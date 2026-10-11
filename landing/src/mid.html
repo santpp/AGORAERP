@@ -1,0 +1,227 @@
+<!-- ============ 3. Módulos · carrusel con gestos ============ -->
+<section class="section modulos" id="modulos" aria-labelledby="modulos-titulo">
+  <div class="container">
+    <header class="section-head reveal">
+      <p class="eyebrow">Módulos</p>
+      <h2 id="modulos-titulo" class="h2"><span class="nw">Vende más</span> · <span class="nw">Trabaja menos</span> · <span class="nw">Todo conectado</span></h2>
+      <p class="lead">Desliza y mira cómo cambia tu día, módulo por módulo.</p>
+    </header>
+  </div>
+
+  <div class="carrusel" data-carrusel role="region" aria-roledescription="carrusel" aria-label="Módulos de Agora Digital App">
+    <div class="container">
+      <div class="progreso" role="group" aria-label="Elegir módulo">
+        <button type="button" class="seg" data-ir="0" aria-label="Módulo 1 de 6: Conversaciones" aria-current="true"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+        <button type="button" class="seg" data-ir="1" aria-label="Módulo 2 de 6: Respuesta a tiempo"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+        <button type="button" class="seg" data-ir="2" aria-label="Módulo 3 de 6: Seguimiento"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+        <button type="button" class="seg" data-ir="3" aria-label="Módulo 4 de 6: Historia del cliente"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+        <button type="button" class="seg" data-ir="4" aria-label="Módulo 5 de 6: Contratos"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+        <button type="button" class="seg" data-ir="5" aria-label="Módulo 6 de 6: Módulo de Finanzas"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+      </div>
+    </div>
+
+    <div class="ventana" data-ventana tabindex="0">
+      <div class="pista" id="pista-modulos" data-pista>
+
+        <!-- 01 · Conversaciones -->
+        <div class="mod is-activo" role="group" aria-roledescription="módulo" aria-label="1 de 6: Conversaciones" data-slug="conversaciones" data-nombre="Conversaciones">
+          <div class="mod-copy">
+            <p class="mod-kicker">01 · Conversaciones</p>
+            <h3 class="mod-titulo">Que ninguna conversación se pierda.</h3>
+            <p class="mod-texto">WhatsApp, Instagram, Facebook, correo y tu web llegan a una sola bandeja, con la ficha de cada cliente.</p>
+            <dl class="ad">
+              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Saltas entre WhatsApp, Instagram y Facebook. Mientras respondes uno, llegan cinco más.</dd></div>
+              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Todo en un solo lugar y ves quién sigue esperando.</dd></div>
+            </dl>
+          </div>
+          <div class="mod-panel mod-panel--vino" aria-hidden="true">
+            <div class="mock mock-bandeja">
+              <ul class="mock-canales"><li>WhatsApp</li><li>Instagram</li><li>Facebook</li><li>Correo</li><li>Web</li></ul>
+              <div class="mock-card">
+                <p class="mock-card-h"><b>Bandeja</b><span class="chip chip-oro">2 esperando</span></p>
+                <ul class="mock-filas">
+                  <li class="is-espera"><span class="av">LG</span><span class="fila-t"><b>Luis</b><small>¿Tienen envío a Maracay?</small></span><span class="chip">WhatsApp</span></li>
+                  <li class="is-espera"><span class="av">AR</span><span class="fila-t"><b>Andrea</b><small>Quiero cotizar para mi equipo</small></span><span class="chip">Correo</span></li>
+                  <li><span class="av">MP</span><span class="fila-t"><b>Mariana</b><small>Perfecto, el jueves a las 10.</small></span><span class="chip">Instagram</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02 · Respuesta a tiempo -->
+        <div class="mod" role="group" aria-roledescription="módulo" aria-label="2 de 6: Respuesta a tiempo" data-slug="respuesta" data-nombre="Respuesta a tiempo">
+          <div class="mod-copy">
+            <p class="mod-kicker">02 · Respuesta a tiempo</p>
+            <h3 class="mod-titulo">Responde a tiempo, aunque no estés conectado.</h3>
+            <p class="mod-texto">Agora Digital App puede responder las preguntas iniciales, entender qué necesita tu cliente y ayudarle a agendar una cita.</p>
+            <dl class="ad">
+              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Te escribieron a las 11:40 p. m. Respondiste 12 horas después.</dd></div>
+              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Amaneces con la conversación encaminada y una cita lista.</dd></div>
+            </dl>
+          </div>
+          <div class="mod-panel mod-panel--azul" aria-hidden="true">
+            <div class="mock mock-chat">
+              <p class="mock-hora">11:40 p. m.</p>
+              <p class="m-burbuja m-in">Hola, ¿tienen cupo el sábado?</p>
+              <p class="m-burbuja m-out">¡Hola! Sí. ¿Te agendo el sábado a las 10:00?</p>
+              <p class="m-burbuja m-in">Sí, por favor.</p>
+              <p class="chip chip-oro chip-lg">Cita lista · sábado 10:00</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 03 · Seguimiento -->
+        <div class="mod" role="group" aria-roledescription="módulo" aria-label="3 de 6: Seguimiento" data-slug="seguimiento" data-nombre="Seguimiento">
+          <div class="mod-copy">
+            <p class="mod-kicker">03 · Seguimiento</p>
+            <h3 class="mod-titulo">Vuelve a aparecer en el momento adecuado.</h3>
+            <p class="mod-texto">Cada oportunidad tiene un siguiente paso y una fecha. Si corresponde, el sistema puede enviar el mensaje por ti.</p>
+            <dl class="ad">
+              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>«Le escribo mañana». Pasaron 12 días.</dd></div>
+              <div class="ad-fila ad-despues"><dt>Después</dt><dd>El sistema recuerda y la conversación sigue viva.</dd></div>
+            </dl>
+          </div>
+          <div class="mod-panel mod-panel--vino" aria-hidden="true">
+            <ol class="mock mock-card mock-pasos">
+              <li class="is-hecho"><span class="paso-i"></span><span class="paso-t"><b>Propuesta enviada</b><small>Lunes 10:40</small></span></li>
+              <li class="is-proximo"><span class="paso-i"></span><span class="paso-t"><b>Retomar la conversación</b><small>Jueves 9:00 · mensaje programado</small></span></li>
+              <li><span class="paso-i"></span><span class="paso-t"><b>El cliente responde</b><small>La conversación sigue viva</small></span></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 04 · Historia del cliente -->
+        <div class="mod" role="group" aria-roledescription="módulo" aria-label="4 de 6: Historia del cliente" data-slug="historia" data-nombre="Historia del cliente">
+          <div class="mod-copy">
+            <p class="mod-kicker">04 · Historia del cliente</p>
+            <h3 class="mod-titulo">La memoria de tu negocio, para todo tu equipo.</h3>
+            <p class="mod-texto">Queda registrado quién escribió, qué preguntó, qué le ofreciste y cuál es el siguiente paso. Cada conversación tiene un responsable.</p>
+            <dl class="ad">
+              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Dos personas del equipo, dos precios distintos, un mismo cliente.</dd></div>
+              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Un cliente, una historia.</dd></div>
+            </dl>
+          </div>
+          <div class="mod-panel mod-panel--azul" aria-hidden="true">
+            <div class="mock mock-card mock-ficha">
+              <p class="ficha-h"><span class="av av-vino">AR</span><span class="fila-t"><b>Andrea Rojas</b><small>Escribió por Instagram</small></span></p>
+              <dl class="ficha-datos">
+                <div><dt>Preguntó</dt><dd>Precio para su equipo</dd></div>
+                <div><dt>Le ofreciste</dt><dd>Propuesta del lunes</dd></div>
+                <div><dt>Siguiente paso</dt><dd>Llamada el jueves</dd></div>
+                <div><dt>Responsable</dt><dd><span class="chip chip-oro">Ana</span></dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- 05 · Contratos -->
+        <div class="mod" role="group" aria-roledescription="módulo" aria-label="5 de 6: Contratos" data-slug="contratos" data-nombre="Contratos">
+          <div class="mod-copy">
+            <p class="mod-kicker">05 · Contratos</p>
+            <h3 class="mod-titulo">Menos pasos para decir que sí.</h3>
+            <p class="mod-texto">Tu cliente recibe el contrato y lo firma desde la misma conversación.</p>
+            <dl class="ad">
+              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Imprimir. Firmar. Escanear. Tres días de espera.</dd></div>
+              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Dos toques. Firmado.</dd></div>
+            </dl>
+          </div>
+          <div class="mod-panel mod-panel--vino" aria-hidden="true">
+            <div class="mock mock-card mock-contrato">
+              <p class="contrato-h"><b>Contrato de servicio</b><small>Enviado en la conversación</small></p>
+              <span class="ln" style="--w:92%"></span>
+              <span class="ln" style="--w:78%"></span>
+              <span class="ln" style="--w:86%"></span>
+              <span class="ln" style="--w:58%"></span>
+              <svg class="firma" viewBox="0 0 160 40" focusable="false"><path d="M6 30c12-17 20-22 25-15s-8 17 2 12 15-19 22-14-3 14 8 10 12-12 20-9 5 9 15 7 17-7 26-6"/></svg>
+              <p class="chip chip-oro chip-lg">Dos toques. Firmado.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 06 · Módulo de Finanzas -->
+        <div class="mod" role="group" aria-roledescription="módulo" aria-label="6 de 6: Módulo de Finanzas" data-slug="finanzas" data-nombre="Módulo de Finanzas">
+          <div class="mod-copy">
+            <p class="mod-kicker">06 · Módulo de Finanzas</p>
+            <h3 class="mod-titulo">Tus ventas y tus números, todo conectado.</h3>
+            <p class="mod-texto">Agora Digital App es un CRM con módulo de finanzas. Si ya tienes cuenta, entra desde aquí.</p>
+            <p class="mod-ancla">Menos plataformas sueltas. <strong>Más ventas cerradas.</strong></p>
+            <a class="btn btn-fin" href="https://mi.agoradigital.app/">
+              Inicio de sesión · Módulo de Finanzas
+              <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
+            </a>
+          </div>
+          <div class="mod-panel mod-panel--azul" aria-hidden="true">
+            <span class="marca-agua marca-agua--panel"></span>
+            <div class="mock mock-conexion">
+              <span class="nodo">CRM</span>
+              <span class="conector"></span>
+              <span class="nodo nodo-oro">Finanzas</span>
+              <p class="conexion-t">Todo conectado</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container controles">
+      <button type="button" class="btn btn-line btn-paso" data-anterior aria-controls="pista-modulos" aria-disabled="true">
+        <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M12.5 8h-9M7 4.5 3.5 8 7 11.5"/></svg>
+        Anterior
+      </button>
+      <p class="contador" aria-hidden="true"><span data-actual>1</span> / 6</p>
+      <button type="button" class="btn btn-line btn-paso" data-siguiente aria-controls="pista-modulos">
+        Siguiente
+        <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg>
+      </button>
+      <p class="sr-only" aria-live="polite" aria-atomic="true" data-anuncio></p>
+    </div>
+    <p class="container caption">Ilustraciones con datos de ejemplo.</p>
+  </div>
+</section>
+
+<!-- ============ 4. Athena · escrita, sin voz ============ -->
+<section class="section athena" id="athena" aria-labelledby="athena-titulo">
+  <span class="marca-agua marca-agua--athena" aria-hidden="true"></span>
+  <div class="container athena-grid">
+    <div class="athena-copy">
+      <p class="pill pill-oro">Agente de IA</p>
+      <h2 id="athena-titulo" class="h2">¡Conoce a Athena!</h2>
+      <p class="lead lead--claro">La agente de inteligencia artificial de Agora Digital App.</p>
+
+      <div class="athena-chat" data-athena>
+        <p class="athena-quien" aria-hidden="true">
+          <img class="athena-mini" src="assets/athena-mini.webp" alt="" width="40" height="40" loading="lazy" decoding="async">
+          Athena
+        </p>
+        <ol class="athena-mensajes" data-mensajes>
+          <li class="msg"><span class="sr-only">Hola, soy Athena.</span><span class="msg-medida" aria-hidden="true">Hola, soy Athena.</span><span class="msg-escrito" aria-hidden="true"></span></li>
+          <li class="msg"><span class="sr-only">Cuando alguien pregunta, está prestando atención.</span><span class="msg-medida" aria-hidden="true">Cuando alguien pregunta, está prestando atención.</span><span class="msg-escrito" aria-hidden="true"></span></li>
+          <li class="msg"><span class="sr-only">No tienes que vivir pegado al teléfono.</span><span class="msg-medida" aria-hidden="true">No tienes que vivir pegado al teléfono.</span><span class="msg-escrito" aria-hidden="true"></span></li>
+          <li class="msg"><span class="sr-only">¿Te muestro, sin costo, cómo podría funcionar en tu negocio?</span><span class="msg-medida" aria-hidden="true">¿Te muestro, sin costo, cómo podría funcionar en tu negocio?</span><span class="msg-escrito" aria-hidden="true"></span></li>
+        </ol>
+        <p class="sr-only" aria-live="polite" data-athena-anuncio></p>
+
+        <div class="athena-acciones">
+          <div class="athena-controles" data-athena-controles>
+            <button type="button" class="btn btn-line btn-line--claro btn-sm" data-athena-siguiente>Siguiente mensaje</button>
+            <button type="button" class="btn-texto" data-athena-omitir>Omitir animación</button>
+            <p class="athena-pista" aria-hidden="true">o toca la burbuja</p>
+          </div>
+          <a class="btn btn-demo athena-cta" data-athena-cta href="#demo">
+            Agenda tu demo gratis de 20 minutos
+            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <figure class="athena-figura" data-athena-figura>
+      <img src="assets/athena.webp"
+           width="480" height="498" loading="lazy" decoding="async"
+           alt="Athena, la agente de IA de Agora Digital App: casco plateado con laureles dorados y chaqueta blanca.">
+    </figure>
+  </div>
+</section>
+

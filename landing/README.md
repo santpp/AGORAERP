@@ -1,6 +1,6 @@
 # Agora Digital App · Landing
 
-Sitio estático sin dependencias ni build: `index.html`, `styles.css`, `app.js`, `config.js` y `assets/`.
+Sitio estático sin dependencias. Se edita en `src/` y se arma con `sh build.sh`, que genera `index.html`, `styles.css` y `app.js` (con `?v=` para evitar caché). Para el servidor solo hacen falta esos tres, `config.js` y `assets/`.
 Lenguaje visual inspirado en shadcn/ui (tokens, tarjetas, botones) y Aceternity UI (spotlight, grid, mockup con pestañas, bento).
 
 ## Configurar (`config.js`)
