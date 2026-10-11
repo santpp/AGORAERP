@@ -313,3 +313,28 @@ body.chat-ready .helper { display: none; } /* cuando GHL muestra su propio botó
 .mobile-menu[hidden] { display: none; }
 [data-theme="dark"] .icon-btn .sun, :root:not([data-theme="dark"]) .icon-btn .moon { display: none; }
 .badge-dot svg { width: 12px; height: 12px; fill: #1d2136; stroke: none; }
+
+/* Clientes: cinta infinita + ficha al pasar el cursor */
+.proof { padding: 64px 0 8px; }
+.marquee { position: relative; overflow: hidden; padding: 10px 0;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.marquee-track { display: flex; gap: 72px; width: max-content; animation: marquee var(--dur, 30s) linear infinite; }
+.marquee:hover .marquee-track, .marquee:focus-within .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.client { display: grid; place-items: center; height: 64px; min-width: 120px; padding: 0 8px; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+.client img { max-height: 56px; max-width: 160px; width: auto; object-fit: contain;
+  filter: grayscale(1) contrast(1.1); opacity: .55; mix-blend-mode: multiply; transition: opacity .3s, filter .3s, transform .4s var(--ease); }
+[data-theme="dark"] .client img { filter: grayscale(1) brightness(0) invert(1); mix-blend-mode: normal; opacity: .6; }
+.client .word { font-weight: 800; font-size: 1.35rem; letter-spacing: -.02em; color: var(--muted); opacity: .75; white-space: nowrap; transition: .3s; }
+.client:hover img, .client:focus-visible img, .client.on img { filter: none; opacity: 1; transform: scale(1.06); }
+.client:hover .word, .client:focus-visible .word, .client.on .word { color: var(--vino); opacity: 1; }
+.client-tip { position: fixed; z-index: 70; width: 290px; padding: 14px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--border);
+  box-shadow: var(--shadow); font-size: .86rem; pointer-events: none; animation: fade .25s var(--ease); }
+.client-tip b { display: block; font-size: .95rem; } .client-tip .h { color: var(--muted); font-size: .75rem; }
+.client-tip p { margin-top: 6px; color: var(--muted); }
+.client-tip .res { color: var(--fg); background: color-mix(in srgb, #2f9e57 12%, var(--card)); border-radius: 10px; padding: .5rem .6rem; }
+.client-tip .res::before { content: "Cómo los ayudamos · "; font-weight: 700; color: #2f9e57; }
+.client-tip::after { content: ""; position: absolute; left: var(--ax, 50%); bottom: -7px; width: 12px; height: 12px; transform: translateX(-50%) rotate(45deg);
+  background: var(--card); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; } .marquee-track [aria-hidden] { display: none; } }
+[data-theme="dark"] .client:hover .word, [data-theme="dark"] .client.on .word, [data-theme="dark"] .client:focus-visible .word { color: #ff8fae; }

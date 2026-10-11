@@ -23,6 +23,15 @@ window.AGORA_CONFIG = {
   // Sin esto, todos los horarios se muestran libres (nunca inventamos escasez).
   busySlotsUrl: "",
 
+  // Clientes (cinta animada). logo: archivo PNG/SVG con fondo transparente en assets/clientes/.
+  // Si el logo no existe, se muestra el nombre como texto. Completa "about" y "result" con datos reales.
+  clients: [
+    { handle: "asocim_",      name: "ASOCIM",         logo: "assets/clientes/asocim_.png",      about: "", result: "" },
+    { handle: "ubalinepro",   name: "Ubaline Pro",    logo: "assets/clientes/ubalinepro.png",   about: "", result: "" },
+    { handle: "bajolamatica", name: "Bajo la Mática", logo: "assets/clientes/bajolamatica.png", about: "", result: "" },
+    { handle: "ciaco_araure", name: "CIACO Araure",   logo: "assets/clientes/ciaco_araure.png", about: "", result: "" }
+  ],
+
   // Precio anual = mensual × 10 (dos meses gratis).
   annualMonths: 10
 };

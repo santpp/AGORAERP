@@ -216,5 +216,50 @@
     setTimeout(idle, 8000);
   }
 
+  /* ---------- Clientes ---------- */
+  const clients = (C.clients || []).filter(c => c.name);
+  const cSec = $('[data-clients]');
+  if (clients.length) {
+    cSec.hidden = false;
+    const trackEl = $('[data-mtrack]', cSec), tip = $('[data-tip]', cSec);
+    const esc = (t) => String(t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const item = (c, i, dup) => {
+      const b = document.createElement('button');
+      b.className = 'client'; b.type = 'button'; b.dataset.i = i;
+      if (dup) { b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; } else b.setAttribute('aria-label', c.name);
+      const word = `<span class="word">${esc(c.name)}</span>`;
+      if (c.logo) {
+        const img = new Image(); img.alt = ''; img.loading = 'lazy'; img.src = c.logo;
+        img.onerror = () => { b.innerHTML = word; };
+        b.append(img);
+      } else b.innerHTML = word;
+      return b;
+    };
+    // Repetimos la lista hasta llenar el ancho y la duplicamos para un bucle sin saltos
+    const base = []; while (base.length < 8) base.push(...clients.map((c, i) => [c, i]));
+    [false, true].forEach(dup => base.forEach(([c, i], k) => trackEl.append(item(c, i, dup || k >= clients.length))));
+    trackEl.style.setProperty('--dur', base.length * 5 + 's');
+
+    const showTip = (b) => {
+      const c = clients[b.dataset.i];
+      $$('.client.on', trackEl).forEach(x => x.classList.remove('on')); b.classList.add('on');
+      tip.innerHTML = `<b>${esc(c.name)}</b><span class="h">@${esc(c.handle)}</span>` +
+        (c.about ? `<p>${esc(c.about)}</p>` : '') + (c.result ? `<p class="res">${esc(c.result)}</p>` : '');
+      tip.hidden = false;
+      const r = b.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+      const left = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+      tip.style.left = left + 'px'; tip.style.top = (r.top - h - 12) + 'px';
+      tip.style.setProperty('--ax', (r.left + r.width / 2 - left) + 'px');
+      track('client_hover', { client: c.handle });
+    };
+    const hideTip = () => { tip.hidden = true; $$('.client.on', trackEl).forEach(x => x.classList.remove('on')); };
+    trackEl.addEventListener('pointerover', e => { const b = e.target.closest('.client'); if (b) showTip(b); });
+    trackEl.addEventListener('focusin', e => { const b = e.target.closest('.client'); if (b) showTip(b); });
+    trackEl.addEventListener('click', e => { const b = e.target.closest('.client'); if (b) showTip(b); }); // táctil
+    $('[data-marquee]', cSec).addEventListener('pointerleave', hideTip);
+    trackEl.addEventListener('focusout', hideTip);
+    addEventListener('scroll', hideTip, { passive: true });
+  }
+
   $$('[data-track]').forEach(a => a.addEventListener('click', () => track(a.dataset.track)));
 })();
