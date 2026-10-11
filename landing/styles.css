@@ -338,3 +338,7 @@ body.chat-ready .helper { display: none; } /* cuando GHL muestra su propio botó
   background: var(--card); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; } .marquee-track [aria-hidden] { display: none; } }
 [data-theme="dark"] .client:hover .word, [data-theme="dark"] .client.on .word, [data-theme="dark"] .client:focus-visible .word { color: #ff8fae; }
+.client { height: 76px; } .client img { max-height: 64px; max-width: 170px; }
+/* En oscuro, el color original se ve sobre una ficha clara al pasar el cursor */
+[data-theme="dark"] .client { transition: background .3s; padding: 6px 12px; }
+[data-theme="dark"] .client:hover, [data-theme="dark"] .client.on, [data-theme="dark"] .client:focus-visible { background: #f6f4f1; }

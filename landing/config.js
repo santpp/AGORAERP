@@ -6,7 +6,7 @@ window.AGORA_CONFIG = {
 
   // GoHighLevel · Chat widget
   // En GHL: Sites → Chat Widget → (tu widget) → Get Code. Copia el valor de data-widget-id.
-  ghlWidgetId: "",
+  ghlWidgetId: "6acb6b600c1163d8968defdc",
   ghlLoaderSrc: "https://widgets.leadconnectorhq.com/loader.js",
   ghlResourcesUrl: "https://widgets.leadconnectorhq.com/chat-widget/loader.js",
 
@@ -27,9 +27,9 @@ window.AGORA_CONFIG = {
   // Si el logo no existe, se muestra el nombre como texto. Completa "about" y "result" con datos reales.
   clients: [
     { handle: "asocim_",      name: "ASOCIM",         logo: "assets/clientes/asocim_.png",      about: "", result: "" },
-    { handle: "ubalinepro",   name: "Ubaline Pro",    logo: "assets/clientes/ubalinepro.png",   about: "", result: "" },
+    { handle: "ubalinepro",   name: "UBA",            logo: "assets/clientes/ubalinepro.png",   about: "", result: "" },
     { handle: "bajolamatica", name: "Bajo la Mática", logo: "assets/clientes/bajolamatica.png", about: "", result: "" },
-    { handle: "ciaco_araure", name: "CIACO Araure",   logo: "assets/clientes/ciaco_araure.png", about: "", result: "" }
+    { handle: "ciaco_araure", name: "C.I.A.C.O",      logo: "assets/clientes/ciaco_araure.png", about: "Centro de Instrucción de Aviación Civil de Occidente · Grupo Sosavenca.", result: "" }
   ],
 
   // Precio anual = mensual × 10 (dos meses gratis).
