@@ -45,7 +45,6 @@
     ['Zoom', 'Enlace de videollamada en cada cita.', 'Agenda', 'Z', '#2d8cff', 'zoom'],
     ['Google Meet', 'Reuniones automáticas al agendar.', 'Agenda', 'M', '#00897b', 'googlemeet'],
     ['Typeform', 'Respuestas que crean contactos.', 'Formularios', 'T', '#262627', 'typeform'],
-    ['Jotform', 'Formularios conectados a tu embudo.', 'Formularios', 'J', '#ff6100', ''],
     ['Formularios nativos', 'Encuestas y formularios con tu marca.', 'Formularios', 'F', '#ad103c', 'agora'],
     ['Slack', 'Avisos de ventas para tu equipo.', 'Productividad', '#', '#4a154b', 'slack'],
     ['Zapier', 'Conecta miles de aplicaciones.', 'Productividad', 'Z', '#ff4f00', 'zapier'],
