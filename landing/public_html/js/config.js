@@ -19,14 +19,9 @@ window.Agora.config = Object.freeze({
     resourcesUrl: 'https://widgets.leadconnectorhq.com/chat-widget/loader.js'
   }),
 
-  // API propia (PHP + MySQL). El servidor reenvía cada solicitud al webhook de
-  // GoHighLevel si lo configuras en api/config.php. Sin API, el formulario abre
-  // WhatsApp con los datos ya escritos (y si no hay WhatsApp, el correo).
-  api: Object.freeze({
-    csrf: 'api/csrf.php',
-    diagnostico: 'api/diagnostico.php',
-    disponibilidad: 'api/disponibilidad.php'
-  }),
+  // Formulario: sin servidor propio, al enviar se abre WhatsApp con los datos ya escritos
+  // (y si no hay WhatsApp, el correo). Deja estas rutas vacías.
+  api: Object.freeze({ csrf: '', diagnostico: '', disponibilidad: '' }),
 
   // reCAPTCHA v3: clave PÚBLICA (la secreta va solo en api/config.php). Vacío = desactivado.
   recaptchaSiteKey: '',

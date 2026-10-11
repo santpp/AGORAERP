@@ -974,6 +974,7 @@
       if (!S.rules.date(date)) { if (date) paint('fecha', 'bad', SCHEMA.fecha.err); return; }
       paint('fecha', 'idle');
       var id = ++slotReq;
+      if (!(cfg.api && cfg.api.disponibilidad)) return;
       S.getJson(cfg.api.disponibilidad + '?fecha=' + encodeURIComponent(date)).then(function (j) {
         if (id !== slotReq || !j || !Array.isArray(j.taken)) return;
         apply(j.taken.filter(function (v) { return (cfg.slots || []).indexOf(v) > -1; }));
@@ -1107,7 +1108,8 @@
       UTM.forEach(function (k) { if (u[k]) data[k] = u[k]; });
       var planKey = data.plan || PLAN_BY_TEAM[data.equipo];
 
-      S.securePost(cfg.api.diagnostico, 'diagnostico', data)
+      var api = cfg.api || {};
+      (api.diagnostico ? S.securePost(api.diagnostico, 'diagnostico', data) : Promise.reject(new Error('sin api')))
         .then(function (res) {
           if (!res.ok && res.status === 400 && res.data && res.data.error === 'too_fast') {
             return wait(1400).then(function () { return S.securePost(cfg.api.diagnostico, 'diagnostico', data); });
@@ -1188,8 +1190,7 @@
     });
   })();
 
-  /* ======================= 12 · APP INSTALABLE (PWA / APK) ======================= */
-  if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* opcional */ }); });
-  }
+  /* La landing ya no es app instalable: se retira cualquier service worker de versiones anteriores */
+  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
+
 })();

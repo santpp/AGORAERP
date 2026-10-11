@@ -40,19 +40,19 @@ head = re.sub(r'(<meta (?:name|property)="(?:description|og:title|og:description
               lambda m: m.group(1) + tr(m.group(2)) + m.group(3), head)
 head = head.replace('content="es_LA"', 'content="en_US"')
 head = head.replace('<link rel="canonical" href="https://landing.agoradigital.app/">',
-                    '<link rel="canonical" href="https://landing.agoradigital.app/en">')
+                    '<link rel="canonical" href="https://landing.agoradigital.app/en.html">')
 head = head.replace('<meta property="og:url" content="https://landing.agoradigital.app/">',
-                    '<meta property="og:url" content="https://landing.agoradigital.app/en">')
+                    '<meta property="og:url" content="https://landing.agoradigital.app/en.html">')
 head = head.replace('"inLanguage":"es-419"', '"inLanguage":"en"').replace('"availableLanguage":["es"]', '"availableLanguage":["es","en"]')
 head = head.replace('"slogan":"Cada conversación, una oportunidad."', '"slogan":"Every conversation, an opportunity."')
 head = head.replace('"description":"CRM con WhatsApp, Athena (agente de IA) y finanzas para pymes: conversaciones, seguimiento, contratos y cobranza en un solo lugar."',
                     '"description":"CRM with WhatsApp, Athena (AI agent) and finance for small businesses: conversations, follow-up, contracts and collections in one place."')
 
 # Selector de idioma: en la versión inglesa apunta al español
-body = body.replace('<a class="lang-btn" href="en" hreflang="en" lang="en" aria-label="Read this page in English">EN</a>',
-                    '<a class="lang-btn" href="./" hreflang="es" lang="es" aria-label="Ver esta página en español">ES</a>')
-body = body.replace('<a class="m-lang" href="en" hreflang="en" lang="en">English</a>',
-                    '<a class="m-lang" href="./" hreflang="es" lang="es">Español</a>')
+body = body.replace('<a class="lang-btn" href="en.html" hreflang="en" lang="en" aria-label="Read this page in English">EN</a>',
+                    '<a class="lang-btn" href="index.html" hreflang="es" lang="es" aria-label="Ver esta página en español">ES</a>')
+body = body.replace('<a class="m-lang" href="en.html" hreflang="en" lang="en">English</a>',
+                    '<a class="m-lang" href="index.html" hreflang="es" lang="es">Español</a>')
 
 open(OUT, 'w', encoding='utf-8').write(head + body)
 if missing:
