@@ -326,3 +326,11 @@ body.chat-ready .helper { display: none; }
 }
 .integra .integra-logo { display: grid; place-items: center; font-size: .8rem; color: #fff; line-height: 1; }
 @media (min-width: 1024px) { .browser--hero { width: 100%; max-width: none; } }
+
+/* Logos oficiales (Simple Icons, CC0) pintados con máscara */
+.marca { display: block; width: 22px; height: 22px; background: currentColor;
+  -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.integra-logo .marca, .ofi-logo .marca { width: 24px; height: 24px; background: #fff; }
+.canal-ico .marca { width: 32px; height: 32px; }
+.c-wa { color: #25d366; } .c-ig { color: #ff0069; } .c-fb { color: #0866ff; } .c-li { color: #0a66c2; } .c-tt { color: #000; }
+.canal-ico.c-wa { color: #25d366; } .canal-ico.c-ig { color: #ff0069; } .canal-ico.c-fb { color: #0866ff; } .canal-ico.c-li { color: #0a66c2; } .canal-ico.c-tt { color: #000; }
