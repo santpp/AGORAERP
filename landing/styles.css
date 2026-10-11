@@ -1013,3 +1013,4 @@ body.chat-ready .helper { display: none; }
 .canal-ico .marca { width: 32px; height: 32px; }
 .c-wa { color: #25d366; } .c-ig { color: #ff0069; } .c-fb { color: #0866ff; } .c-li { color: #0a66c2; } .c-tt { color: #000; }
 .canal-ico.c-wa { color: #25d366; } .canal-ico.c-ig { color: #ff0069; } .canal-ico.c-fb { color: #0866ff; } .canal-ico.c-li { color: #0a66c2; } .canal-ico.c-tt { color: #000; }
+.integra-logo .integra-foto { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; } .integra-logo:has(.integra-foto) { overflow: hidden; }
