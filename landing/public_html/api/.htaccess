@@ -1,0 +1,14 @@
+# API: solo endpoints PHP públicos; todo lo demás (config, núcleo), denegado
+Options -Indexes
+LimitRequestBody 16384
+
+<FilesMatch ".*">
+  Require all denied
+</FilesMatch>
+<FilesMatch "^(csrf|diagnostico|disponibilidad)\.php$">
+  Require all granted
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>

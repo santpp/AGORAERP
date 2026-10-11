@@ -1,0 +1,98 @@
+# =============================================================================
+# Agora Digital App · Landing 3.0 — Apache / LiteSpeed (Hostinger)
+# Capas: HTTPS → filtro barato de solicitudes → cabeceras de seguridad →
+# caché (lo estático nunca toca PHP ni MySQL).
+# =============================================================================
+Options -Indexes -MultiViews
+ServerSignature Off
+AddDefaultCharset utf-8
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 1 · Solo HTTPS y sin "www." (funciona en cualquier dominio o subdominio)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # 2 · Métodos permitidos: GET, HEAD y POST
+  RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|POST)$ [NC]
+  RewriteRule ^ - [F,L]
+
+  # 3 · POST solo hacia el endpoint que lo acepta
+  RewriteCond %{REQUEST_METHOD} =POST
+  RewriteRule !^api/diagnostico\.php$ - [F,L]
+
+  # 4 · API: solo endpoints públicos; sin agente de usuario = bot, se descarta
+  RewriteRule ^api/(?!(csrf|diagnostico|disponibilidad)\.php$) - [F,L]
+  RewriteCond %{HTTP_USER_AGENT} ^-?$
+  RewriteRule ^api/ - [F,L]
+
+  # 5 · Archivos ocultos (salvo .well-known), respaldos, fuentes y documentación
+  RewriteRule (^|/)\.(?!well-known/) - [F,L]
+  RewriteRule ^(database|docs)/ - [F,L,NC]
+  # Versión en inglés: /en (sin barra final) sirve en.html
+  RewriteRule ^en/$ /en [L,R=301]
+  RewriteRule ^en$ en.html [L]
+  RewriteRule \.(md|log|sql|env|ini|bak|old|orig|swp|sh|py|lock|map|tpl|dist)$ - [F,L,NC]
+
+  # 6 · Escáneres automáticos: respuesta inmediata sin tocar PHP
+  RewriteRule ^(wp-admin|wp-login\.php|wp-content|wp-includes|xmlrpc\.php|phpmyadmin|pma|adminer|cgi-bin|vendor|\.git) - [F,L,NC]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Transporte y aislamiento
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+
+  # CSP: el código propio no usa scripts ni estilos en línea. Se abren solo los
+  # dominios del chat de GoHighLevel (que inyecta estilos propios) y reCAPTCHA.
+  # Si no usas el chat de GHL, cambia esta línea por la versión estricta de abajo.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://widgets.leadconnectorhq.com https://*.leadconnectorhq.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://*.leadconnectorhq.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com https://*.leadconnectorhq.com; media-src 'self' https:; connect-src 'self' https://*.leadconnectorhq.com wss://*.leadconnectorhq.com https://*.msgsndr.com https://*.googleapis.com https://www.google.com/recaptcha/; frame-src https://*.leadconnectorhq.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests"
+  # Versión estricta (sin chat de GHL):
+  # Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://www.google.com/recaptcha/; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests"
+  Header always unset X-Powered-By
+  Header unset Server
+
+  # Caché: CSS y JS llevan ?v=3.0.0 en el HTML (cambia la versión al editarlos)
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+  </FilesMatch>
+  <FilesMatch "\.(woff2|svg|webp|png|ico)$">
+    Header set Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
+  </FilesMatch>
+  # HTML: el navegador siempre revalida; la CDN puede servirlo 5 min (absorbe picos)
+  <FilesMatch "\.(html|xml|txt|webmanifest)$">
+    Header set Cache-Control "public, max-age=0, s-maxage=300, must-revalidate"
+  </FilesMatch>
+  # El service worker nunca se guarda en caché (así las actualizaciones llegan al instante)
+  <Files "sw.js">
+    Header set Cache-Control "no-cache"
+  </Files>
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+  AddType application/manifest+json .webmanifest
+  AddCharset utf-8 .html .css .js .xml .txt .webmanifest
+</IfModule>
+
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript application/json image/svg+xml application/xml text/plain application/manifest+json
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml application/xml text/plain application/manifest+json
+</IfModule>
+
+ErrorDocument 403 /404.html
+ErrorDocument 404 /404.html
