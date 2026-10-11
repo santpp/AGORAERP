@@ -2,7 +2,7 @@
    Edita solo este archivo para conectar GoHighLevel, WhatsApp y la disponibilidad. */
 window.AGORA_CONFIG = {
   // Número de WhatsApp del equipo, solo dígitos con código de país (ej. "584121234567").
-  whatsapp: "",
+  whatsapp: "584220446222",
 
   // GoHighLevel · Chat widget
   // En GHL: Sites → Chat Widget → (tu widget) → Get Code. Copia el valor de data-widget-id.
