@@ -6,28 +6,58 @@
   const track = (event, data = {}) => { (window.dataLayer = window.dataLayer || []).push({ event, ...data }); };
   const waLink = (text) => C.whatsapp ? `https://wa.me/${C.whatsapp}?text=${encodeURIComponent(text)}` : null;
 
-  /* Menús desplegables */
+  /* Tema */
+  $('[data-theme-toggle]').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('agora-theme', next); } catch (e) {}
+  });
+
+  /* Nav: fondo al hacer scroll, menús y menú móvil */
+  const nav = $('[data-nav]');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
   $$('.dd').forEach(dd => {
     const btn = $('.dd-btn', dd);
     const set = (o) => { dd.classList.toggle('open', o); btn.setAttribute('aria-expanded', o); };
     btn.addEventListener('click', (e) => { e.stopPropagation(); const o = !dd.classList.contains('open'); $$('.dd.open').forEach(d => d.classList.remove('open')); set(o); });
     if (matchMedia('(hover: hover)').matches) { dd.addEventListener('mouseenter', () => set(true)); dd.addEventListener('mouseleave', () => set(false)); }
-    $$('a', dd).forEach(l => l.addEventListener('click', () => set(false)));
   });
   document.addEventListener('click', () => $$('.dd.open').forEach(d => d.classList.remove('open')));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $$('.dd.open').forEach(d => d.classList.remove('open')); });
 
-  /* Enlaces a un módulo concreto: mueven el carrusel sin recargar */
-  $$('[data-modulo]').forEach(l => l.addEventListener('click', (e) => {
-    const car = $('[data-carrusel]');
-    if (!car || !car.goTo) return;
-    e.preventDefault();
-    car.goTo(+l.dataset.modulo, { origen: 'boton' });
-    $('#modulos').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }));
+  const mBtn = $('[data-menu]'), mMenu = $('[data-mobile-menu]');
+  mBtn.addEventListener('click', () => { mMenu.hidden = !mMenu.hidden; mBtn.setAttribute('aria-expanded', !mMenu.hidden); });
+  $$('a', mMenu).forEach(a => a.addEventListener('click', () => { mMenu.hidden = true; }));
+
+  /* Sección activa en la nav */
+  const spy = $$('[data-spy]');
+  const spyObs = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) spy.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+  }), { rootMargin: '-45% 0px -50% 0px' });
+  spy.forEach(a => { const t = $(a.getAttribute('href')); if (t) spyObs.observe(t); });
+
+  /* Aparición al hacer scroll */
+  const rev = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rev.unobserve(e.target); } }), { threshold: .12 });
+  $$('.reveal').forEach(el => rev.observe(el));
 
   /* WhatsApp en la barra social */
   $$('[data-whatsapp]').forEach(a => { const l = waLink('Hola, quiero saber más de Agora Digital App.'); if (l) a.href = l; else a.remove(); });
+
+  /* Athena: conversación escrita al entrar en pantalla */
+  const chat = $('[data-athena-chat]');
+  const lines = ['Hola, soy Athena.', 'Cuando alguien pregunta, está prestando atención.', 'No tienes que vivir pegado al teléfono.', '¿Te muestro, sin costo, cómo podría funcionar en tu negocio?'];
+  const play = async () => {
+    for (const l of lines) {
+      const t = document.createElement('p'); t.className = 'typing'; t.innerHTML = '<i></i><i></i><i></i>'; chat.append(t);
+      await new Promise(r => setTimeout(r, 900));
+      t.className = ''; t.textContent = l;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  };
+  const aObs = new IntersectionObserver(es => { if (es[0].isIntersecting) { aObs.disconnect(); play(); } }, { threshold: .4 });
+  aObs.observe(chat);
 
   /* Precios: mensual / anual */
   $$('[data-billing]').forEach(b => b.addEventListener('click', () => {
@@ -91,7 +121,7 @@
   const update = () => {
     let done = req.filter(validField).length + (form.hora && $('input[name=hora]:checked', form) ? 1 : 0);
     const total = req.length + 1, pct = Math.round(done / total * 100);
-    $('[data-progress-bar]').style.transform = `scaleX(${pct / 100})`;
+    $('[data-progress-bar]').style.width = pct + '%';
     $('[data-progress-pct]').textContent = pct + ' %';
     $('[data-progress-label]').textContent = pct === 100 ? '¡Listo! Solo pulsa el botón' : pct ? 'Vas muy bien' : 'Empecemos';
   };

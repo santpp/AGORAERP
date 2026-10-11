@@ -1,166 +1,138 @@
-<!DOCTYPE html>
-<html lang="es-VE">
+<!doctype html>
+<html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Agora Digital App · Cada conversación, una oportunidad</title>
-  <meta name="description" content="CRM con WhatsApp, IA y finanzas para pymes. Reúne tus conversaciones, responde a tiempo y dale seguimiento a cada oportunidad. Diagnóstico gratis de 20 minutos.">
-  <link rel="canonical" href="https://landing.agoradigital.app/">
-  <meta name="theme-color" content="#EFEFEF">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="es_VE">
-  <meta property="og:site_name" content="Agora Digital App">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agora Digital App · CRM con WhatsApp, IA y finanzas para pymes</title>
+  <meta name="description" content="Agora Digital App reúne tus conversaciones de WhatsApp, Instagram, Facebook y correo, te muestra quién sigue esperando y le da seguimiento a cada oportunidad.">
   <meta property="og:title" content="Quizá no perdiste la venta. Perdiste el momento.">
-  <meta property="og:description" content="Menos plataformas sueltas. Más ventas cerradas.">
+  <meta property="og:description" content="CRM con WhatsApp, IA y finanzas para pymes. Agenda tu diagnóstico gratis de 20 minutos.">
+  <meta property="og:type" content="website">
   <meta property="og:url" content="https://landing.agoradigital.app/">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#AD103C">
   <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg">
   <link rel="preload" href="assets/author.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=202610111313">
-  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="styles.css?v=202610111329">
+  <script>
+    /* Tema antes de pintar, para evitar el destello */
+    try { var t = localStorage.getItem('agora-theme'); if (t) document.documentElement.dataset.theme = t;
+      else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+  </script>
 </head>
 <body>
-<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<a class="skip" href="#contenido">Saltar al contenido</a>
 
-<!-- Redes, fijas a la izquierda en escritorio -->
+<!-- Barra social flotante -->
 <aside class="social-rail" aria-label="Redes">
-  <a href="https://www.instagram.com/agoradigital.app/" target="_blank" rel="noopener" aria-label="Instagram"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6"/></svg></a>
-  <a data-whatsapp href="#" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="ico" viewBox="0 0 24 24"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8c-1-.5-2-1.5-2.5-2.5l.8-1-1-2z"/></svg></a>
-  <a href="mailto:info@agoradigital.app" aria-label="Correo"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg></a>
+  <a href="https://www.instagram.com/agoradigital.app/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a>
+  <a data-whatsapp href="#" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8c-1-.5-2-1.5-2.5-2.5l.8-1-1-2z"/></svg></a>
+  <a href="mailto:info@agoradigital.app" aria-label="Correo"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg></a>
 </aside>
 
-<!-- ============ 1. Barra superior ============ -->
-<header class="nav-wrap">
+<header class="nav-wrap" data-nav>
   <nav class="nav container" aria-label="Principal">
-    <a class="nav-logo" href="#inicio">
-      <img src="assets/logo.svg" alt="Agora Digital App, ir al inicio" width="96" height="40">
-    </a>
+    <a class="brand" href="#inicio" aria-label="Agora Digital App, inicio"><span class="logo"></span></a>
 
     <ul class="nav-links">
       <li class="dd">
-        <button type="button" class="dd-btn" aria-expanded="false">Productos <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+        <button class="dd-btn" aria-expanded="false">Productos <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="dd-menu">
-          <a href="?modulo=conversaciones#modulos" data-modulo="0"><b>Conversaciones</b><span>Todos tus canales en una bandeja</span></a>
-          <a href="?modulo=seguimiento#modulos" data-modulo="2"><b>Seguimiento</b><span>Ninguna oportunidad se enfría</span></a>
-          <a href="?modulo=contratos#modulos" data-modulo="4"><b>Contratos</b><span>Firma desde la conversación</span></a>
+          <a href="#modulos"><b>Conversaciones</b><span>Todos tus canales en una bandeja</span></a>
           <a href="#athena"><b>Athena IA</b><span>Responde y agenda por ti</span></a>
+          <a href="#modulos"><b>Seguimiento</b><span>Ninguna oportunidad se enfría</span></a>
+          <a href="#finanzas"><b>Finanzas</b><span>Ventas y números conectados</span></a>
         </div>
       </li>
       <li class="dd">
-        <button type="button" class="dd-btn" aria-expanded="false">Recursos <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+        <button class="dd-btn" aria-expanded="false">Recursos <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="dd-menu">
           <a href="#integraciones"><b>Integraciones</b><span>Canales y apps conectadas</span></a>
-          <a href="#infraestructura"><b>Infraestructura</b><span>Automatizaciones, embudos y reportes</span></a>
           <a href="#seguridad"><b>Seguridad</b><span>Cómo protegemos tus datos</span></a>
-          <a href="#costo"><b>¿Por qué responder rápido?</b><span>Lo que dicen los datos</span></a>
-          <a href="#demo"><b>Diagnóstico gratis</b><span>20 minutos con el equipo</span></a>
+          <a href="#diagnostico"><b>Diagnóstico gratis</b><span>20 minutos con el equipo</span></a>
           <a href="mailto:info@agoradigital.app"><b>Soporte</b><span>info@agoradigital.app</span></a>
         </div>
       </li>
-      <li><a href="#precios">Precios</a></li>
-      <li><a href="?modulo=finanzas#modulos" data-modulo="5">Finanzas</a></li>
-      <li><a href="#infraestructura">Infraestructura</a></li>
+      <li><a href="#precios" data-spy>Precios</a></li>
+      <li><a href="#finanzas" data-spy>Finanzas</a></li>
+      <li><a href="#infraestructura" data-spy>Infraestructura</a></li>
     </ul>
 
-    <div class="nav-acciones">
-      <details class="acceso" data-acceso>
-        <summary class="btn btn-line btn-sm">
-          Iniciar sesión
-          <svg class="ico ico-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg>
-        </summary>
-        <div class="acceso-panel">
-          <p class="acceso-titulo">¿A dónde quieres entrar?</p>
-          <a class="btn btn-crm btn-bloque" href="https://go.agoradigital.app/">
-            <span class="btn-txt">Inicio de sesión CRM<small>go.agoradigital.app</small></span>
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-          <a class="btn btn-fin btn-bloque" href="https://mi.agoradigital.app/">
-            <span class="btn-txt">Inicio de sesión · Módulo de Finanzas<small>mi.agoradigital.app</small></span>
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-          <ul class="acceso-anclas">
-            <li><a href="#modulos">Módulos</a></li>
-            <li><a href="#athena">Athena</a></li>
-            <li><a href="#precios">Precios</a></li>
-            <li><a href="#integraciones">Integraciones</a></li>
-            <li><a href="#demo">Diagnóstico</a></li>
-          </ul>
+    <div class="nav-actions">
+      <button class="icon-btn" data-theme-toggle aria-label="Cambiar tema">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <!-- Inicio de sesión: mismas URL que la versión anterior -->
+      <div class="dd login-dd">
+        <button class="link-btn dd-btn" aria-expanded="false">Iniciar sesión</button>
+        <div class="dd-menu dd-right">
+          <p class="dd-title">¿A dónde quieres entrar?</p>
+          <a href="https://go.agoradigital.app/"><b>Inicio de sesión CRM</b><span>go.agoradigital.app</span></a>
+          <a href="https://mi.agoradigital.app/"><b>Inicio de sesión · Módulo de Finanzas</b><span>mi.agoradigital.app</span></a>
         </div>
-      </details>
-
-      <a class="btn btn-demo btn-sm nav-demo" href="#demo">
-        Diagnóstico gratis
-        <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-      </a>
+      </div>
+      <a class="btn btn-primary btn-sm" href="#diagnostico">Diagnóstico gratis</a>
+      <button class="icon-btn menu-btn" data-menu aria-label="Abrir menú" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </nav>
+  <div class="mobile-menu" data-mobile-menu hidden>
+    <a href="#modulos">Productos</a><a href="#athena">Athena IA</a><a href="#precios">Precios</a>
+    <a href="#finanzas">Finanzas</a><a href="#integraciones">Integraciones</a><a href="#infraestructura">Infraestructura</a><a href="#seguridad">Seguridad</a>
+    <hr>
+    <a href="https://go.agoradigital.app/">Inicio de sesión CRM</a>
+    <a href="https://mi.agoradigital.app/">Inicio de sesión · Módulo de Finanzas</a>
+  </div>
 </header>
 
 <main id="contenido">
 
-<!-- ============ 2. Hero ============ -->
-<section class="hero" id="inicio" aria-labelledby="hero-titulo">
-  <div class="container hero-grid">
-    <div class="hero-copy">
-      <p class="pill pill-line hero-kicker">
-        <img src="assets/isotipo.svg" alt="" width="14" height="17">
-        CRM con WhatsApp, IA y finanzas para pymes
-      </p>
-      <h1 id="hero-titulo" class="hero-titulo">Quizá no perdiste la venta. Perdiste el <span class="pill-titular">momento</span>.</h1>
-      <p class="hero-sub">Agora Digital App reúne tus conversaciones, te muestra quién sigue esperando y le da seguimiento a cada oportunidad.</p>
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="container hero-inner">
 
-      <div class="hero-cta">
-        <div class="hero-botones">
-          <a class="btn btn-demo" href="#demo">
-            Agenda tu diagnóstico gratis de 20 minutos
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-          <a class="btn btn-line" href="#precios">Ver planes y precios</a>
-        </div>
-        <ul class="checks">
-          <li>Sin costo y sin compromiso</li>
-          <li>Solo 6 horarios por día</li>
-          <li>Confirmación por WhatsApp</li>
-        </ul>
-      </div>
+    <ul class="channels" aria-label="Canales que conectas">
+      <li class="ch wa" style="--i:0" title="WhatsApp"><i class="marca" style="--m:url(assets/brands/whatsapp.svg)"></i></li>
+      <li class="ch ig" style="--i:1" title="Instagram"><i class="marca" style="--m:url(assets/brands/instagram.svg)"></i></li>
+      <li class="ch fb" style="--i:2" title="Facebook"><i class="marca" style="--m:url(assets/brands/facebook.svg)"></i></li>
+      <li class="ch athena" style="--i:3" title="Athena IA"><img src="assets/athena-mini.webp" alt="" width="48" height="48"></li>
+      <li class="ch li" style="--i:4" title="LinkedIn"><i class="marca" style="--m:url(assets/brands/linkedin.svg)"></i></li>
+      <li class="ch tt" style="--i:5" title="TikTok"><i class="marca" style="--m:url(assets/brands/tiktok.svg)"></i></li>
+      <li class="ch web" style="--i:6" title="Tu web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></li>
+    </ul>
 
-      <div class="hero-acceso">
-        <p class="acceso-label" id="hero-acceso-t">¿Ya tienes cuenta?</p>
-        <div class="acceso-botones" role="group" aria-labelledby="hero-acceso-t">
-          <a class="btn btn-crm" href="https://go.agoradigital.app/">
-            Inicio de sesión CRM
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-          <a class="btn btn-fin" href="https://mi.agoradigital.app/">
-            Inicio de sesión · Módulo de Finanzas
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-        </div>
-      </div>
+    <a class="badge" href="#athena"><span class="badge-dot"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span> CRM con WhatsApp, IA y finanzas para pymes <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+
+    <h1 class="hero-title">
+      Quizá no perdiste la&nbsp;venta. Perdiste el <mark class="pill">momento</mark>.
+    </h1>
+    <p class="hero-sub">Agora Digital App reúne tus conversaciones, te muestra quién sigue esperando y le da seguimiento a cada oportunidad.</p>
+
+    <div class="cta-row">
+      <a class="btn btn-gold btn-lg" href="#diagnostico" data-track="hero_cta">Quiero mi diagnóstico gratis <span class="btn-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <a class="btn btn-soft btn-lg" href="#precios">Ver planes y precios</a>
     </div>
+    <ul class="checks">
+      <li>Sin costo y sin compromiso</li>
+      <li>Solo 6 horarios por día</li>
+      <li>Confirmación por WhatsApp</li>
+    </ul>
+    <p class="have-account">¿Ya tienes cuenta? <a href="https://go.agoradigital.app/">Inicio de sesión CRM</a> · <a href="https://mi.agoradigital.app/">Inicio de sesión · Módulo de Finanzas</a></p>
 
-    <figure class="hero-visual">
-      <ul class="canales" aria-label="Canales que conectas">
-        <li class="c-wa" title="WhatsApp"><i class="marca" style="--m:url(assets/brands/whatsapp.svg)"></i></li>
-        <li class="c-ig" title="Instagram"><i class="marca" style="--m:url(assets/brands/instagram.svg)"></i></li>
-        <li class="c-fb" title="Facebook"><i class="marca" style="--m:url(assets/brands/facebook.svg)"></i></li>
-        <li class="c-athena" title="Athena IA"><img src="assets/athena-mini.webp" alt="" width="52" height="52"></li>
-        <li class="c-li" title="LinkedIn"><i class="marca" style="--m:url(assets/brands/linkedin.svg)"></i></li>
-        <li class="c-tt" title="TikTok"><i class="marca" style="--m:url(assets/brands/tiktok.svg)"></i></li>
-        <li class="c-web" title="Tu web"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></li>
-      </ul>
-      <div class="browser browser--hero">
-        <div class="browser-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="url">go.agoradigital.app/conversaciones</span></div>
-        <img src="assets/screens/conversaciones.webp" width="1542" height="754" alt="Bandeja de conversaciones de Agora Digital App con mensajes de TikTok, WhatsApp e Instagram y la ficha del contacto.">
+    <div class="browser browser--hero reveal">
+      <div class="browser-bar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="url">go.agoradigital.app/conversaciones</span>
       </div>
-      <figcaption class="pill pill-oro hero-pie">Así se ve tu bandeja: todos los canales, un solo lugar.</figcaption>
-    </figure>
+      <img src="assets/screens/conversaciones.webp" width="1542" height="754" alt="Bandeja de conversaciones de Agora Digital App con mensajes de TikTok, WhatsApp e Instagram y la ficha del contacto.">
+    </div>
   </div>
 </section>
 
-<!-- ============ Clientes: datos en config.js ============ -->
-<section class="clientes" id="clientes" aria-labelledby="clientes-t" data-clients hidden>
-  <div class="container"><p class="eyebrow" id="clientes-t">Negocios que ya trabajan con Agora Digital App</p></div>
+
+<!-- CLIENTES: datos en config.js (clients). Logos en assets/clientes/<handle>.png|svg -->
+<section class="proof" aria-labelledby="proof-t" data-clients hidden>
+  <p class="eyebrow" id="proof-t">Negocios que ya trabajan con Agora Digital</p>
   <div class="marquee" data-marquee><div class="marquee-track" data-mtrack></div></div>
   <div class="client-tip" data-tip role="tooltip" hidden></div>
 </section>
@@ -172,14 +144,14 @@
     <div class="costo-grid">
       <header class="costo-copy reveal">
         <p class="eyebrow">El costo de no responder a tiempo</p>
-        <h2 id="costo-titulo" class="h2">Cada hora sin respuesta, la venta se enfría.</h2>
+        <h2 id="costo-titulo" class="h2 left">Cada hora sin respuesta, la venta se enfría.</h2>
         <p class="lead lead--claro">Alguien te escribe. Tu equipo responde tarde, se le olvida, o lo atendió por Instagram y nadie más lo sabe. Ese cliente le compra a quien le contestó primero.</p>
       </header>
-      <div class="hero-chat costo-chat" data-costo-chat>
+      <div class="costo-chat" data-costo-chat>
         <p class="hb hb-vino">Te escribieron el martes.</p>
         <p class="hb hb-blanco">Respondiste el jueves.</p>
         <p class="hb hb-vino hb-fuerte">Ya habían comprado.</p>
-        <p class="pill pill-oro hero-pie">Agora Digital App te ayuda a responder a tiempo.</p>
+        <p class="costo-pie">Agora Digital App te ayuda a responder a tiempo.</p>
       </div>
     </div>
     <div class="stats">
@@ -206,7 +178,7 @@
 <!-- ============ Canales e integraciones ============ -->
 <section class="section integraciones" id="integraciones" aria-labelledby="integra-titulo">
   <div class="container">
-    <header class="section-head section-head--centro reveal">
+    <header class="sec-head sec-head--centro reveal">
       <p class="eyebrow">Canales e integraciones</p>
       <h2 id="integra-titulo" class="h2">Todos tus canales. Una sola bandeja.</h2>
     </header>
@@ -241,17 +213,17 @@
     <div class="chips integra-filtros" role="group" aria-label="Categorías" data-integra-filtros></div>
     <ul class="integra-grid" data-integra-grid></ul>
     <p class="integra-vacio" data-integra-vacio hidden>No encontramos esa integración. Pregúntanos en el diagnóstico: probablemente se puede conectar.</p>
-    <button type="button" class="btn btn-line integra-mas" data-integra-mas hidden>Ver todas</button>
+    <button type="button" class="btn btn-outline integra-mas" data-integra-mas hidden>Ver todas</button>
   </div>
 </section>
 
 <!-- ============ Infraestructura ============ -->
-<section class="section infra" id="infraestructura" aria-labelledby="infra-titulo">
+<section class="section infra-sec" id="infraestructura" aria-labelledby="infra-titulo">
   <div class="container">
     <div class="infra-head reveal">
       <div>
-        <p class="eyebrow">Automatiza · Infraestructura Agora Digital App <span class="pill pill-line pill-mini">Aliado oficial</span></p>
-        <h2 id="infra-titulo" class="h2">El motor que trabaja mientras tú vendes.</h2>
+        <p class="eyebrow">Automatiza · Infraestructura Agora Digital App <span class="aliado">Aliado oficial</span></p>
+        <h2 id="infra-titulo" class="h2 left">El motor que trabaja mientras tú vendes.</h2>
       </div>
       <p class="lead">Bandeja, flujos automáticos, embudos, calendarios y reportes sobre una sola infraestructura. Lo configuras una vez y Agora Digital App lo ejecuta todos los días.</p>
     </div>
@@ -314,317 +286,153 @@
 <!-- ============ Seguridad ============ -->
 <section class="section seguridad" id="seguridad" aria-labelledby="seg-titulo">
   <div class="container">
-    <header class="section-head reveal">
+    <header class="sec-head reveal">
       <p class="eyebrow">Seguridad</p>
-      <h2 id="seg-titulo" class="h2">Tus datos y los de tus clientes, protegidos.</h2>
+      <h2 id="seg-titulo" class="h2 left">Tus datos y los de tus clientes, protegidos.</h2>
     </header>
     <div class="seg-grid">
-      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span><h3 class="h3">Conexión cifrada siempre</h3><p>Todo el tráfico viaja por HTTPS con HSTS activo.</p></article>
-      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><circle cx="5" cy="11" r="2.5"/><path d="m6.8 9.2 6-6M10.5 5.5l1.5 1.5"/></svg></span><h3 class="h3">Sesiones seguras</h3><p>Tu sesión vive en cookies protegidas que el navegador no expone.</p></article>
-      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><path d="M8 1.5 2.5 3.5v4c0 3.3 2.3 6 5.5 7 3.2-1 5.5-3.7 5.5-7v-4z"/><path d="m5.5 8 2 2 3-3.5"/></svg></span><h3 class="h3">Accesos por rol y auditoría</h3><p>Cada persona ve lo que le toca y cada cambio queda registrado.</p></article>
-      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><path d="M2.5 11a5.5 5.5 0 1 1 11 0"/><path d="m8 11 3-3.5"/></svg></span><h3 class="h3">Protección contra abuso</h3><p>Verificación invisible y límites de intentos en cada formulario.</p></article>
+      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span><h3 class="sec-h3">Conexión cifrada siempre</h3><p>Todo el tráfico viaja por HTTPS con HSTS activo.</p></article>
+      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><circle cx="5" cy="11" r="2.5"/><path d="m6.8 9.2 6-6M10.5 5.5l1.5 1.5"/></svg></span><h3 class="sec-h3">Sesiones seguras</h3><p>Tu sesión vive en cookies protegidas que el navegador no expone.</p></article>
+      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><path d="M8 1.5 2.5 3.5v4c0 3.3 2.3 6 5.5 7 3.2-1 5.5-3.7 5.5-7v-4z"/><path d="m5.5 8 2 2 3-3.5"/></svg></span><h3 class="sec-h3">Accesos por rol y auditoría</h3><p>Cada persona ve lo que le toca y cada cambio queda registrado.</p></article>
+      <article class="seg-card reveal"><span class="seg-ico"><svg class="ico" viewBox="0 0 16 16"><path d="M2.5 11a5.5 5.5 0 1 1 11 0"/><path d="m8 11 3-3.5"/></svg></span><h3 class="sec-h3">Protección contra abuso</h3><p>Verificación invisible y límites de intentos en cada formulario.</p></article>
     </div>
   </div>
 </section>
 
 
-<!-- ============ 3. Módulos · carrusel con gestos ============ -->
-<section class="section modulos" id="modulos" aria-labelledby="modulos-titulo">
-  <div class="container">
-    <header class="section-head reveal">
-      <p class="eyebrow">Módulos</p>
-      <h2 id="modulos-titulo" class="h2"><span class="nw">Vende más</span> · <span class="nw">Trabaja menos</span> · <span class="nw">Todo conectado</span></h2>
-      <p class="lead">Desliza y mira cómo cambia tu día, módulo por módulo.</p>
-    </header>
-  </div>
-
-  <div class="carrusel" data-carrusel role="region" aria-roledescription="carrusel" aria-label="Módulos de Agora Digital App">
-    <div class="container">
-      <div class="progreso" role="group" aria-label="Elegir módulo">
-        <button type="button" class="seg" data-ir="0" aria-label="Módulo 1 de 6: Conversaciones" aria-current="true"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
-        <button type="button" class="seg" data-ir="1" aria-label="Módulo 2 de 6: Respuesta a tiempo"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
-        <button type="button" class="seg" data-ir="2" aria-label="Módulo 3 de 6: Seguimiento"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
-        <button type="button" class="seg" data-ir="3" aria-label="Módulo 4 de 6: Historia del cliente"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
-        <button type="button" class="seg" data-ir="4" aria-label="Módulo 5 de 6: Contratos"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
-        <button type="button" class="seg" data-ir="5" aria-label="Módulo 6 de 6: Módulo de Finanzas"><span class="seg-barra"><span class="seg-relleno"></span></span></button>
+<!-- MÓDULOS (bento) -->
+<section class="section container" id="modulos">
+  <p class="eyebrow">Módulos</p>
+  <h2 class="h2">Vende más. Trabaja menos.<br>Todo conectado.</h2>
+  <div class="bento">
+    <article class="b-card span2 reveal">
+      <p class="num">01 · Conversaciones</p>
+      <h3>Que ninguna conversación se pierda.</h3>
+      <p class="muted">WhatsApp, Instagram, Facebook, correo y tu web llegan a una sola bandeja, con la ficha de cada cliente.</p>
+      <div class="ba"><p><b>Antes</b>Saltas entre WhatsApp, Instagram y Facebook. Mientras respondes uno, llegan cinco más.</p><p><b>Después</b>Todo en un solo lugar y ves quién sigue esperando.</p></div>
+    </article>
+    <article class="b-card reveal">
+      <p class="num">02 · Respuesta a tiempo</p>
+      <h3>Responde aunque no estés conectado.</h3>
+      <div class="chat-mini">
+        <span class="t">11:40 p. m.</span>
+        <p class="in">Hola, ¿tienen cupo el sábado?</p>
+        <p class="out">¡Hola! Sí. ¿Te agendo el sábado a las 10:00?</p>
+        <p class="in">Sí, por favor.</p>
+        <span class="ok">Cita lista · sábado 10:00</span>
       </div>
-    </div>
-
-    <div class="ventana" data-ventana tabindex="0">
-      <div class="pista" id="pista-modulos" data-pista>
-
-        <!-- 01 · Conversaciones -->
-        <div class="mod is-activo" role="group" aria-roledescription="módulo" aria-label="1 de 6: Conversaciones" data-slug="conversaciones" data-nombre="Conversaciones">
-          <div class="mod-copy">
-            <p class="mod-kicker">01 · Conversaciones</p>
-            <h3 class="mod-titulo">Que ninguna conversación se pierda.</h3>
-            <p class="mod-texto">WhatsApp, Instagram, Facebook, correo y tu web llegan a una sola bandeja, con la ficha de cada cliente.</p>
-            <dl class="ad">
-              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Saltas entre WhatsApp, Instagram y Facebook. Mientras respondes uno, llegan cinco más.</dd></div>
-              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Todo en un solo lugar y ves quién sigue esperando.</dd></div>
-            </dl>
-          </div>
-          <div class="mod-panel mod-panel--vino" aria-hidden="true">
-            <div class="mock mock-bandeja">
-              <ul class="mock-canales"><li>WhatsApp</li><li>Instagram</li><li>Facebook</li><li>Correo</li><li>Web</li></ul>
-              <div class="mock-card">
-                <p class="mock-card-h"><b>Bandeja</b><span class="chip chip-oro">2 esperando</span></p>
-                <ul class="mock-filas">
-                  <li class="is-espera"><span class="av">LG</span><span class="fila-t"><b>Luis</b><small>¿Tienen envío a Maracay?</small></span><span class="chip">WhatsApp</span></li>
-                  <li class="is-espera"><span class="av">AR</span><span class="fila-t"><b>Andrea</b><small>Quiero cotizar para mi equipo</small></span><span class="chip">Correo</span></li>
-                  <li><span class="av">MP</span><span class="fila-t"><b>Mariana</b><small>Perfecto, el jueves a las 10.</small></span><span class="chip">Instagram</span></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 02 · Respuesta a tiempo -->
-        <div class="mod" role="group" aria-roledescription="módulo" aria-label="2 de 6: Respuesta a tiempo" data-slug="respuesta" data-nombre="Respuesta a tiempo">
-          <div class="mod-copy">
-            <p class="mod-kicker">02 · Respuesta a tiempo</p>
-            <h3 class="mod-titulo">Responde a tiempo, aunque no estés conectado.</h3>
-            <p class="mod-texto">Agora Digital App puede responder las preguntas iniciales, entender qué necesita tu cliente y ayudarle a agendar una cita.</p>
-            <dl class="ad">
-              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Te escribieron a las 11:40 p. m. Respondiste 12 horas después.</dd></div>
-              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Amaneces con la conversación encaminada y una cita lista.</dd></div>
-            </dl>
-          </div>
-          <div class="mod-panel mod-panel--azul" aria-hidden="true">
-            <div class="mock mock-chat">
-              <p class="mock-hora">11:40 p. m.</p>
-              <p class="m-burbuja m-in">Hola, ¿tienen cupo el sábado?</p>
-              <p class="m-burbuja m-out">¡Hola! Sí. ¿Te agendo el sábado a las 10:00?</p>
-              <p class="m-burbuja m-in">Sí, por favor.</p>
-              <p class="chip chip-oro chip-lg">Cita lista · sábado 10:00</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 03 · Seguimiento -->
-        <div class="mod" role="group" aria-roledescription="módulo" aria-label="3 de 6: Seguimiento" data-slug="seguimiento" data-nombre="Seguimiento">
-          <div class="mod-copy">
-            <p class="mod-kicker">03 · Seguimiento</p>
-            <h3 class="mod-titulo">Vuelve a aparecer en el momento adecuado.</h3>
-            <p class="mod-texto">Cada oportunidad tiene un siguiente paso y una fecha. Si corresponde, el sistema puede enviar el mensaje por ti.</p>
-            <dl class="ad">
-              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>«Le escribo mañana». Pasaron 12 días.</dd></div>
-              <div class="ad-fila ad-despues"><dt>Después</dt><dd>El sistema recuerda y la conversación sigue viva.</dd></div>
-            </dl>
-          </div>
-          <div class="mod-panel mod-panel--vino" aria-hidden="true">
-            <ol class="mock mock-card mock-pasos">
-              <li class="is-hecho"><span class="paso-i"></span><span class="paso-t"><b>Propuesta enviada</b><small>Lunes 10:40</small></span></li>
-              <li class="is-proximo"><span class="paso-i"></span><span class="paso-t"><b>Retomar la conversación</b><small>Jueves 9:00 · mensaje programado</small></span></li>
-              <li><span class="paso-i"></span><span class="paso-t"><b>El cliente responde</b><small>La conversación sigue viva</small></span></li>
-            </ol>
-          </div>
-        </div>
-
-        <!-- 04 · Historia del cliente -->
-        <div class="mod" role="group" aria-roledescription="módulo" aria-label="4 de 6: Historia del cliente" data-slug="historia" data-nombre="Historia del cliente">
-          <div class="mod-copy">
-            <p class="mod-kicker">04 · Historia del cliente</p>
-            <h3 class="mod-titulo">La memoria de tu negocio, para todo tu equipo.</h3>
-            <p class="mod-texto">Queda registrado quién escribió, qué preguntó, qué le ofreciste y cuál es el siguiente paso. Cada conversación tiene un responsable.</p>
-            <dl class="ad">
-              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Dos personas del equipo, dos precios distintos, un mismo cliente.</dd></div>
-              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Un cliente, una historia.</dd></div>
-            </dl>
-          </div>
-          <div class="mod-panel mod-panel--azul" aria-hidden="true">
-            <div class="mock mock-card mock-ficha">
-              <p class="ficha-h"><span class="av av-vino">AR</span><span class="fila-t"><b>Andrea Rojas</b><small>Escribió por Instagram</small></span></p>
-              <dl class="ficha-datos">
-                <div><dt>Preguntó</dt><dd>Precio para su equipo</dd></div>
-                <div><dt>Le ofreciste</dt><dd>Propuesta del lunes</dd></div>
-                <div><dt>Siguiente paso</dt><dd>Llamada el jueves</dd></div>
-                <div><dt>Responsable</dt><dd><span class="chip chip-oro">Ana</span></dd></div>
-              </dl>
-            </div>
-          </div>
-        </div>
-
-        <!-- 05 · Contratos -->
-        <div class="mod" role="group" aria-roledescription="módulo" aria-label="5 de 6: Contratos" data-slug="contratos" data-nombre="Contratos">
-          <div class="mod-copy">
-            <p class="mod-kicker">05 · Contratos</p>
-            <h3 class="mod-titulo">Menos pasos para decir que sí.</h3>
-            <p class="mod-texto">Tu cliente recibe el contrato y lo firma desde la misma conversación.</p>
-            <dl class="ad">
-              <div class="ad-fila ad-antes"><dt>Antes</dt><dd>Imprimir. Firmar. Escanear. Tres días de espera.</dd></div>
-              <div class="ad-fila ad-despues"><dt>Después</dt><dd>Dos toques. Firmado.</dd></div>
-            </dl>
-          </div>
-          <div class="mod-panel mod-panel--vino" aria-hidden="true">
-            <div class="mock mock-card mock-contrato">
-              <p class="contrato-h"><b>Contrato de servicio</b><small>Enviado en la conversación</small></p>
-              <span class="ln" style="--w:92%"></span>
-              <span class="ln" style="--w:78%"></span>
-              <span class="ln" style="--w:86%"></span>
-              <span class="ln" style="--w:58%"></span>
-              <svg class="firma" viewBox="0 0 160 40" focusable="false"><path d="M6 30c12-17 20-22 25-15s-8 17 2 12 15-19 22-14-3 14 8 10 12-12 20-9 5 9 15 7 17-7 26-6"/></svg>
-              <p class="chip chip-oro chip-lg">Dos toques. Firmado.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 06 · Módulo de Finanzas -->
-        <div class="mod" role="group" aria-roledescription="módulo" aria-label="6 de 6: Módulo de Finanzas" data-slug="finanzas" data-nombre="Módulo de Finanzas">
-          <div class="mod-copy">
-            <p class="mod-kicker">06 · Módulo de Finanzas</p>
-            <h3 class="mod-titulo">Tus ventas y tus números, todo conectado.</h3>
-            <p class="mod-texto">Agora Digital App es un CRM con módulo de finanzas. Si ya tienes cuenta, entra desde aquí.</p>
-            <p class="mod-ancla">Menos plataformas sueltas. <strong>Más ventas cerradas.</strong></p>
-            <a class="btn btn-fin" href="https://mi.agoradigital.app/">
-              Inicio de sesión · Módulo de Finanzas
-              <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-            </a>
-          </div>
-          <div class="mod-panel mod-panel--azul" aria-hidden="true">
-            <span class="marca-agua marca-agua--panel"></span>
-            <div class="mock mock-conexion">
-              <span class="nodo">CRM</span>
-              <span class="conector"></span>
-              <span class="nodo nodo-oro">Finanzas</span>
-              <p class="conexion-t">Todo conectado</p>
-            </div>
-          </div>
-        </div>
-
+    </article>
+    <article class="b-card reveal">
+      <p class="num">03 · Seguimiento</p>
+      <h3>Vuelve a aparecer en el momento adecuado.</h3>
+      <div class="ba"><p><b>Antes</b>«Le escribo mañana». Pasaron 12 días.</p><p><b>Después</b>El sistema recuerda y la conversación sigue viva.</p></div>
+    </article>
+    <article class="b-card reveal">
+      <p class="num">04 · Historia del cliente</p>
+      <h3>La memoria de tu negocio, para todo tu equipo.</h3>
+      <div class="ba"><p><b>Antes</b>Dos personas, dos precios distintos, un mismo cliente.</p><p><b>Después</b>Un cliente, una historia.</p></div>
+    </article>
+    <article class="b-card reveal">
+      <p class="num">05 · Contratos</p>
+      <h3>Menos pasos para decir que sí.</h3>
+      <div class="ba"><p><b>Antes</b>Imprimir. Firmar. Escanear. Tres días de espera.</p><p><b>Después</b>Dos toques. Firmado.</p></div>
+    </article>
+    <article class="b-card span3 finance reveal" id="finanzas">
+      <div>
+        <p class="num">06 · Módulo de Finanzas</p>
+        <h3>Tus ventas y tus números, todo conectado.</h3>
+        <p class="muted">Caja, cobros multimoneda (USD, bolívares, Binance) e informes, conectados a cada venta del CRM. Menos plataformas sueltas. Más ventas cerradas.</p>
+        <a class="btn btn-outline btn-sm" href="https://mi.agoradigital.app/">Inicio de sesión · Módulo de Finanzas</a>
       </div>
-    </div>
-
-    <div class="container controles">
-      <button type="button" class="btn btn-line btn-paso" data-anterior aria-controls="pista-modulos" aria-disabled="true">
-        <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M12.5 8h-9M7 4.5 3.5 8 7 11.5"/></svg>
-        Anterior
-      </button>
-      <p class="contador" aria-hidden="true"><span data-actual>1</span> / 6</p>
-      <button type="button" class="btn btn-line btn-paso" data-siguiente aria-controls="pista-modulos">
-        Siguiente
-        <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg>
-      </button>
-      <p class="sr-only" aria-live="polite" aria-atomic="true" data-anuncio></p>
-    </div>
-    <p class="container caption">Ilustraciones con datos de ejemplo.</p>
+      <div class="bars big" aria-hidden="true"><i style="--h:35%"></i><i style="--h:58%"></i><i style="--h:46%"></i><i style="--h:72%"></i><i style="--h:64%"></i><i style="--h:92%"></i></div>
+    </article>
   </div>
+  <p class="muted small center">Ilustraciones con datos de ejemplo.</p>
 </section>
 
-<!-- ============ 4. Athena · escrita, sin voz ============ -->
-<section class="section athena" id="athena" aria-labelledby="athena-titulo">
-  <span class="marca-agua marca-agua--athena" aria-hidden="true"></span>
+<!-- ATHENA -->
+<section class="section athena-sec" id="athena">
   <div class="container athena-grid">
-    <div class="athena-copy">
-      <p class="pill pill-oro">Agente de IA</p>
-      <h2 id="athena-titulo" class="h2">¡Conoce a Athena!</h2>
-      <p class="lead lead--claro">La agente de inteligencia artificial de Agora Digital App.</p>
-
-      <div class="athena-chat" data-athena>
-        <p class="athena-quien" aria-hidden="true">
-          <img class="athena-mini" src="assets/athena-mini.webp" alt="" width="40" height="40" loading="lazy" decoding="async">
-          Athena
-        </p>
-        <ol class="athena-mensajes" data-mensajes>
-          <li class="msg"><span class="sr-only">Hola, soy Athena.</span><span class="msg-medida" aria-hidden="true">Hola, soy Athena.</span><span class="msg-escrito" aria-hidden="true"></span></li>
-          <li class="msg"><span class="sr-only">Cuando alguien pregunta, está prestando atención.</span><span class="msg-medida" aria-hidden="true">Cuando alguien pregunta, está prestando atención.</span><span class="msg-escrito" aria-hidden="true"></span></li>
-          <li class="msg"><span class="sr-only">No tienes que vivir pegado al teléfono.</span><span class="msg-medida" aria-hidden="true">No tienes que vivir pegado al teléfono.</span><span class="msg-escrito" aria-hidden="true"></span></li>
-          <li class="msg"><span class="sr-only">¿Te muestro, sin costo, cómo podría funcionar en tu negocio?</span><span class="msg-medida" aria-hidden="true">¿Te muestro, sin costo, cómo podría funcionar en tu negocio?</span><span class="msg-escrito" aria-hidden="true"></span></li>
-        </ol>
-        <p class="sr-only" aria-live="polite" data-athena-anuncio></p>
-
-        <div class="athena-acciones">
-          <div class="athena-controles" data-athena-controles>
-            <button type="button" class="btn btn-line btn-line--claro btn-sm" data-athena-siguiente>Siguiente mensaje</button>
-            <button type="button" class="btn-texto" data-athena-omitir>Omitir animación</button>
-            <p class="athena-pista" aria-hidden="true">o toca la burbuja</p>
-          </div>
-          <a class="btn btn-demo athena-cta" data-athena-cta href="#demo">
-            Agenda tu demo gratis de 20 minutos
-            <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-          </a>
-        </div>
+    <div>
+      <p class="eyebrow">Agente de IA</p>
+      <h2 class="h2 left">¡Conoce a Athena!</h2>
+      <p class="lead">La agente de inteligencia artificial de Agora Digital App. Responde las preguntas iniciales, entiende qué necesita tu cliente y le agenda una cita, a cualquier hora.</p>
+      <div class="athena-chat" data-athena-chat aria-live="polite"></div>
+      <div class="cta-row left">
+        <button class="btn btn-primary" data-open-chat>Habla con Athena ahora</button>
+        <a class="btn btn-soft" href="#diagnostico">Ver cómo funcionaría en mi negocio</a>
       </div>
     </div>
-
-    <figure class="athena-figura" data-athena-figura>
-      <img src="assets/athena.webp"
-           width="480" height="498" loading="lazy" decoding="async"
-           alt="Athena, la agente de IA de Agora Digital App: casco plateado con laureles dorados y chaqueta blanca.">
-    </figure>
+    <figure class="athena-fig reveal"><img src="assets/athena.webp" alt="Athena, la agente de IA de Agora Digital App" loading="lazy" width="460" height="460"></figure>
   </div>
 </section>
 
-
-<!-- ============ Precios ============ -->
-<section class="section precios" id="precios" aria-labelledby="precios-titulo">
-  <span class="marca-agua marca-agua--precios" aria-hidden="true"></span>
+<!-- PRECIOS -->
+<section class="section pricing" id="precios">
   <div class="container">
-    <header class="section-head section-head--centro reveal">
-      <p class="eyebrow">Precios en dólares (USD)</p>
-      <h2 id="precios-titulo" class="h2">Empieza donde estás. Escala sin cambiar de sistema.</h2>
-      <div class="billing" role="group" aria-label="Facturación">
-        <button type="button" aria-pressed="true" data-billing="m">Mensual</button>
-        <button type="button" aria-pressed="false" data-billing="y">Anual <span>−2 meses</span></button>
-      </div>
-    </header>
+    <p class="eyebrow center">Precios en dólares (USD)</p>
+    <h2 class="h2">Empieza donde estás. Escala<br>sin cambiar de sistema.</h2>
+    <div class="billing" role="group" aria-label="Facturación">
+      <button aria-pressed="true" data-billing="m">Mensual</button>
+      <button aria-pressed="false" data-billing="y">Anual <span>−2 meses</span></button>
+    </div>
     <div class="plans">
-      <article class="plan reveal" data-price="50">
+      <article class="plan reveal" data-plan="Bronce" data-price="50">
         <p class="tier">Bronce</p>
-        <p class="price">USD <b data-amount>50</b><span data-per>/mes</span></p>
-        <h3 class="h3">Ordena tu negocio.</h3>
-        <p class="plan-pers">Hasta 3 personas.</p>
+        <p class="price">USD <b data-amount>50</b><span>/mes</span></p>
+        <h3>Ordena tu negocio.</h3>
+        <p class="muted small">Hasta 3 personas.</p>
         <ul><li>Contactos en un solo lugar</li><li>Estado de cada venta</li><li>Citas sin doble reserva</li></ul>
-        <a class="btn btn-line btn-line--claro btn-bloque" href="#demo" data-choose="Bronce">Elegir Bronce</a>
+        <a class="btn btn-outline w" href="#diagnostico" data-choose="Bronce">Elegir Bronce</a>
       </article>
-      <article class="plan reveal" data-price="100">
+      <article class="plan reveal" data-plan="Plata" data-price="100">
         <p class="tier">Plata</p>
-        <p class="price">USD <b data-amount>100</b><span data-per>/mes</span></p>
-        <h3 class="h3">Deja de perseguir clientes.</h3>
-        <p class="plan-pers">Hasta 10 personas.</p>
+        <p class="price">USD <b data-amount>100</b><span>/mes</span></p>
+        <h3>Deja de perseguir clientes.</h3>
+        <p class="muted small">Hasta 10 personas.</p>
         <ul><li>Todo lo del Bronce</li><li>Seguimiento automático por correo y WhatsApp</li><li>Asistente que te propone respuestas</li></ul>
-        <a class="btn btn-line btn-line--claro btn-bloque" href="#demo" data-choose="Plata">Elegir Plata</a>
+        <a class="btn btn-outline w" href="#diagnostico" data-choose="Plata">Elegir Plata</a>
       </article>
-      <article class="plan plan--oro reveal" data-price="150">
+      <article class="plan featured reveal" data-plan="Oro" data-price="150">
         <span class="rec">Recomendado</span>
         <p class="tier">Oro</p>
-        <p class="price">USD <b data-amount>150</b><span data-per>/mes</span></p>
-        <h3 class="h3">Domina tu ecosistema.</h3>
-        <p class="plan-pers">Hasta 20 personas.</p>
+        <p class="price">USD <b data-amount>150</b><span>/mes</span></p>
+        <h3>Domina tu ecosistema.</h3>
+        <p class="muted small">Hasta 20 personas.</p>
         <ul><li>Todo lo del Plata</li><li>Athena responde y agenda sola</li><li>Contratos y firma digital</li><li>Reseñas, cursos y membresías</li></ul>
-        <a class="btn btn-demo btn-bloque" href="#demo" data-choose="Oro">Elegir Oro <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span></a>
+        <a class="btn btn-gold w" href="#diagnostico" data-choose="Oro">Elegir Oro <span class="btn-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
       </article>
-      <article class="plan reveal" data-price="250">
+      <article class="plan reveal" data-plan="Diamante" data-price="250">
         <p class="tier">Diamante</p>
-        <p class="price">USD <b data-amount>250</b><span data-per>/mes</span></p>
-        <h3 class="h3">Sin límites.</h3>
-        <p class="plan-pers">Usuarios ilimitados.</p>
+        <p class="price">USD <b data-amount>250</b><span>/mes</span></p>
+        <h3>Sin límites.</h3>
+        <p class="muted small">Usuarios ilimitados.</p>
         <ul><li>Todo lo del Oro</li><li>Analítica y retorno de cada campaña</li><li>Soporte dedicado e integraciones a medida</li></ul>
-        <a class="btn btn-line btn-line--claro btn-bloque" href="#demo" data-choose="Diamante">Elegir Diamante</a>
+        <a class="btn btn-outline w" href="#diagnostico" data-choose="Diamante">Elegir Diamante</a>
       </article>
     </div>
     <p class="fine">La conexión oficial de WhatsApp Business se paga aparte a Meta: <b>USD 20/mes</b>. El módulo de Finanzas se cotiza según tu operación. Aceptamos USD, bolívares y Binance.</p>
   </div>
 </section>
 
-<!-- ============ Diagnóstico + acceso ============ -->
-<section class="section demo" id="demo" aria-labelledby="demo-titulo">
-  <div class="container demo-grid">
-    <div class="demo-panel reveal">
-      <span class="marca-agua marca-agua--demo" aria-hidden="true"></span>
-      <p class="pill pill-line pill-line--claro">Diagnóstico gratis · 20 min</p>
-      <h2 id="demo-titulo" class="h2">En 20 minutos podemos encontrar dónde se traban tus ventas.</h2>
-      <p class="lead lead--claro">No vamos a darte un catálogo de soluciones. Vamos a revisar tus mensajes, tiempos y seguimientos.</p>
-      <p class="demo-promesa">Si Agora Digital App no es para ti, igual te llevas el diagnóstico.</p>
-      <p class="nota nota--claro">Sin costo y sin compromiso. También puedes escribirnos a <a href="mailto:info@agoradigital.app">info@agoradigital.app</a>.</p>
+
+
+<!-- DIAGNÓSTICO (formulario integrado) -->
+<section class="section diag" id="diagnostico">
+  <div class="container diag-grid">
+    <div class="diag-copy">
+      <p class="eyebrow">Diagnóstico gratis · 20 min</p>
+      <h2 class="h2 left">En 20 minutos encontramos dónde se traban tus ventas.</h2>
+      <p class="lead">No vamos a darte un catálogo de soluciones. Vamos a revisar tus mensajes, tiempos y seguimientos.</p>
+      <ul class="checks col"><li>Sin costo y sin compromiso</li><li>Confirmación por WhatsApp</li><li>Si no es para ti, igual te llevas el diagnóstico</li></ul>
     </div>
 
-    <form class="booking reveal" data-booking novalidate>
-      <h3 class="h3">Reserva tu diagnóstico de ventas</h3>
-      <p class="booking-sub">Elige el día y la hora. Solo te toma un minuto.</p>
+    <form class="booking" data-booking novalidate>
+      <h3>Reserva tu diagnóstico de ventas</h3>
+      <p class="muted small">Elige el día y la hora. Solo te toma un minuto.</p>
       <div class="progress"><span data-progress-label>Empecemos</span><b data-progress-pct>0 %</b><div class="bar"><i data-progress-bar></i></div></div>
 
-      <fieldset class="chips">
+      <fieldset class="goal">
         <legend>¿Qué quieres mejorar primero?</legend>
         <label><input type="radio" name="objetivo" value="Vender más" checked><span>Vender más</span></label>
         <label><input type="radio" name="objetivo" value="Mis números"><span>Mis números</span></label>
@@ -643,14 +451,14 @@
       </div>
       <p class="hint" data-suggest hidden></p>
 
-      <fieldset class="chips slots">
+      <fieldset class="slots">
         <legend>Hora (Caracas, UTC−4)</legend>
         <div data-slots></div>
         <p class="slot-note" data-slot-note></p>
       </fieldset>
 
       <details class="more">
-        <summary>Agregar empresa, correo o detalles (opcional)</summary>
+        <summary>Agregar correo o detalles (opcional)</summary>
         <div class="grid2">
           <label class="field"><span>Empresa</span><input name="empresa" autocomplete="organization" placeholder="Panadería La Esquina"></label>
           <label class="field"><span>Correo</span><input name="correo" type="email" autocomplete="email" placeholder="juana@laesquina.com"></label>
@@ -660,80 +468,33 @@
       <input type="hidden" name="plan" value="">
       <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
-      <button class="btn btn-demo btn-bloque" type="submit">Quiero mi diagnóstico gratis <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span></button>
+      <button class="btn btn-gold btn-lg w" type="submit">Quiero mi diagnóstico gratis <span class="btn-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
       <p class="form-msg" data-form-msg role="status"></p>
     </form>
   </div>
-
-  <div class="container">
-    <aside class="acceso-card acceso-card--fila reveal" aria-labelledby="acceso-titulo">
-      <div>
-        <h3 id="acceso-titulo" class="h3">¿Ya tienes cuenta?</h3>
-        <p>Entra directo a tu herramienta.</p>
-      </div>
-      <a class="btn btn-crm btn-bloque" href="https://go.agoradigital.app/">
-        <span class="btn-txt">Inicio de sesión CRM<small>go.agoradigital.app</small></span>
-        <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-      </a>
-      <a class="btn btn-fin btn-bloque" href="https://mi.agoradigital.app/">
-        <span class="btn-txt">Inicio de sesión · Módulo de Finanzas<small>mi.agoradigital.app</small></span>
-        <span class="btn-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 16 16" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></span>
-      </a>
-    </aside>
-  </div>
 </section>
-
-
 </main>
 
-<!-- ============ Pie ============ -->
 <footer class="footer">
-  <div class="container footer-top">
-    <div class="footer-marca">
-      <span class="logo-blanco" role="img" aria-label="Agora Digital App"></span>
-      <p class="footer-eslogan">Cada conversación, una oportunidad.</p>
-      <p class="footer-ancla">Menos plataformas sueltas. Más ventas cerradas.</p>
+  <div class="container foot-grid">
+    <div>
+      <span class="logo"></span>
+      <p class="muted">Cada conversación, una oportunidad.<br>Menos plataformas sueltas. Más ventas cerradas.</p>
     </div>
-    <nav class="footer-cols" aria-label="Pie de página">
-      <div>
-        <p class="footer-h">Producto</p>
-        <ul>
-          <li><a href="#modulos">Módulos</a></li>
-          <li><a href="#athena">Athena</a></li>
-          <li><a href="#precios">Precios</a></li>
-          <li><a href="#integraciones">Integraciones</a></li>
-          <li><a href="#seguridad">Seguridad</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="footer-h">Inicio de sesión</p>
-        <ul>
-          <li><a href="https://go.agoradigital.app/">Inicio de sesión CRM</a></li>
-          <li><a href="https://mi.agoradigital.app/">Inicio de sesión · Módulo de Finanzas</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="footer-h">Agora Digital</p>
-        <ul>
-          <li><a href="https://agoradigital.app/">agoradigital.app</a></li>
-          <li><a href="https://www.instagram.com/agoradigital.app/">Instagram @agoradigital.app</a></li>
-          <li><a href="mailto:info@agoradigital.app">info@agoradigital.app</a></li>
-        </ul>
-      </div>
-    </nav>
+    <div><p class="foot-h">Producto</p><a href="#modulos">Módulos</a><a href="#athena">Athena</a><a href="#precios">Precios</a><a href="#integraciones">Integraciones</a></div>
+    <div><p class="foot-h">Inicio de sesión</p><a href="https://go.agoradigital.app/">Inicio de sesión CRM</a><a href="https://mi.agoradigital.app/">Inicio de sesión · Módulo de Finanzas</a></div>
+    <div><p class="foot-h">Agora Digital</p><a href="https://agoradigital.app/">agoradigital.app</a><a href="https://www.instagram.com/agoradigital.app/">Instagram @agoradigital.app</a><a href="mailto:info@agoradigital.app">info@agoradigital.app</a></div>
   </div>
-  <div class="container footer-base">
-    <p>© 2026 Agora Digital. Todos los derechos reservados.</p>
-  </div>
+  <p class="container copy muted small">© 2026 Agora Digital. Todos los derechos reservados.</p>
 </footer>
 
 <!-- Athena flotante: abre el chat de GoHighLevel -->
-<button type="button" class="helper" data-open-chat aria-label="Abrir chat con Athena">
+<button class="helper" data-open-chat aria-label="Abrir chat con Athena">
   <span class="helper-bubble">¿Te ayudo?</span>
-  <img src="assets/athena-mini.webp" alt="" width="60" height="60">
+  <img src="assets/athena-mini.webp" alt="" width="56" height="56">
 </button>
 
-<script src="config.js?v=202610111313"></script>
-<script src="app.js?v=202610111313" defer></script>
+<script src="config.js?v=202610111329"></script>
+<script src="app.js?v=202610111329" defer></script>
 </body>
 </html>
