@@ -65,7 +65,7 @@ def escribir(pagina, punto, texto, fuente, tamano, centro=None):
     if centro is not None:
         ancho = fuente.text_length(texto, fontsize=tamano)
         punto = (centro - ancho / 2, punto[1])
-    alias = _ALIAS.setdefault(id(fuente), f"F{len(_ALIAS)}")
+    alias = _ALIAS.setdefault((pagina.number, id(fuente)), f"ZX{len(_ALIAS)}")
     pagina.insert_font(fontname=alias, fontbuffer=fuente.buffer)
     pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0))
 
@@ -136,7 +136,7 @@ def llenar(datos, salida, firma_png):
     escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_os, 12)
     escribir(p, (310.1, 633.0), datos["staff"], f_os, 12)
 
-    # ----- página 7 (anexo)
+    # ----- página 7 (anexo): se traslada a la página de la tabla y la página 7 se elimina
     p = doc[6]
     cubrir(p, buscar(p, "1 Cuota Mensual"))
     p.apply_redactions(images=0, graphics=0, text=pymupdf.PDF_REDACT_TEXT_REMOVE)
@@ -153,6 +153,22 @@ def llenar(datos, salida, firma_png):
         escribir(p, (0, base), fila["mes"], f_os, 12, centro=COL_MES)
         escribir(p, (0, base), fila["anio"], f_os, 12, centro=COL_ANIO)
         escribir(p, (0, base), fila["modalidad"], f_inter_b, 12, centro=COL_MOD)
+
+    # ----- página 8: el anexo va justo encima de la tabla (se baja la tabla y se elimina la página 7)
+    SUBIDA = 112
+    tmp = pymupdf.open()
+    tmp.insert_pdf(doc, from_page=7, to_page=7)
+    nueva = doc.new_page(-1, width=612, height=792)
+    nueva.show_pdf_page(pymupdf.Rect(0, SUBIDA, 612, 792), tmp, 0, clip=pymupdf.Rect(0, 0, 612, 792 - SUBIDA))
+    tmp.close()
+    doc.delete_page(7)
+    doc.delete_page(6)
+    pa = doc[6]
+    escribir(pa, (0, 46), "ANEXO ÚNICO: CONTROL MANUAL DE PAGOS", f_inter_b, 9, centro=306)
+    escribir(pa, (44, 70), "Este anexo complementa el Convenio de Pago y sirve como registro digital de la modalidad de pago", f_inter_r, 9)
+    escribir(pa, (44, 84), "elegida por EL ESTUDIANTE/REPRESENTANTE y la consecuente imputación de los pagos recibidos, en", f_inter_r, 9)
+    escribir(pa, (44, 98), "consonancia con la Cláusula 2 (Forma y Término de Pago).", f_inter_r, 9)
+    escribir(pa, (44, 118), "Modalidad de Pago Elegida: " + datos["modalidad"] + ".", f_inter_r, 9)
 
     # ----- firmas del cliente: una sola firma copiada en las tres cajas
     if firma_png:
