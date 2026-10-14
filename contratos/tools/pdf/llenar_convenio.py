@@ -162,9 +162,21 @@ def llenar(datos, salida, firma_png):
     tmp = pymupdf.open()
     tmp.insert_pdf(doc, from_page=6, to_page=7)       # copia de la página 7 (anexo con logo) y la 8 (tabla)
     nueva = doc.new_page(-1, width=612, height=792)
+    # marca de agua: solo el logo grande central (recorte de la imagen de página del original)
+    xref_fondo = doc[6].get_images(full=True)[0][0]
+    import io
+    from PIL import Image
+    fondo = Image.open(io.BytesIO(doc.extract_image(xref_fondo)["image"])).convert("RGB")
+    buf = io.BytesIO()
+    # transparencia: el blanco del fondo desaparece y el color de la marca se conserva
+    recorte = fondo.crop((263, 942, 1378, 1790)).convert("RGBA")
+    alfa = recorte.convert("L").point(lambda v: 255 - v)
+    recorte.putalpha(alfa)
+    recorte.save(buf, format="PNG")
     nueva.show_pdf_page(pymupdf.Rect(32, 14, 32 + 535 * ESCALA, 14 + 96 * ESCALA), tmp, 0,
                         clip=pymupdf.Rect(40, 18, 575, 114))
     nueva.show_pdf_page(pymupdf.Rect(0, SUBIDA, 612, 792), tmp, 1, clip=pymupdf.Rect(0, 0, 612, 792 - SUBIDA))
+    nueva.insert_image(pymupdf.Rect(97.3, 318.4, 509.9, 605.3), stream=buf.getvalue(), overlay=True)
     tmp.close()
     doc.delete_page(7)
     doc.delete_page(6)
