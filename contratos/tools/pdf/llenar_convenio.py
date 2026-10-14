@@ -65,7 +65,8 @@ def escribir(pagina, punto, texto, fuente, tamano, centro=None):
     if centro is not None:
         ancho = fuente.text_length(texto, fontsize=tamano)
         punto = (centro - ancho / 2, punto[1])
-    alias = _ALIAS.setdefault((pagina.number, id(fuente)), f"ZX{len(_ALIAS)}")
+    alias = f"ZX{len(_ALIAS)}"
+    _ALIAS[alias] = True
     pagina.insert_font(fontname=alias, fontbuffer=fuente.buffer)
     pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0))
 
@@ -154,21 +155,25 @@ def llenar(datos, salida, firma_png):
         escribir(p, (0, base), fila["anio"], f_os, 12, centro=COL_ANIO)
         escribir(p, (0, base), fila["modalidad"], f_inter_b, 12, centro=COL_MOD)
 
-    # ----- página 8: el anexo va justo encima de la tabla (se baja la tabla y se elimina la página 7)
-    SUBIDA = 112
+    # ----- página 8: encabezado con logo (reducido al 80 %), anexo y tabla; la página 7 se elimina
+    ESCALA = 0.8
+    ALTO_ENCABEZADO = 110
+    SUBIDA = 186
     tmp = pymupdf.open()
-    tmp.insert_pdf(doc, from_page=7, to_page=7)
+    tmp.insert_pdf(doc, from_page=6, to_page=7)       # copia de la página 7 (anexo con logo) y la 8 (tabla)
     nueva = doc.new_page(-1, width=612, height=792)
-    nueva.show_pdf_page(pymupdf.Rect(0, SUBIDA, 612, 792), tmp, 0, clip=pymupdf.Rect(0, 0, 612, 792 - SUBIDA))
+    nueva.show_pdf_page(pymupdf.Rect(32, 14, 32 + 535 * ESCALA, 14 + 96 * ESCALA), tmp, 0,
+                        clip=pymupdf.Rect(40, 18, 575, 114))
+    nueva.show_pdf_page(pymupdf.Rect(0, SUBIDA, 612, 792), tmp, 1, clip=pymupdf.Rect(0, 0, 612, 792 - SUBIDA))
     tmp.close()
     doc.delete_page(7)
     doc.delete_page(6)
     pa = doc[6]
-    escribir(pa, (0, 46), "ANEXO ÚNICO: CONTROL MANUAL DE PAGOS", f_inter_b, 9, centro=306)
-    escribir(pa, (44, 70), "Este anexo complementa el Convenio de Pago y sirve como registro digital de la modalidad de pago", f_inter_r, 9)
-    escribir(pa, (44, 84), "elegida por EL ESTUDIANTE/REPRESENTANTE y la consecuente imputación de los pagos recibidos, en", f_inter_r, 9)
-    escribir(pa, (44, 98), "consonancia con la Cláusula 2 (Forma y Término de Pago).", f_inter_r, 9)
-    escribir(pa, (44, 118), "Modalidad de Pago Elegida: " + datos["modalidad"] + ".", f_inter_r, 9)
+    escribir(pa, (0, 108), "ANEXO ÚNICO: CONTROL MANUAL DE PAGOS", f_inter_b, 9, centro=306)
+    escribir(pa, (60, 128), "Este anexo complementa el Convenio de Pago y sirve como registro digital de la modalidad de pago", f_inter_r, 9)
+    escribir(pa, (60, 140), "elegida por EL ESTUDIANTE/REPRESENTANTE y la consecuente imputación de los pagos recibidos, en", f_inter_r, 9)
+    escribir(pa, (60, 152), "consonancia con la Cláusula 2 (Forma y Término de Pago).", f_inter_r, 9)
+    escribir(pa, (60, 170), "Modalidad de Pago Elegida: " + datos["modalidad"] + ".", f_inter_r, 9)
 
     # ----- firmas del cliente: una sola firma copiada en las tres cajas
     if firma_png:
