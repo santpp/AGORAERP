@@ -24,39 +24,46 @@ spl_autoload_register(static function (string $clase): void {
 });
 
 require __DIR__ . '/ShimPHPUnit.php';
-require __DIR__ . '/CalculadoraContratoTest.php';
 
-$clase = 'Asocim\\Contratos\\Tests\\CalculadoraContratoTest';
+$clases = [
+    'Asocim\\Contratos\\Tests\\CalculadoraContratoTest',
+    'Asocim\\Contratos\\Tests\\ServicioContratoTest',
+];
+
 $pasadas = 0;
 $fallidas = [];
 
-foreach (get_class_methods($clase) as $metodo) {
-    if (!str_starts_with($metodo, 'test_')) {
-        continue;
-    }
-    $prueba = new $clase();
-    try {
-        $prueba->prepararPrueba();
-        $prueba->{$metodo}();
-        if ($prueba->excepcionEsperada() !== null) {
-            $fallidas[$metodo] = 'no lanzó ' . $prueba->excepcionEsperada();
+foreach ($clases as $clase) {
+    require str_replace(['Asocim\\Contratos\\Tests\\', '\\'], [__DIR__ . '/', '/'], $clase) . '.php';
+    foreach (get_class_methods($clase) as $metodo) {
+        if (!str_starts_with($metodo, 'test_')) {
             continue;
         }
-        $pasadas++;
-    } catch (\PHPUnit\Framework\AssertionFailed $e) {
-        $fallidas[$metodo] = $e->getMessage();
-    } catch (\Throwable $e) {
-        $esperada = $prueba->excepcionEsperada();
-        if ($esperada !== null && $e instanceof $esperada) {
+        $prueba = new $clase();
+        $nombre = basename(str_replace('\\', '/', $clase)) . '::' . $metodo;
+        try {
+            $prueba->prepararPrueba();
+            $prueba->{$metodo}();
+            if ($prueba->excepcionEsperada() !== null) {
+                $fallidas[$nombre] = 'no lanzó ' . $prueba->excepcionEsperada();
+                continue;
+            }
             $pasadas++;
-        } else {
-            $fallidas[$metodo] = get_class($e) . ': ' . $e->getMessage();
+        } catch (\PHPUnit\Framework\AssertionFailed $e) {
+            $fallidas[$nombre] = $e->getMessage();
+        } catch (\Throwable $e) {
+            $esperada = $prueba->excepcionEsperada();
+            if ($esperada !== null && $e instanceof $esperada) {
+                $pasadas++;
+            } else {
+                $fallidas[$nombre] = get_class($e) . ': ' . $e->getMessage();
+            }
         }
     }
 }
 
-foreach ($fallidas as $metodo => $motivo) {
-    echo "FALLA  {$metodo}: {$motivo}\n";
+foreach ($fallidas as $nombre => $motivo) {
+    echo "FALLA  {$nombre}: {$motivo}\n";
 }
 $total = $pasadas + count($fallidas);
 echo "\n{$pasadas}/{$total} pruebas pasaron\n";
