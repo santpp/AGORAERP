@@ -42,6 +42,9 @@ final class Aplicacion
             if (str_starts_with($ruta, '/api/usuarios')) {
                 return $this->usuariosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }
+            if (str_starts_with($ruta, '/api/contratos')) {
+                return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
+            }
             return [404, ['error' => 'No existe esta ruta.']];
         } catch (ErrorContrato $e) {
             return [$e->http, ['error' => $e->getMessage()]];
@@ -72,7 +75,7 @@ final class Aplicacion
     /** @return array{0:int,1:array<string,mixed>} */
     private function usuariosApi(string $metodo, string $ruta, array $cabeceras, string $cuerpo): array
     {
-        $admin = $this->sesionDe($cabeceras, Roles::ADMIN);
+        $admin = $this->sesionDe($cabeceras, 'usuarios');
         if ($metodo === 'GET' && $ruta === '/api/usuarios') {
             return [200, ['usuarios' => $this->usuarios->listar()]];
         }
@@ -104,10 +107,44 @@ final class Aplicacion
         if ($u === null) {
             throw new ErrorContrato('Inicia sesión para continuar.', 401);
         }
-        if ($permiso !== null && !Roles::puede($u['rol'], 'usuarios')) {
-            throw new ErrorContrato('Solo el administrador puede hacer esto.', 403);
+        if ($permiso !== null && !Roles::puede($u['rol'], $permiso)) {
+            throw new ErrorContrato('No tienes permiso para hacer esto.', 403);
         }
         return $u;
+    }
+
+    /** @return array{0:int,1:array<string,mixed>} */
+    private function contratosApi(string $metodo, string $ruta, array $cabeceras, string $cuerpo): array
+    {
+        if ($metodo === 'GET' && $ruta === '/api/contratos') {
+            $this->sesionDe($cabeceras, 'ver');
+            return [200, ['contratos' => $this->servicio->listar()]];
+        }
+        if ($metodo === 'GET' && preg_match('#^/api/contratos/([a-f0-9]{24})$#', $ruta, $m)) {
+            $this->sesionDe($cabeceras, 'ver');
+            return [200, $this->servicio->ver($m[1])];
+        }
+        if ($metodo === 'POST' && $ruta === '/api/contratos/calculo') {
+            $this->sesionDe($cabeceras, 'ver');
+            $r = $this->servicio->previsualizar($this->json($cuerpo));
+            return [200, ['precio_curso' => $r->precioCurso->aTexto(), 'total_a_pagar' => $r->totalAPagar->aTexto(), 'cuotas' => count($r->cuotas)]];
+        }
+        if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/(editar|enviar|revocar)$#', $ruta, $m)) {
+            $permiso = $m[2] === 'editar' ? 'editar' : ($m[2] === 'enviar' ? 'enviar' : 'revocar');
+            $this->sesionDe($cabeceras, $permiso);
+            if ($m[2] === 'editar') {
+                $numero = $this->servicio->editar($m[1], $this->json($cuerpo));
+                return [200, ['version' => $numero]];
+            }
+            if ($m[2] === 'enviar') {
+                $envio = $this->servicio->enviar($m[1]);
+                $base = rtrim((string) getenv('APP_URL') ?: 'https://asocim.agoradigital.app', '/');
+                return [200, ['version' => $envio['version'], 'enlace' => $base . '/firmar?t=' . $envio['token'], 'vence' => $envio['vence']]];
+            }
+            $this->servicio->revocar($m[1]);
+            return [200, ['ok' => true]];
+        }
+        return [404, ['error' => 'No existe esta ruta.']];
     }
 
     private function tokenDe(array $cabeceras): ?string

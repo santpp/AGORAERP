@@ -210,4 +210,17 @@ final class ServicioContratoTest extends TestCase
         $this->assertSame('1260.00', $ver['calculo']['precio_curso']);
         $this->assertSame('2026-10-30', $ver['calculo']['cuotas'][0]['vencimiento']);
     }
+
+    public function test_listar_muestra_la_ultima_version_de_cada_contrato(): void
+    {
+        $a = $this->servicio->crearDesdeWebhook($this->webhook([], 'lista-a'))['uid'];
+        $this->servicio->crearDesdeWebhook($this->webhook(['cliente' => ['nombre' => 'Otra', 'cedula' => '2', 'telefono' => '0', 'correo' => 'otra@example.com']], 'lista-b'));
+        $this->servicio->enviar($a);
+        $this->servicio->editar($a, ['cuota' => '110']);
+        $lista = $this->servicio->listar();
+        $this->assertCount(2, $lista);
+        $fila = array_values(array_filter($lista, fn ($f) => $f['uid'] === $a))[0];
+        $this->assertSame(2, $fila['version']);
+        $this->assertSame('BORRADOR', $fila['estado']);
+    }
 }

@@ -250,6 +250,30 @@ final class ContratoServicio
         ];
     }
 
+    /**
+     * Lista de contratos con el estado de su última versión (más recientes primero).
+     * @return list<array<string,mixed>>
+     */
+    public function listar(): array
+    {
+        $filas = $this->fila_todas(
+            'SELECT c.uid, c.cliente_nombre, c.cliente_correo, c.creado_en,
+                    v.numero, v.estado
+               FROM contratos c
+               JOIN versiones v ON v.contrato_id = c.id
+              WHERE v.numero = (SELECT MAX(numero) FROM versiones WHERE contrato_id = c.id)
+              ORDER BY c.creado_en DESC, c.id DESC'
+        );
+        return array_map(fn (array $f) => [
+            'uid' => $f['uid'],
+            'cliente' => $f['cliente_nombre'],
+            'correo' => $f['cliente_correo'],
+            'version' => (int) $f['numero'],
+            'estado' => $f['estado'],
+            'creado_en' => $f['creado_en'],
+        ], $filas);
+    }
+
     /** Vista previa de cálculo sin guardar nada (lo que el personal ve al editar). */
     public function previsualizar(array $terminos): Resultado
     {
