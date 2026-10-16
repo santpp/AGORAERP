@@ -194,7 +194,8 @@ def llenar(datos, salida, firma_png):
     if firma_png:
         for pag, (x0, y0, x1, y1) in CAJAS_CLIENTE:
             pg = doc[pag]
-            pg.draw_rect(pymupdf.Rect(x0 + 1.5, y0 + 1.5, x1 - 1.5, y1 - 1.5), color=None, fill=None)
+            # Blanco dentro del marco: tapa la marca de agua de la plantilla, sin tocar el borde
+            pg.draw_rect(pymupdf.Rect(x0 + 1.5, y0 + 1.5, x1 - 1.5, y1 - 1.5), color=None, fill=(1, 1, 1))
             caja = pymupdf.Rect(x0 + 6, y0 + 4, x1 - 6, y1 - 4)
             pg.insert_image(caja, filename=firma_png, keep_proportion=True)
 
