@@ -10,6 +10,8 @@ use Asocim\Contratos\Calculo\DatosInvalidos;
 use Asocim\Contratos\Calculo\Dinero;
 use Asocim\Contratos\Calculo\Resultado;
 use Asocim\Contratos\Calculo\Terminos;
+use Asocim\Contratos\Documento\Formato;
+use Asocim\Contratos\Documento\GeneradorPdf;
 use PDO;
 
 /**
@@ -22,8 +24,12 @@ final class ContratoServicio
 
     private CalculadoraContrato $calculadora;
 
-    public function __construct(private readonly PDO $pdo, private readonly ?\Closure $ahora = null)
-    {
+    public function __construct(
+        private readonly PDO $pdo,
+        private readonly ?\Closure $ahora = null,
+        private readonly ?GeneradorPdf $generador = null,
+        private readonly ?string $carpetaDocumentos = null,
+    ) {
         $this->calculadora = new CalculadoraContrato();
     }
 
@@ -131,13 +137,28 @@ final class ContratoServicio
      * Envía la versión actual al cliente: la congela y devuelve el enlace de firma (solo se muestra una vez).
      * @return array{token:string,version:int,vence:string}
      */
-    public function enviar(string $uid): array
+    public function enviar(string $uid, string $personalAsocim = ''): array
     {
         $contrato = $this->contrato($uid);
         $version = $this->ultimaVersion((int) $contrato['id']);
         if ($version['estado'] !== 'BORRADOR') {
             throw new ErrorContrato('Solo se puede enviar un borrador. Crea una versión nueva para corregirlo.', 409);
         }
+        $terminos = json_decode($version['terminos'], true);
+        $r = $this->calculadora->calcular($this->construirTerminos($terminos));
+        if (count($r->cuotas) > 0 && (int) $terminos['meses'] > 20) {
+            throw new ErrorContrato('El convenio admite hasta 20 meses.');
+        }
+
+        // Primero el PDF: si falla, el contrato sigue como borrador.
+        $pdf = null;
+        if ($this->generador !== null && $this->carpetaDocumentos !== null) {
+            $datos = $this->datosPdf($contrato, $terminos, $r, $personalAsocim);
+            $ruta = $this->carpetaDocumentos . '/' . $uid . '-v' . $version['numero'] . '.pdf';
+            $this->generador->generar($datos, $ruta);
+            $pdf = ['ruta' => $ruta, 'sha256' => hash_file('sha256', $ruta)];
+        }
+
         $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
         $vence = $this->sumarDias(self::DIAS_VALIDEZ_ENLACE);
 
@@ -150,13 +171,71 @@ final class ContratoServicio
                 'hash' => hash('sha256', $token),
                 'expira_en' => $vence,
             ]);
-            $this->evento((int) $contrato['id'], (int) $version['id'], 'ENVIADO', ['numero' => (int) $version['numero']]);
+            if ($pdf !== null) {
+                $this->insertar('documentos', [
+                    'version_id' => $version['id'],
+                    'ruta' => $pdf['ruta'],
+                    'sha256' => $pdf['sha256'],
+                    'creado_en' => $this->ahora(),
+                ]);
+            }
+            $this->evento((int) $contrato['id'], (int) $version['id'], 'ENVIADO', ['numero' => (int) $version['numero'], 'pdf' => $pdf !== null]);
             $this->pdo->commit();
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
             throw $e;
         }
         return ['token' => $token, 'version' => (int) $version['numero'], 'vence' => $vence];
+    }
+
+    /**
+     * Datos que llena el script de Python (claves del convenio original).
+     * @param array<string,mixed> $contrato
+     * @param array<string,mixed> $terminos
+     * @return array<string,mixed>
+     */
+    private function datosPdf(array $contrato, array $terminos, \Asocim\Contratos\Calculo\Resultado $r, string $personalAsocim): array
+    {
+        $meses = (int) $terminos['meses'];
+        $cuotasPorMes = (int) ($terminos['cuotas_por_mes'] ?? 1);
+        $inscripcion = '0';
+        foreach ($r->cargos as $c) {
+            if (stripos($c->concepto, 'inscrip') !== false) {
+                $inscripcion = Formato::dinero($c->monto);
+            }
+        }
+        $cronograma = [];
+        $vistos = [];
+        foreach ($r->cuotas as $q) {
+            if (isset($vistos[$q->mesNumero])) {
+                continue;
+            }
+            $vistos[$q->mesNumero] = true;
+            $fecha = new \DateTimeImmutable($q->vencimiento);
+            $cronograma[] = [
+                'mes' => ucfirst(Formato::mes((int) $fecha->format('n'))),
+                'anio' => $fecha->format('Y'),
+                'modalidad' => Formato::modalidad($cuotasPorMes),
+            ];
+        }
+        $hoy = new \DateTimeImmutable('now', new \DateTimeZone('America/Caracas'));
+        return [
+            'nombre' => mb_strtoupper($contrato['cliente_nombre']),
+            'cedula' => $contrato['cliente_cedula'],
+            'telefono' => $contrato['cliente_telefono'] ?? '',
+            'meses' => (string) $meses,
+            'meses_texto' => Formato::palabras($meses),
+            'precio' => Formato::dinero($r->precioCurso),
+            'cuota' => Formato::dinero(\Asocim\Contratos\Calculo\Dinero::desde((string) $terminos['cuota'])),
+            'inscripcion' => $inscripcion,
+            'descuento' => '0',
+            'modalidad' => Formato::modalidad($cuotasPorMes),
+            'fecha_dia' => $hoy->format('j'),
+            'fecha_mes' => Formato::mes((int) $hoy->format('n')),
+            'fecha_anio' => $hoy->format('Y'),
+            'staff' => $personalAsocim,
+            'cronograma' => $cronograma,
+        ];
     }
 
     /** Revoca el enlace activo: el cliente ya no puede firmar esa versión. */

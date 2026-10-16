@@ -137,13 +137,13 @@ final class Aplicacion
         }
         if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/(editar|enviar|revocar)$#', $ruta, $m)) {
             $permiso = $m[2] === 'editar' ? 'editar' : ($m[2] === 'enviar' ? 'enviar' : 'revocar');
-            $this->sesionDe($cabeceras, $permiso);
+            $u = $this->sesionDe($cabeceras, $permiso);
             if ($m[2] === 'editar') {
                 $numero = $this->servicio->editar($m[1], $this->json($cuerpo));
                 return [200, ['version' => $numero]];
             }
             if ($m[2] === 'enviar') {
-                $envio = $this->servicio->enviar($m[1]);
+                $envio = $this->servicio->enviar($m[1], $u['nombre']);
                 $base = rtrim((string) getenv('APP_URL') ?: 'https://asocim.agoradigital.app', '/');
                 return [200, ['version' => $envio['version'], 'enlace' => $base . '/firmar?t=' . $envio['token'], 'vence' => $envio['vence']]];
             }

@@ -80,3 +80,12 @@ CREATE TABLE IF NOT EXISTS sesiones (
     expira_en   TEXT NOT NULL,
     creado_en   TEXT NOT NULL
 );
+
+-- PDF generado al enviar cada versión. Nunca se sobrescribe: una versión, un archivo.
+CREATE TABLE IF NOT EXISTS documentos (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id  INTEGER NOT NULL UNIQUE REFERENCES versiones(id),
+    ruta        TEXT NOT NULL,
+    sha256      TEXT NOT NULL,
+    creado_en   TEXT NOT NULL
+);

@@ -14,6 +14,7 @@ spl_autoload_register(static function (string $clase): void {
 require __DIR__ . '/cargar_entorno.php';
 cargar_entorno(__DIR__ . '/../../.env');
 
+use Asocim\Contratos\Documento\GeneradorPdf;
 use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Servicio\ContratoServicio;
 use Asocim\Contratos\Servicio\UsuarioServicio;
@@ -21,7 +22,18 @@ use Asocim\Contratos\Web\Aplicacion;
 
 $bd = getenv('CONTRATOS_BD') ?: 'sqlite:' . __DIR__ . '/../../storage/contratos.sqlite';
 $pdo = Base::conectar($bd);
-$app = new Aplicacion(new ContratoServicio($pdo), new UsuarioServicio($pdo), (string) getenv('GHL_WEBHOOK_SECRET'));
+$raiz = dirname(__DIR__, 2);
+$generador = new GeneradorPdf(
+    getenv('PDF_PYTHON') ?: '/opt/agora-pdf/bin/python',
+    $raiz . '/tools/pdf/llenar_convenio.py',
+    $raiz . '/storage/tmp',
+);
+$documentos = $raiz . '/storage/documentos';
+$app = new Aplicacion(
+    new ContratoServicio($pdo, null, $generador, $documentos),
+    new UsuarioServicio($pdo),
+    (string) getenv('GHL_WEBHOOK_SECRET'),
+);
 
 $cabeceras = [];
 foreach ($_SERVER as $k => $v) {
