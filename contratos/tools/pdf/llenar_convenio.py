@@ -135,9 +135,10 @@ def llenar(datos, salida, firma_png):
     poner("dia", datos["fecha_dia"], f_inter_r)
     poner("mes", datos["fecha_mes"].lower(), f_inter_r)
     poner("anio", datos["fecha_anio"], f_inter_r)
-    escribir(p, (48.0, 633.0), datos["nombre"].upper(), f_os, 12)
-    escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_os, 12)
-    escribir(p, (310.1, 633.0), datos["staff"], f_os, 12)
+    # Inter, no Open Sans: la fuente embebida del original no tiene todas las letras (p. ej. la "d" minúscula)
+    escribir(p, (48.0, 633.0), datos["nombre"].upper(), f_inter_r, 12)
+    escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_inter_r, 12)
+    escribir(p, (310.1, 633.0), datos["staff"], f_inter_r, 12)
 
     # ----- página 7 (anexo): se traslada a la página de la tabla y la página 7 se elimina
     p = doc[6]
