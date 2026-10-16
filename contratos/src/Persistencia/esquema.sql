@@ -58,3 +58,25 @@ CREATE TABLE IF NOT EXISTS eventos (
     detalle     TEXT,
     creado_en   TEXT NOT NULL
 );
+
+-- Personas que usan el sistema (staff). El acceso se da por invitación del administrador.
+CREATE TABLE IF NOT EXISTS usuarios (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    correo        TEXT NOT NULL UNIQUE,
+    nombre        TEXT NOT NULL,
+    clave_hash    TEXT NOT NULL,
+    rol           TEXT NOT NULL CHECK (rol IN ('ADMIN','REMITENTE','VISOR')),
+    activo        INTEGER NOT NULL DEFAULT 1,
+    intentos_fallidos INTEGER NOT NULL DEFAULT 0,
+    bloqueado_hasta TEXT,
+    creado_en     TEXT NOT NULL
+);
+
+-- Sesiones: se guarda solo el hash del token de la cookie.
+CREATE TABLE IF NOT EXISTS sesiones (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id  INTEGER NOT NULL REFERENCES usuarios(id),
+    hash        TEXT NOT NULL UNIQUE,
+    expira_en   TEXT NOT NULL,
+    creado_en   TEXT NOT NULL
+);

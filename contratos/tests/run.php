@@ -28,6 +28,7 @@ require __DIR__ . '/ShimPHPUnit.php';
 $clases = [
     'Asocim\\Contratos\\Tests\\CalculadoraContratoTest',
     'Asocim\\Contratos\\Tests\\ServicioContratoTest',
+    'Asocim\\Contratos\\Tests\\UsuarioServicioTest',
 ];
 
 $pasadas = 0;

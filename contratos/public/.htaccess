@@ -1,0 +1,3 @@
+# Envía /api/... al punto de entrada de la API. El resto de archivos se sirven tal cual.
+RewriteEngine On
+RewriteRule ^api/ index.php [L,QSA]

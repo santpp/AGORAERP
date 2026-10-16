@@ -16,10 +16,12 @@ cargar_entorno(__DIR__ . '/../../.env');
 
 use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Servicio\ContratoServicio;
+use Asocim\Contratos\Servicio\UsuarioServicio;
 use Asocim\Contratos\Web\Aplicacion;
 
 $bd = getenv('CONTRATOS_BD') ?: 'sqlite:' . __DIR__ . '/../../storage/contratos.sqlite';
-$app = new Aplicacion(new ContratoServicio(Base::conectar($bd)), (string) getenv('GHL_WEBHOOK_SECRET'));
+$pdo = Base::conectar($bd);
+$app = new Aplicacion(new ContratoServicio($pdo), new UsuarioServicio($pdo), (string) getenv('GHL_WEBHOOK_SECRET'));
 
 $cabeceras = [];
 foreach ($_SERVER as $k => $v) {
@@ -35,4 +37,10 @@ foreach ($_SERVER as $k => $v) {
 );
 http_response_code($codigo);
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+$cookie = $cuerpo['cookie'] ?? null;
+unset($cuerpo['cookie']);
+if ($cookie !== null) {
+    header('Set-Cookie: ' . $cookie);
+}
 echo json_encode($cuerpo, JSON_UNESCAPED_UNICODE);
