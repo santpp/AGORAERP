@@ -49,7 +49,27 @@ final class Aplicacion
         if (!is_array($datos)) {
             return [400, ['error' => 'Se esperaba un objeto JSON.']];
         }
+        $this->registrarRecepcion($datos);
         $resultado = $this->servicio->crearDesdeWebhook($datos);
         return [$resultado['duplicado'] ? 200 : 201, $resultado];
+    }
+
+    /**
+     * Diagnóstico: guarda solo los NOMBRES de los campos recibidos y si vienen vacíos.
+     * No guarda valores, para no registrar datos personales.
+     * @param array<string,mixed> $datos
+     */
+    private function registrarRecepcion(array $datos): void
+    {
+        $ruta = dirname(__DIR__, 2) . '/storage/webhook-recibidos.log';
+        $lineas = [];
+        foreach ($datos as $clave => $valor) {
+            if (is_array($valor)) {
+                $lineas[] = $clave . '=[seccion]';
+                continue;
+            }
+            $lineas[] = $clave . '=' . (trim((string) $valor) === '' ? 'VACIO' : 'con valor');
+        }
+        @file_put_contents($ruta, date('Y-m-d H:i:s') . ' ' . implode(' | ', $lineas) . "\n", FILE_APPEND);
     }
 }
