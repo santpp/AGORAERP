@@ -48,6 +48,22 @@ final class Aplicacion
                 $this->usuarios->cambiarClave($u['id'], (string) ($d['clave_actual'] ?? ''), (string) ($d['clave_nueva'] ?? ''), (string) $this->tokenDe($cabeceras));
                 return [200, ['ok' => true]];
             }
+            if (preg_match('#^/api/firmar/([A-Za-z0-9_-]{40,50})$#', $ruta, $m)) {
+                // Público: el enlace del cliente es el único acceso (token de un solo uso).
+                if ($metodo === 'GET') {
+                    return [200, $this->servicio->paraFirmar($m[1])];
+                }
+                if ($metodo === 'POST') {
+                    $d = $this->json($cuerpo);
+                    $this->servicio->firmar($m[1], [
+                        'firma_png' => $this->decodificarFirma((string) ($d['firma'] ?? '')),
+                        'nombre' => (string) ($d['nombre'] ?? ''),
+                        'ip' => $cabeceras['cf-connecting-ip'] ?? $cabeceras['ip-cliente'] ?? '',
+                        'user_agent' => $cabeceras['user-agent'] ?? '',
+                    ]);
+                    return [200, ['ok' => true]];
+                }
+            }
             if (str_starts_with($ruta, '/api/contratos')) {
                 return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }
@@ -151,6 +167,14 @@ final class Aplicacion
             return [200, ['ok' => true]];
         }
         return [404, ['error' => 'No existe esta ruta.']];
+    }
+
+    /** Acepta la firma como data URL (lo que entrega el canvas) o como base64 simple. */
+    private function decodificarFirma(string $firma): string
+    {
+        $base64 = preg_replace('#^data:image/png;base64,#', '', $firma) ?? '';
+        $png = base64_decode($base64, true);
+        return $png === false ? '' : $png;
     }
 
     private function tokenDe(array $cabeceras): ?string

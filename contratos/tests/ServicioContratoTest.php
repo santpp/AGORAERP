@@ -37,7 +37,7 @@ final class ServicioContratoTest extends TestCase
 
     private function firma(): array
     {
-        return ['firma_png' => 'PNG-DE-PRUEBA', 'nombre' => 'Yuly Eunice Navas Callaspo', 'ip' => '190.0.0.1', 'user_agent' => 'prueba'];
+        return ['firma_png' => "\x89PNG\r\n\x1a\n" . 'PNG-DE-PRUEBA', 'nombre' => 'Yuly Eunice Navas Callaspo', 'ip' => '190.0.0.1', 'user_agent' => 'prueba'];
     }
 
     public function test_camino_completo_webhook_envio_firma(): void
@@ -130,6 +130,15 @@ final class ServicioContratoTest extends TestCase
 
         $this->expectException(ErrorContrato::class);
         $this->servicio->firmar($token, $this->firma());
+    }
+
+    public function test_firma_que_no_es_png_falla(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $token = $this->servicio->enviar($uid)['token'];
+
+        $this->expectException(ErrorContrato::class);
+        $this->servicio->firmar($token, ['firma_png' => 'no soy png', 'nombre' => 'Yuly', 'ip' => '1.1.1.1', 'user_agent' => 'x']);
     }
 
     public function test_firma_sin_nombre_falla(): void

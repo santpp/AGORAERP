@@ -41,18 +41,4 @@ foreach ($_SERVER as $k => $v) {
         $cabeceras[strtolower(str_replace('_', '-', substr($k, 5)))] = (string) $v;
     }
 }
-[$codigo, $cuerpo] = $app->responder(
-    $_SERVER['REQUEST_METHOD'] ?? 'GET',
-    parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/',
-    $cabeceras,
-    (string) file_get_contents('php://input'),
-);
-http_response_code($codigo);
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
-$cookie = $cuerpo['cookie'] ?? null;
-unset($cuerpo['cookie']);
-if ($cookie !== null) {
-    header('Set-Cookie: ' . $cookie);
-}
-echo json_encode($cuerpo, JSON_UNESCAPED_UNICODE);
+$cabeceras['ip-cliente'] = (string) ($_SERVER['REMOTE_ADDR'] ?? '');

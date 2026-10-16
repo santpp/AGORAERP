@@ -179,7 +179,7 @@ final class ContratoServicio
                     'creado_en' => $this->ahora(),
                 ]);
             }
-            $this->evento((int) $contrato['id'], (int) $version['id'], 'ENVIADO', ['numero' => (int) $version['numero'], 'pdf' => $pdf !== null]);
+            $this->evento((int) $contrato['id'], (int) $version['id'], 'ENVIADO', ['numero' => (int) $version['numero'], 'pdf' => $pdf !== null, 'personal' => $personalAsocim]);
             $this->pdo->commit();
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
@@ -194,7 +194,7 @@ final class ContratoServicio
      * @param array<string,mixed> $terminos
      * @return array<string,mixed>
      */
-    private function datosPdf(array $contrato, array $terminos, \Asocim\Contratos\Calculo\Resultado $r, string $personalAsocim): array
+    private function datosPdf(array $contrato, array $terminos, \Asocim\Contratos\Calculo\Resultado $r, string $personalAsocim, ?\DateTimeImmutable $fecha = null): array
     {
         $meses = (int) $terminos['meses'];
         $cuotasPorMes = (int) ($terminos['cuotas_por_mes'] ?? 1);
@@ -218,7 +218,8 @@ final class ContratoServicio
                 'modalidad' => Formato::modalidad($cuotasPorMes),
             ];
         }
-        $hoy = new \DateTimeImmutable('now', new \DateTimeZone('America/Caracas'));
+        // La fecha del convenio es la del envío: al firmar se conserva la misma.
+        $hoy = $fecha ?? new \DateTimeImmutable('now', new \DateTimeZone('America/Caracas'));
         return [
             'nombre' => mb_strtoupper($contrato['cliente_nombre']),
             'cedula' => $contrato['cliente_cedula'],
@@ -287,7 +288,26 @@ final class ContratoServicio
         if (trim($firma['nombre']) === '' || $firma['firma_png'] === '') {
             throw new ErrorContrato('Escribe tu nombre y firma en el recuadro.');
         }
-        $documento = hash('sha256', (string) $version['terminos'] . '|' . $firma['firma_png']);
+        $this->validarPng($firma['firma_png']);
+
+        // El convenio firmado se genera antes de cambiar nada: si falla, el enlace sigue activo.
+        $rutaFirmado = null;
+        $sha = null;
+        if ($this->generador !== null && $this->carpetaDocumentos !== null) {
+            $terminos = json_decode($version['terminos'], true);
+            $r = $this->calculadora->calcular($this->construirTerminos($terminos));
+            $fecha = $this->fechaDeEnvio($version);
+            $datos = $this->datosPdf($contrato, $terminos, $r, $this->personalDeEnvio((int) $version['id']), $fecha);
+            $png = $this->carpetaTemporalFirma($firma['firma_png']);
+            try {
+                $rutaFirmado = $this->carpetaDocumentos . '/' . $contrato['uid'] . '-v' . $version['numero'] . '-firmado.pdf';
+                $this->generador->generar($datos, $rutaFirmado, $png);
+                $sha = hash_file('sha256', $rutaFirmado);
+            } finally {
+                @unlink($png);
+            }
+        }
+        $documento = $sha ?? hash('sha256', (string) $version['terminos'] . '|' . $firma['firma_png']);
 
         $this->pdo->beginTransaction();
         try {
@@ -300,6 +320,14 @@ final class ContratoServicio
                 'firmado_en' => $this->ahora(),
                 'hash_documento' => $documento,
             ]);
+            if ($rutaFirmado !== null) {
+                $this->insertar('documentos_firmados', [
+                    'version_id' => $version['id'],
+                    'ruta' => $rutaFirmado,
+                    'sha256' => $sha,
+                    'creado_en' => $this->ahora(),
+                ]);
+            }
             $this->pdo->prepare("UPDATE versiones SET estado = 'FIRMADO', firmado_en = ? WHERE id = ?")
                 ->execute([$this->ahora(), $version['id']]);
             $this->pdo->prepare('UPDATE tokens_firma SET usado_en = ? WHERE id = ?')
@@ -361,6 +389,56 @@ final class ContratoServicio
     }
 
     // ------------------------------------------------------------------ internos
+
+    /**
+     * Ruta del PDF enviado, para que el cliente lo revise antes de firmar.
+     */
+    public function documentoDeEnlace(string $token): string
+    {
+        [, $version] = $this->validarEnlace($token);
+        $fila = $this->fila('SELECT ruta FROM documentos WHERE version_id = ?', [$version['id']]);
+        if (!$fila || !is_file($fila['ruta'])) {
+            throw new ErrorContrato('El documento no está disponible. Pide a la institución que lo reenvíe.', 404);
+        }
+        return $fila['ruta'];
+    }
+
+    /** Solo se aceptan PNG de tamaño razonable (la firma dibujada en pantalla). */
+    private function validarPng(string $datos): void
+    {
+        if (strlen($datos) > 400 * 1024 || !str_starts_with($datos, "\x89PNG\r\n\x1a\n")) {
+            throw new ErrorContrato('La firma no es válida. Vuelve a firmar en el recuadro.');
+        }
+    }
+
+    /** Guarda la firma en un archivo temporal para el generador de PDF. */
+    private function carpetaTemporalFirma(string $png): string
+    {
+        $dir = dirname((string) $this->carpetaDocumentos) . '/tmp';
+        @mkdir($dir, 0700, true);
+        $ruta = $dir . '/firma-' . bin2hex(random_bytes(8)) . '.png';
+        file_put_contents($ruta, $png);
+        @chmod($ruta, 0600);
+        return $ruta;
+    }
+
+    /** Personal de ASOCIM que envió la versión (quedó en el evento ENVIADO). */
+    private function personalDeEnvio(int $versionId): string
+    {
+        $fila = $this->fila("SELECT detalle FROM eventos WHERE version_id = ? AND tipo = 'ENVIADO' ORDER BY id DESC LIMIT 1", [$versionId]);
+        $detalle = $fila ? json_decode((string) $fila['detalle'], true) : null;
+        return is_array($detalle) ? (string) ($detalle['personal'] ?? '') : '';
+    }
+
+    /** Fecha del envío en hora de Caracas, para que el convenio conserve su fecha original. */
+    private function fechaDeEnvio(array $version): ?\DateTimeImmutable
+    {
+        if (empty($version['enviado_en'])) {
+            return null;
+        }
+        return (new \DateTimeImmutable($version['enviado_en'], new \DateTimeZone('UTC')))
+            ->setTimezone(new \DateTimeZone('America/Caracas'));
+    }
 
     /** @return array{0:array,1:array,2:array} contrato, versión y enlace válidos */
     private function validarEnlace(string $token): array

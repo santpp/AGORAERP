@@ -23,7 +23,7 @@ final class GeneradorPdf
      * @param array<string,mixed> $datos
      * @return string ruta del PDF generado
      */
-    public function generar(array $datos, string $salida): string
+    public function generar(array $datos, string $salida, ?string $firmaPng = null): string
     {
         if (!is_file($this->python) || !is_file($this->script)) {
             throw new ErrorContrato('No está instalado el generador de PDF en el servidor.', 500);
@@ -34,7 +34,8 @@ final class GeneradorPdf
         file_put_contents($datosJson, json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 
         $orden = escapeshellarg($this->python) . ' ' . escapeshellarg($this->script) . ' '
-            . escapeshellarg($datosJson) . ' ' . escapeshellarg($salida) . ' 2>&1';
+            . escapeshellarg($datosJson) . ' ' . escapeshellarg($salida)
+            . ($firmaPng !== null ? ' ' . escapeshellarg($firmaPng) : '') . ' 2>&1';
         exec($orden, $resultado, $codigo);
         @unlink($datosJson);
 

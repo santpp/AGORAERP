@@ -89,3 +89,12 @@ CREATE TABLE IF NOT EXISTS documentos (
     sha256      TEXT NOT NULL,
     creado_en   TEXT NOT NULL
 );
+
+-- Convenio con la firma del cliente. Un PDF por versión firmada (el enviado queda en documentos).
+CREATE TABLE IF NOT EXISTS documentos_firmados (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id  INTEGER NOT NULL UNIQUE REFERENCES versiones(id),
+    ruta        TEXT NOT NULL,
+    sha256      TEXT NOT NULL,
+    creado_en   TEXT NOT NULL
+);
