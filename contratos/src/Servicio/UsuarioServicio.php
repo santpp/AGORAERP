@@ -43,6 +43,24 @@ final class UsuarioServicio
         return (int) $this->pdo->lastInsertId();
     }
 
+    /** Cambia la clave propia. Exige la clave actual y cierra las demás sesiones. */
+    public function cambiarClave(int $usuarioId, string $claveActual, string $claveNueva, string $tokenActual): void
+    {
+        $u = $this->pdo->prepare('SELECT * FROM usuarios WHERE id = ?');
+        $u->execute([$usuarioId]);
+        $fila = $u->fetch();
+        if ($fila === false || !password_verify($claveActual, $fila['clave_hash'])) {
+            throw new ErrorContrato('La clave actual no es correcta.', 401);
+        }
+        if (mb_strlen($claveNueva) < self::CLAVE_MINIMA) {
+            throw new ErrorContrato('La clave nueva debe tener al menos ' . self::CLAVE_MINIMA . ' caracteres.');
+        }
+        $this->pdo->prepare('UPDATE usuarios SET clave_hash = ? WHERE id = ?')
+            ->execute([password_hash($claveNueva, PASSWORD_DEFAULT), $usuarioId]);
+        $this->pdo->prepare('DELETE FROM sesiones WHERE usuario_id = ? AND hash <> ?')
+            ->execute([$usuarioId, hash('sha256', $tokenActual)]);
+    }
+
     public function cambiarRol(int $usuarioId, string $rol, int $administradorId): void
     {
         if (!in_array($rol, Roles::TODOS, true)) {

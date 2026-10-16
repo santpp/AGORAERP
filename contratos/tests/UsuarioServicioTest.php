@@ -112,4 +112,20 @@ final class UsuarioServicioTest extends TestCase
         $this->assertTrue(!Roles::puede(Roles::VISOR, 'enviar'));
         $this->assertTrue(Roles::puede(Roles::VISOR, 'ver'));
     }
+
+    public function test_cambiar_clave_exige_la_actual_y_cierra_otras_sesiones(): void
+    {
+        $id = $this->usuarios->crear('a@asocim.com', 'A', 'clave-segura-1', Roles::REMITENTE);
+        $t1 = $this->usuarios->iniciarSesion('a@asocim.com', 'clave-segura-1')['token'];
+        $t2 = $this->usuarios->iniciarSesion('a@asocim.com', 'clave-segura-1')['token'];
+        try {
+            $this->usuarios->cambiarClave($id, 'mala-clave-xx', 'clave-nueva-22', $t1);
+            $this->fail('debió rechazar la clave actual incorrecta');
+        } catch (ErrorContrato) {
+        }
+        $this->usuarios->cambiarClave($id, 'clave-segura-1', 'clave-nueva-22', $t1);
+        $this->assertTrue($this->usuarios->usuarioDeSesion($t1) !== null);
+        $this->assertTrue($this->usuarios->usuarioDeSesion($t2) === null);
+        $this->assertSame('A', $this->usuarios->iniciarSesion('a@asocim.com', 'clave-nueva-22')['usuario']['nombre']);
+    }
 }

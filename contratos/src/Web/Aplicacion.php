@@ -42,6 +42,12 @@ final class Aplicacion
             if (str_starts_with($ruta, '/api/usuarios')) {
                 return $this->usuariosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }
+            if ($metodo === 'POST' && $ruta === '/api/clave') {
+                $u = $this->sesionDe($cabeceras);
+                $d = $this->json($cuerpo);
+                $this->usuarios->cambiarClave($u['id'], (string) ($d['clave_actual'] ?? ''), (string) ($d['clave_nueva'] ?? ''), (string) $this->tokenDe($cabeceras));
+                return [200, ['ok' => true]];
+            }
             if (str_starts_with($ruta, '/api/contratos')) {
                 return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }
