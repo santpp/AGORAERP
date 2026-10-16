@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^api/ index.php [L,QSA]
+RewriteRule ^firmar$ firmar.php [L,QSA]
