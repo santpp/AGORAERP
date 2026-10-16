@@ -195,6 +195,8 @@ header('X-Robots-Tag: noindex');
     $('documento').src = '/firmar?documento=' + encodeURIComponent(token);
     $('cargando').classList.add('oculto');
     $('contenido').classList.remove('oculto');
+    // El lienzo estaba oculto al cargar y medía 0: hay que ajustarlo ahora que es visible.
+    ajustar();
   }
 
   // ---- lienzo de firma (ratón, dedo y lápiz)
