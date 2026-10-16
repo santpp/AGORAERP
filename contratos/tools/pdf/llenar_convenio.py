@@ -8,13 +8,15 @@ Uso:
   python3 llenar_convenio.py datos.json salida.pdf [firma.png]
 """
 import json
+import os
 import sys
 
 import pymupdf
 
-ORIGINAL = "/home/user/AGORAERP/contratos/plantillas/convenio_original.pdf"
-FUENTE_INTER_R = "/usr/share/fonts/opentype/inter/Inter-Regular.otf"
-FUENTE_INTER_B = "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ORIGINAL = os.path.join(RAIZ, "plantillas", "convenio_original.pdf")
+FUENTE_INTER_R = os.path.join(RAIZ, "plantillas", "fuentes", "Inter-Regular.otf")
+FUENTE_INTER_B = os.path.join(RAIZ, "plantillas", "fuentes", "Inter-Bold.otf")
 
 MESES = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
          "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
