@@ -12,6 +12,7 @@ use Asocim\Contratos\Calculo\Resultado;
 use Asocim\Contratos\Calculo\Terminos;
 use Asocim\Contratos\Documento\Formato;
 use Asocim\Contratos\Documento\GeneradorPdf;
+use Asocim\Contratos\Ghl\ClienteGhl;
 use PDO;
 
 /**
@@ -21,6 +22,7 @@ use PDO;
 final class ContratoServicio
 {
     public const DIAS_VALIDEZ_ENLACE = 7;
+    private const DIAS_DESCARGA = 30;
 
     private CalculadoraContrato $calculadora;
 
@@ -29,6 +31,8 @@ final class ContratoServicio
         private readonly ?\Closure $ahora = null,
         private readonly ?GeneradorPdf $generador = null,
         private readonly ?string $carpetaDocumentos = null,
+        private readonly ?ClienteGhl $ghl = null,
+        private readonly string $appUrl = 'https://asocim.agoradigital.app',
     ) {
         $this->calculadora = new CalculadoraContrato();
     }
@@ -309,6 +313,7 @@ final class ContratoServicio
         }
         $documento = $sha ?? hash('sha256', (string) $version['terminos'] . '|' . $firma['firma_png']);
 
+        $descarga = null;
         $this->pdo->beginTransaction();
         try {
             $this->insertar('firmas', [
@@ -328,6 +333,15 @@ final class ContratoServicio
                     'creado_en' => $this->ahora(),
                 ]);
             }
+            if ($rutaFirmado !== null) {
+                $descarga = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+                $this->insertar('descargas_firma', [
+                    'version_id' => $version['id'],
+                    'hash' => hash('sha256', $descarga),
+                    'expira_en' => $this->sumarDias(self::DIAS_DESCARGA),
+                    'creado_en' => $this->ahora(),
+                ]);
+            }
             $this->pdo->prepare("UPDATE versiones SET estado = 'FIRMADO', firmado_en = ? WHERE id = ?")
                 ->execute([$this->ahora(), $version['id']]);
             $this->pdo->prepare('UPDATE tokens_firma SET usado_en = ? WHERE id = ?')
@@ -337,6 +351,10 @@ final class ContratoServicio
         } catch (\Throwable $e) {
             $this->pdo->rollBack();
             throw $e;
+        }
+
+        if ($descarga !== null) {
+            $this->avisarCliente($contrato, $descarga);
         }
     }
 
@@ -389,6 +407,45 @@ final class ContratoServicio
     }
 
     // ------------------------------------------------------------------ internos
+
+    /** Ruta del convenio firmado para el enlace de descarga (vence a los 30 días). */
+    public function documentoFirmadoDeDescarga(string $token): string
+    {
+        $fila = $this->fila(
+            'SELECT d.ruta, dg.expira_en FROM descargas_firma dg JOIN documentos_firmados d ON d.version_id = dg.version_id WHERE dg.hash = ?',
+            [hash('sha256', $token)]
+        );
+        if (!$fila || $fila['expira_en'] < $this->ahora()) {
+            throw new ErrorContrato('Este enlace no es válido o ya venció.', 404);
+        }
+        if (!is_file($fila['ruta'])) {
+            throw new ErrorContrato('El convenio firmado no está disponible.', 404);
+        }
+        return $fila['ruta'];
+    }
+
+    /**
+     * Envía al cliente el enlace a su convenio firmado. El id de contacto de GHL
+     * es la primera parte de clave_webhook. Si GHL falla, la firma ya quedó guardada.
+     * @param array<string,mixed> $contrato
+     */
+    private function avisarCliente(array $contrato, string $descarga): void
+    {
+        if ($this->ghl === null || empty($contrato['clave_webhook'])) {
+            return;
+        }
+        try {
+            $contactoId = explode(':', (string) $contrato['clave_webhook'])[0];
+            $enlace = rtrim($this->appUrl, '/') . '/firmar?descarga=' . $descarga;
+            $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
+                . '<p>Tu convenio de pago con ASOCIM ya está firmado. Puedes descargar tu copia aquí:</p>'
+                . '<p><a href="' . $enlace . '">Descargar convenio firmado</a></p>'
+                . '<p>El enlace estará disponible durante 30 días.</p>';
+            $this->ghl->enviarCorreo($contactoId, 'Tu convenio firmado · ASOCIM', $html);
+        } catch (\Throwable $e) {
+            error_log('[contratos] No se envió el correo de firma: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Ruta del PDF enviado, para que el cliente lo revise antes de firmar.

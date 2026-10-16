@@ -29,6 +29,7 @@ $clases = [
     'Asocim\\Contratos\\Tests\\CalculadoraContratoTest',
     'Asocim\\Contratos\\Tests\\ServicioContratoTest',
     'Asocim\\Contratos\\Tests\\UsuarioServicioTest',
+    'Asocim\\Contratos\\Tests\\ClienteGhlTest',
 ];
 
 $pasadas = 0;

@@ -15,6 +15,7 @@ require __DIR__ . '/cargar_entorno.php';
 cargar_entorno(__DIR__ . '/../../.env');
 
 use Asocim\Contratos\Documento\GeneradorPdf;
+use Asocim\Contratos\Ghl\ClienteGhl;
 use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Servicio\ContratoServicio;
 use Asocim\Contratos\Servicio\UsuarioServicio;
@@ -29,8 +30,9 @@ $generador = new GeneradorPdf(
     $raiz . '/storage/tmp',
 );
 $documentos = $raiz . '/storage/documentos';
+$ghl = new ClienteGhl((string) getenv('GHL_TOKEN'), (string) getenv('GHL_LOCATION_ID'));
 $app = new Aplicacion(
-    new ContratoServicio($pdo, null, $generador, $documentos),
+    new ContratoServicio($pdo, null, $generador, $documentos, $ghl, getenv('APP_URL') ?: 'https://asocim.agoradigital.app'),
     new UsuarioServicio($pdo),
     (string) getenv('GHL_WEBHOOK_SECRET'),
 );

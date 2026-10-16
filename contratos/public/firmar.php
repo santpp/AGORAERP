@@ -18,6 +18,23 @@ use Asocim\Contratos\Servicio\ErrorContrato;
 $token = (string) ($_GET['t'] ?? $_GET['documento'] ?? '');
 $servicio = new ContratoServicio($pdo, null, $generador, $documentos);
 
+if (isset($_GET['descarga'])) {
+    // Enlace del correo: copia del convenio firmado (vence a los 30 días).
+    try {
+        $ruta = $servicio->documentoFirmadoDeDescarga((string) $_GET['descarga']);
+    } catch (ErrorContrato $e) {
+        http_response_code($e->http);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo $e->getMessage();
+        exit;
+    }
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="convenio-firmado-asocim.pdf"');
+    header('Cache-Control: no-store');
+    readfile($ruta);
+    exit;
+}
+
 if (isset($_GET['documento'])) {
     try {
         $ruta = $servicio->documentoDeEnlace($token);

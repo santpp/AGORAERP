@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS documentos (
     creado_en   TEXT NOT NULL
 );
 
+-- Enlaces de descarga del convenio firmado (se envían por correo al cliente). Solo se guarda el hash.
+CREATE TABLE IF NOT EXISTS descargas_firma (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id  INTEGER NOT NULL REFERENCES versiones(id),
+    hash        TEXT NOT NULL UNIQUE,
+    expira_en   TEXT NOT NULL,
+    creado_en   TEXT NOT NULL
+);
+
 -- Convenio con la firma del cliente. Un PDF por versión firmada (el enviado queda en documentos).
 CREATE TABLE IF NOT EXISTS documentos_firmados (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
