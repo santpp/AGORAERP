@@ -431,11 +431,14 @@ final class ContratoServicio
      */
     private function avisarCliente(array $contrato, string $descarga): void
     {
-        if ($this->ghl === null || empty($contrato['clave_webhook'])) {
+        if ($this->ghl === null) {
             return;
         }
         try {
-            $contactoId = explode(':', (string) $contrato['clave_webhook'])[0];
+            // Si el webhook no trajo el contact_id de GHL, se busca o crea el contacto por correo.
+            $contactoId = empty($contrato['clave_webhook'])
+                ? $this->ghl->contactoPara((string) $contrato['cliente_correo'], (string) $contrato['cliente_nombre'], $contrato['cliente_telefono'] ?? null)
+                : explode(':', (string) $contrato['clave_webhook'])[0];
             $enlace = rtrim($this->appUrl, '/') . '/firmar?descarga=' . $descarga;
             $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
                 . '<p>Tu convenio de pago con ASOCIM ya está firmado. Puedes descargar tu copia aquí:</p>'
