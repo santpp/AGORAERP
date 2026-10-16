@@ -175,4 +175,25 @@ final class ServicioContratoTest extends TestCase
         $this->expectException(ErrorContrato::class);
         ContratoServicio::mesDeInicio('noviembre');
     }
+
+    public function test_payload_plano_de_custom_data_de_ghl(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook([
+            'clave' => 'plano-1',
+            'sub_cuenta' => 'loc-asocim',
+            'nombre_cliente' => 'Yuly Eunice Navas Callaspo',
+            'cedula' => '14943155',
+            'telefono' => '0412-5063751',
+            'correo_cliente' => 'cliente@example.com',
+            'cuota_mensual' => '105',
+            'meses' => '12',
+            'mes_inicio' => 'Oct 6, 2026',
+            'cuotas_por_mes' => '1',
+            'responsable_nombre' => 'Vendedor',
+            'responsable_correo' => 'vendedor@example.com',
+        ])['uid'];
+        $ver = $this->servicio->ver($uid);
+        $this->assertSame('1260.00', $ver['calculo']['precio_curso']);
+        $this->assertSame('2026-10-30', $ver['calculo']['cuotas'][0]['vencimiento']);
+    }
 }

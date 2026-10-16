@@ -44,6 +44,7 @@ final class ContratoServicio
             }
         }
 
+        $p = self::normalizarPayload($p);
         $cliente = $this->seccion($p, 'cliente');
         $curso = $this->seccion($p, 'curso');
         $responsable = $this->seccion($p, 'responsable');
@@ -324,6 +325,40 @@ final class ContratoServicio
             'mes' => $mes,
             'cuotas_por_mes' => (int) ($curso['cuotas_por_mes'] ?? 1),
             'cargos' => $cargos,
+        ];
+    }
+
+    /**
+     * GHL "Custom Data" envía pares planos (cedula, cuota_mensual…). Los convierte a la forma por secciones.
+     * Si ya viene por secciones (cliente, curso, responsable), la deja igual.
+     * @param array<string,mixed> $p
+     * @return array<string,mixed>
+     */
+    public static function normalizarPayload(array $p): array
+    {
+        if (isset($p['cliente'])) {
+            return $p;
+        }
+        return [
+            'clave' => $p['clave'] ?? '',
+            'sub_cuenta' => $p['sub_cuenta'] ?? '',
+            'cliente' => [
+                'nombre' => $p['nombre_cliente'] ?? '',
+                'cedula' => $p['cedula'] ?? '',
+                'telefono' => $p['telefono'] ?? '',
+                'correo' => $p['correo_cliente'] ?? '',
+            ],
+            'curso' => [
+                'cuota_mensual' => $p['cuota_mensual'] ?? '',
+                'meses' => $p['meses'] ?? 0,
+                'mes_inicio' => $p['mes_inicio'] ?? '',
+                'cuotas_por_mes' => $p['cuotas_por_mes'] ?? 1,
+                'cargos' => [],
+            ],
+            'responsable' => [
+                'nombre' => $p['responsable_nombre'] ?? '',
+                'correo' => $p['responsable_correo'] ?? '',
+            ],
         ];
     }
 
