@@ -339,6 +339,31 @@ final class ContratoServicio
         if (isset($p['cliente'])) {
             return $p;
         }
+        // Formato estándar de GHL: campos de contacto y de campos personalizados con su nombre
+        if (isset($p['contact_id'])) {
+            $nombre = trim(($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''));
+            return [
+                'clave' => (string) $p['contact_id'] . ':' . (string) ($p['workflow']['id'] ?? 'manual'),
+                'sub_cuenta' => (string) ($p['location']['id'] ?? ''),
+                'cliente' => [
+                    'nombre' => $nombre !== '' ? $nombre : ($p['full_name'] ?? ''),
+                    'cedula' => $p['Cédula'] ?? $p['cedula'] ?? '',
+                    'telefono' => $p['phone'] ?? '',
+                    'correo' => $p['email'] ?? '',
+                ],
+                'curso' => [
+                    'cuota_mensual' => $p['cuota mensual'] ?? '',
+                    'meses' => $p['meses'] ?? 0,
+                    'mes_inicio' => $p['mes inicio'] ?? '',
+                    'cuotas_por_mes' => $p['cuotas por mes'] ?? 1,
+                    'cargos' => [],
+                ],
+                'responsable' => [
+                    'nombre' => $p['user']['name'] ?? '',
+                    'correo' => $p['user']['email'] ?? '',
+                ],
+            ];
+        }
         return [
             'clave' => $p['clave'] ?? '',
             'sub_cuenta' => $p['sub_cuenta'] ?? '',

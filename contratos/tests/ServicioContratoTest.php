@@ -196,4 +196,18 @@ final class ServicioContratoTest extends TestCase
         $this->assertSame('1260.00', $ver['calculo']['precio_curso']);
         $this->assertSame('2026-10-30', $ver['calculo']['cuotas'][0]['vencimiento']);
     }
+
+    public function test_formato_estandar_de_ghl(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook([
+            'contact_id' => 'c-1', 'first_name' => 'Yuly', 'last_name' => 'Navas', 'email' => 'cliente@example.com',
+            'phone' => '0412-5063751', 'Cédula' => '14943155', 'cuota mensual' => '105', 'meses' => '12',
+            'mes inicio' => 'Oct 26, 2026', 'cuotas por mes' => '1',
+            'location' => ['id' => 'loc-asocim'], 'user' => ['name' => 'Vendedor', 'email' => 'v@example.com'],
+            'workflow' => ['id' => 'wf-1'],
+        ])['uid'];
+        $ver = $this->servicio->ver($uid);
+        $this->assertSame('1260.00', $ver['calculo']['precio_curso']);
+        $this->assertSame('2026-10-30', $ver['calculo']['cuotas'][0]['vencimiento']);
+    }
 }
