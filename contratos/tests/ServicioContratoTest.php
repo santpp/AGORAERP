@@ -160,4 +160,19 @@ final class ServicioContratoTest extends TestCase
         $guardado = $this->pdo->query('SELECT hash FROM tokens_firma')->fetchAll(PDO::FETCH_COLUMN);
         $this->assertTrue(!in_array($token, $guardado, true), 'el token aparece en claro en la base');
     }
+
+    public function test_fecha_de_ghl_se_convierte_a_anio_y_mes(): void
+    {
+        $this->assertSame([2026, 10], ContratoServicio::mesDeInicio('Oct 6, 2026'));
+        $this->assertSame([2026, 10], ContratoServicio::mesDeInicio('10/06/2026'));
+        $this->assertSame([2026, 10], ContratoServicio::mesDeInicio('2026-10-06'));
+        $this->assertSame([2026, 11], ContratoServicio::mesDeInicio('2026-11'));
+        $this->assertSame([2027, 1], ContratoServicio::mesDeInicio('January 15, 2027'));
+    }
+
+    public function test_fecha_de_inicio_no_reconocida_falla(): void
+    {
+        $this->expectException(ErrorContrato::class);
+        ContratoServicio::mesDeInicio('noviembre');
+    }
 }

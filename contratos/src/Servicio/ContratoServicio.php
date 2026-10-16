@@ -312,10 +312,7 @@ final class ContratoServicio
     /** Convierte la sección "curso" del webhook a términos guardables (montos como texto). */
     private function terminosDesde(array $curso): array
     {
-        $mes = (string) ($curso['mes_inicio'] ?? '');
-        if (!preg_match('/^(\d{4})-(\d{2})$/', $mes, $m)) {
-            throw new ErrorContrato('El mes de inicio debe tener formato AAAA-MM, por ejemplo 2026-11.');
-        }
+        [$anio, $mes] = self::mesDeInicio((string) ($curso['mes_inicio'] ?? ''));
         $cargos = [];
         foreach ($curso['cargos'] ?? [] as $c) {
             $cargos[] = ['concepto' => (string) $c['concepto'], 'monto' => (string) $c['monto']];
@@ -323,11 +320,33 @@ final class ContratoServicio
         return [
             'cuota' => (string) ($curso['cuota_mensual'] ?? ''),
             'meses' => (int) ($curso['meses'] ?? 0),
-            'anio' => (int) $m[1],
-            'mes' => (int) $m[2],
+            'anio' => $anio,
+            'mes' => $mes,
             'cuotas_por_mes' => (int) ($curso['cuotas_por_mes'] ?? 1),
             'cargos' => $cargos,
         ];
+    }
+
+    /**
+     * Año y mes de inicio. Acepta lo que envía GHL en un campo de fecha ("Oct 6, 2026",
+     * "10/06/2026" como MM/DD/AAAA, "2026-10-06") y también "2026-10" o "10/2026".
+     * El día no importa: el convenio solo usa el mes.
+     * @return array{0:int,1:int}
+     */
+    public static function mesDeInicio(string $texto): array
+    {
+        $texto = trim($texto);
+        $formatos = ['Y-m-d', 'Y-m', 'm/d/Y', 'm/Y', 'M j, Y', 'F j, Y', 'M d, Y', 'F d, Y'];
+        foreach ($formatos as $formato) {
+            $fecha = \DateTimeImmutable::createFromFormat('!' . $formato, $texto);
+            if ($fecha && $fecha->format($formato) === $texto) {
+                return [(int) $fecha->format('Y'), (int) $fecha->format('n')];
+            }
+        }
+        if (preg_match('/^(\d{4})-(\d{2})-\d{2}T/', $texto, $m)) {
+            return [(int) $m[1], (int) $m[2]];
+        }
+        throw new ErrorContrato('No entiendo el mes de inicio «' . $texto . '». Usa un campo de fecha de GHL o el formato AAAA-MM.');
     }
 
     /** @param array<string,mixed> $c */
