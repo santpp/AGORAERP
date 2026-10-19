@@ -33,6 +33,8 @@ export class NuevoContrato {
 
   // Paso 2: datos del convenio para ese contacto
   protected cedula = '';
+  protected nombre = '';
+  protected readonly aviso = signal('');
   protected curso = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
@@ -47,7 +49,8 @@ export class NuevoContrato {
     this.buscando.set(true);
     this.busquedaError.set('');
     this.api.buscarContactos(texto).subscribe({
-      next: ({ contactos }) => {
+      next: ({ contactos, aviso }) => {
+        this.aviso.set(aviso ?? '');
         this.resultados.set(contactos);
         this.busquedaHecha.set(true);
         this.buscando.set(false);
@@ -61,6 +64,7 @@ export class NuevoContrato {
 
   protected elegir(contacto: ContactoGhl): void {
     this.elegido.set(contacto);
+    this.nombre = contacto.nombre;
     this.cedula = contacto.cedula;
     this.error.set('');
   }
@@ -81,7 +85,7 @@ export class NuevoContrato {
       .crear({
         cliente: {
           contact_id: contacto.id,
-          nombre: contacto.nombre,
+          nombre: this.nombre.trim(),
           cedula: this.cedula.trim(),
           telefono: contacto.telefono,
           correo: contacto.correo,

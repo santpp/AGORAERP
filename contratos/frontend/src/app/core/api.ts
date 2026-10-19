@@ -48,6 +48,7 @@ export interface ContratoDetalle {
   version: number;
   cliente: { nombre: string; correo: string; cedula: string; telefono: string };
   descuento: string;
+  enlace: string | null;
   pdfs: { enviado: boolean; firmado: boolean };
   calculo: {
     precio_curso: string;
@@ -133,9 +134,9 @@ export class ApiService {
   }
 
   /** Busca contactos en AGORA (los que se agregan allí aparecen aquí). */
-  buscarContactos(consulta: string): Observable<{ contactos: ContactoGhl[] }> {
+  buscarContactos(consulta: string): Observable<{ contactos: ContactoGhl[]; aviso?: string }> {
     return this.http
-      .post<{ contactos: ContactoGhl[] }>('/api/ghl/contactos/buscar', { consulta })
+      .post<{ contactos: ContactoGhl[]; aviso?: string }>('/api/ghl/contactos/buscar', { consulta })
       .pipe(catchError(mensajeDeError));
   }
 
@@ -145,6 +146,11 @@ export class ApiService {
 
   editar(uid: string, cambios: CambiosCalculo): Observable<{ version: number }> {
     return this.http.post<{ version: number }>(`/api/contratos/${uid}/editar`, cambios).pipe(catchError(mensajeDeError));
+  }
+
+  /** Vista previa de un borrador: se genera al pedirla, no se guarda. */
+  urlPrevia(uid: string): string {
+    return `/api/contratos/${uid}/pdf/previa`;
   }
 
   /** Ruta relativa del PDF (mismo dominio, la sesión viaja con la cookie). */

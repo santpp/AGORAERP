@@ -90,6 +90,13 @@ CREATE TABLE IF NOT EXISTS documentos (
     creado_en   TEXT NOT NULL
 );
 
+-- Enlace de firma cifrado (APP_CLAVE): permite mostrarlo otra vez en el panel mientras siga vigente.
+CREATE TABLE IF NOT EXISTS enlaces_firma (
+    version_id    INTEGER PRIMARY KEY REFERENCES versiones(id),
+    token_cifrado TEXT NOT NULL,
+    creado_en     TEXT NOT NULL
+);
+
 -- Enlaces de descarga del convenio firmado (se envían por correo al cliente). Solo se guarda el hash.
 CREATE TABLE IF NOT EXISTS descargas_firma (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

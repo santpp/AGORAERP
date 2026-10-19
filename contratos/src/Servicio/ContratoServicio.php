@@ -12,6 +12,7 @@ use Asocim\Contratos\Calculo\Resultado;
 use Asocim\Contratos\Calculo\Terminos;
 use Asocim\Contratos\Documento\Formato;
 use Asocim\Contratos\Documento\GeneradorPdf;
+use Asocim\Contratos\Correo\Plantilla;
 use Asocim\Contratos\Ghl\ClienteGhl;
 use PDO;
 
@@ -25,6 +26,7 @@ final class ContratoServicio
     private const DIAS_DESCARGA = 30;
 
     private CalculadoraContrato $calculadora;
+    private Plantilla $plantilla;
 
     public function __construct(
         private readonly PDO $pdo,
@@ -35,6 +37,7 @@ final class ContratoServicio
         private readonly string $appUrl = 'https://contratos.agoradigital.app',
     ) {
         $this->calculadora = new CalculadoraContrato();
+        $this->plantilla = new Plantilla($this->appUrl);
     }
 
     // ------------------------------------------------------------------ GHL
@@ -175,6 +178,7 @@ final class ContratoServicio
                 'hash' => hash('sha256', $token),
                 'expira_en' => $vence,
             ]);
+            $this->guardarEnlaceCifrado((int) $version['id'], $token);
             if ($pdf !== null) {
                 $this->insertar('documentos', [
                     'version_id' => $version['id'],
@@ -189,7 +193,7 @@ final class ContratoServicio
             $this->pdo->rollBack();
             throw $e;
         }
-        $this->avisarEnvio($contrato, $token, $vence);
+        $this->avisarEnvio($contrato, $token, $vence, $terminos);
         return ['token' => $token, 'version' => (int) $version['numero'], 'vence' => $vence];
     }
 
@@ -381,6 +385,7 @@ final class ContratoServicio
             'version' => (int) $ultima['numero'],
             'calculo' => $this->calcular($ultima),
             'descuento' => (string) ($terminos['descuento'] ?? '0'),
+            'enlace' => $this->enlaceVigente($ultima),
             'pdfs' => [
                 'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
                 'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,
@@ -485,17 +490,20 @@ final class ContratoServicio
     }
 
     /** Correo al cliente con el enlace para firmar. */
-    private function avisarEnvio(array $contrato, string $token, string $vence): void
+    private function avisarEnvio(array $contrato, string $token, string $vence, array $terminos): void
     {
         if ($this->ghl === null) {
             return;
         }
         try {
             $enlace = rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
-            $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
-                . '<p>Tu convenio de pago con ASOCIM está listo para revisar y firmar:</p>'
-                . '<p><a href="' . $enlace . '">Revisar y firmar el convenio</a></p>'
-                . '<p>El enlace vence el ' . date('m/d/Y', strtotime($vence)) . '.</p>';
+            $html = $this->plantilla->enlaceFirma(
+                (string) $contrato['cliente_nombre'],
+                $enlace,
+                date('m/d/Y H:i', strtotime($vence)),
+                Formato::dinero(\Asocim\Contratos\Calculo\Dinero::desde((string) $terminos['cuota'])),
+                (int) $terminos['meses'],
+            );
             $this->ghl->enviarCorreo($this->contactoDelCliente($contrato), 'Tu convenio de pago · ASOCIM', $html);
         } catch (\Throwable $e) {
             error_log('[contratos] No se envió el correo con el enlace: ' . $e->getMessage());
@@ -511,12 +519,70 @@ final class ContratoServicio
         try {
             $contactoId = $this->ghl->contactoPara((string) $contrato['responsable_correo'], (string) ($contrato['responsable_nombre'] ?? ''), null);
             $enlace = rtrim($this->appUrl, '/') . '/contratos/' . $contrato['uid'];
-            $html = '<p>' . htmlspecialchars((string) $contrato['cliente_nombre']) . ' firmó el convenio de pago.</p>'
-                . '<p><a href="' . $enlace . '">Ver el convenio en el panel</a></p>';
-            $this->ghl->enviarCorreo($contactoId, 'Convenio firmado · ' . $contrato['cliente_nombre'], $html);
+            $this->ghl->enviarCorreo($contactoId, 'Convenio firmado · ' . $contrato['cliente_nombre'], $this->plantilla->avisoPersonal((string) $contrato['cliente_nombre'], $enlace));
         } catch (\Throwable $e) {
             error_log('[contratos] No se avisó al personal: ' . $e->getMessage());
         }
+    }
+
+    /** Guarda el enlace de firma cifrado para poder mostrarlo otra vez en el panel. */
+    private function guardarEnlaceCifrado(int $versionId, string $token): void
+    {
+        $clave = getenv('APP_CLAVE') ?: '';
+        if ($clave === '') {
+            error_log('[contratos] Falta APP_CLAVE en .env: el enlace no se podrá mostrar en el panel.');
+            return;
+        }
+        $iv = random_bytes(12);
+        $tag = '';
+        $cifrado = openssl_encrypt($token, 'aes-256-gcm', hash('sha256', $clave, true), OPENSSL_RAW_DATA, $iv, $tag);
+        $this->pdo->prepare('INSERT OR REPLACE INTO enlaces_firma (version_id, token_cifrado, creado_en) VALUES (?, ?, ?)')
+            ->execute([$versionId, base64_encode($iv . $tag . $cifrado), $this->ahora()]);
+    }
+
+    /** Enlace de firma vigente de la última versión, o null si ya no sirve. */
+    private function enlaceVigente(array $version): ?string
+    {
+        $clave = getenv('APP_CLAVE') ?: '';
+        if ($clave === '' || $version['estado'] !== 'ENVIADO') {
+            return null;
+        }
+        $fila = $this->fila(
+            'SELECT ef.token_cifrado, tf.expira_en, tf.usado_en, tf.revocado_en FROM enlaces_firma ef
+               JOIN tokens_firma tf ON tf.version_id = ef.version_id
+              WHERE ef.version_id = ? ORDER BY tf.id DESC LIMIT 1',
+            [$version['id']]
+        );
+        if (!$fila || $fila['usado_en'] !== null || $fila['revocado_en'] !== null || $fila['expira_en'] < $this->ahora()) {
+            return null;
+        }
+        $bruto = base64_decode((string) $fila['token_cifrado'], true);
+        if ($bruto === false || strlen($bruto) < 28) {
+            return null;
+        }
+        $token = openssl_decrypt(substr($bruto, 28), 'aes-256-gcm', hash('sha256', $clave, true), OPENSSL_RAW_DATA, substr($bruto, 0, 12), substr($bruto, 12, 16));
+        return $token === false ? null : rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
+    }
+
+    /**
+     * PDF de vista previa de un borrador (no se guarda como enviado).
+     * @return string ruta del PDF
+     */
+    public function previaPdf(string $uid, string $personal): string
+    {
+        if ($this->generador === null) {
+            throw new ErrorContrato('No está instalado el generador de PDF en el servidor.', 500);
+        }
+        $contrato = $this->contrato($uid);
+        $version = $this->ultimaVersion((int) $contrato['id']);
+        if ($version['estado'] !== 'BORRADOR') {
+            throw new ErrorContrato('La vista previa es solo para borradores.', 409);
+        }
+        $terminos = json_decode($version['terminos'], true);
+        $r = $this->calculadora->calcular($this->construirTerminos($terminos));
+        $datos = $this->datosPdf($contrato, $terminos, $r, $personal);
+        $ruta = dirname((string) $this->carpetaDocumentos) . '/tmp/previa-' . $uid . '-v' . $version['numero'] . '.pdf';
+        return $this->generador->generar($datos, $ruta);
     }
 
     /** Ruta del convenio firmado para el enlace de descarga (vence a los 30 días). */

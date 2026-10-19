@@ -74,9 +74,22 @@ class ClienteGhl
                 'correo' => (string) ($c['email'] ?? ''),
                 'telefono' => (string) ($c['phone'] ?? ''),
                 'cedula' => $cedula,
+                'asignado' => (string) ($c['assignedTo'] ?? ''),
             ];
         }
         return array_values(array_filter($salida, fn (array $c) => $c['id'] !== ''));
+    }
+
+    /** Id de usuario en GHL de la persona con ese correo (null si no existe en la subcuenta). */
+    public function usuarioPorCorreo(string $correo): ?string
+    {
+        $respuesta = ($this->http)('GET', self::BASE . '/users/?' . http_build_query(['locationId' => $this->locationId]), []);
+        foreach ($respuesta['users'] ?? [] as $u) {
+            if (strcasecmp((string) ($u['email'] ?? ''), $correo) === 0 && !empty($u['id'])) {
+                return (string) $u['id'];
+            }
+        }
+        return null;
     }
 
     /** Id del campo personalizado cuya clave es contact.cedula (se consulta una vez por petición). */

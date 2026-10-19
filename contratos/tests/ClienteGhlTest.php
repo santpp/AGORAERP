@@ -68,6 +68,6 @@ final class ClienteGhlTest extends TestCase
         $resultado = $cliente->buscarContactos('Yuly');
 
         $this->assertCount(1, $resultado);
-        $this->assertSame(['id' => 'c1', 'nombre' => 'Yuly Navas', 'correo' => 'y@example.com', 'telefono' => '0412', 'cedula' => '14943155'], $resultado[0]);
+        $this->assertSame(['id' => 'c1', 'nombre' => 'Yuly Navas', 'correo' => 'y@example.com', 'telefono' => '0412', 'cedula' => '14943155', 'asignado' => ''], $resultado[0]);
     }
 }

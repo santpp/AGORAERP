@@ -21,6 +21,8 @@
 
     @if (busquedaError()) {
       <p class="error" role="alert">{{ busquedaError() }}</p>
+    } @else if (aviso()) {
+      <p class="suave">{{ aviso() }}</p>
     } @else if (busquedaHecha() && resultados().length === 0) {
       <p class="suave">No hay contactos con esa búsqueda. Revisa el nombre o agrégalo en AGORA.</p>
     } @else if (resultados().length > 0) {
@@ -48,6 +50,10 @@
     <form class="formulario" (ngSubmit)="crear()">
       <h2>2. Datos del convenio</h2>
       <div class="campos">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre completo</mat-label>
+          <input matInput name="nombre" required [(ngModel)]="nombre" />
+        </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Cédula</mat-label>
           <input matInput name="cedula" required inputmode="numeric" [(ngModel)]="cedula" />

@@ -136,6 +136,7 @@ export class DetalleContrato implements OnInit {
     this.accion(() => this.api.enviar(this.uid), (resultado) => {
       this.envio.set(resultado as EnvioResultado);
       this.copiado.set(false);
+      this.verPrevia.set(false);
     });
   }
 
@@ -149,14 +150,18 @@ export class DetalleContrato implements OnInit {
     this.accion(() => this.api.revocar(this.uid));
   }
 
-  protected async copiarEnlace(): Promise<void> {
-    const enlace = this.envio()?.enlace;
-    if (!enlace) {
-      return;
-    }
+  protected async copiarEnlace(enlace: string): Promise<void> {
     await navigator.clipboard.writeText(enlace);
     this.copiado.set(true);
   }
+
+  protected readonly verPrevia = signal(false);
+  protected readonly previaUrl = computed<SafeResourceUrl | null>(() => {
+    if (!this.verPrevia()) {
+      return null;
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.api.urlPrevia(this.uid));
+  });
 
   private accion<T>(ejecutar: () => Observable<T>, alTerminar?: (resultado: T) => void): void {
     this.ocupado.set(true);

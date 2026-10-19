@@ -67,7 +67,7 @@ final class Aplicacion
                 }
             }
             if ($metodo === 'POST' && $ruta === '/api/ghl/contactos/buscar') {
-                $this->sesionDe($cabeceras, 'editar');
+                $u = $this->sesionDe($cabeceras, 'editar');
                 if ($this->ghl === null) {
                     throw new ErrorContrato('La conexión con AGORA no está configurada en el servidor.', 500);
                 }
@@ -75,7 +75,13 @@ final class Aplicacion
                 if (mb_strlen($consulta) < 2) {
                     return [200, ['contactos' => []]];
                 }
-                return [200, ['contactos' => $this->ghl->buscarContactos($consulta)]];
+                // Solo se muestran los contactos asignados a quien busca (su usuario de AGORA en GHL).
+                $idGhl = $this->ghl->usuarioPorCorreo((string) $u['correo']);
+                if ($idGhl === null) {
+                    return [200, ['contactos' => [], 'aviso' => 'Tu correo no está registrado como usuario en AGORA. Pide a la administración que te agregue.']];
+                }
+                $propios = array_values(array_filter($this->ghl->buscarContactos($consulta), fn (array $c) => $c['asignado'] === $idGhl));
+                return [200, ['contactos' => $propios]];
             }
             if ($metodo === 'GET' && $ruta === '/api/registro') {
                 $this->sesionDe($cabeceras, 'usuarios');
@@ -181,6 +187,10 @@ final class Aplicacion
             unset($p['cliente']['contact_id']);
             $p['sub_cuenta'] = $p['sub_cuenta'] ?? 'panel';
             return [201, ['uid' => $this->servicio->crearDesdeWebhook($p)['uid']]];
+        }
+        if ($metodo === 'GET' && preg_match('#^/api/contratos/([a-f0-9]{24})/pdf/previa$#', $ruta, $m)) {
+            $u = $this->sesionDe($cabeceras, 'ver');
+            return [200, ['__archivo' => $this->servicio->previaPdf($m[1], (string) $u['nombre']), '__nombre' => 'vista-previa.pdf']];
         }
         if ($metodo === 'GET' && preg_match('#^/api/contratos/([a-f0-9]{24})/pdf/(enviado|firmado)$#', $ruta, $m)) {
             $this->sesionDe($cabeceras, 'ver');
