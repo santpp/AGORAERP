@@ -61,6 +61,7 @@ export class NuevoContrato {
 
   protected elegir(contacto: ContactoGhl): void {
     this.elegido.set(contacto);
+    this.cedula = contacto.cedula;
     this.error.set('');
   }
 

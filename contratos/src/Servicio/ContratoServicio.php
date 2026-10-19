@@ -32,7 +32,7 @@ final class ContratoServicio
         private readonly ?GeneradorPdf $generador = null,
         private readonly ?string $carpetaDocumentos = null,
         private readonly ?ClienteGhl $ghl = null,
-        private readonly string $appUrl = 'https://asocim.agoradigital.app',
+        private readonly string $appUrl = 'https://contratos.agoradigital.app',
     ) {
         $this->calculadora = new CalculadoraContrato();
     }
@@ -461,7 +461,7 @@ final class ContratoServicio
         }
         try {
             $contactoId = $this->ghl->contactoPara((string) $contrato['responsable_correo'], (string) ($contrato['responsable_nombre'] ?? ''), null);
-            $enlace = rtrim($this->appUrl, '/') . '/app/contratos/' . $contrato['uid'];
+            $enlace = rtrim($this->appUrl, '/') . '/contratos/' . $contrato['uid'];
             $html = '<p>' . htmlspecialchars((string) $contrato['cliente_nombre']) . ' firmó el convenio de pago.</p>'
                 . '<p><a href="' . $enlace . '">Ver el convenio en el panel</a></p>';
             $this->ghl->enviarCorreo($contactoId, 'Convenio firmado · ' . $contrato['cliente_nombre'], $html);

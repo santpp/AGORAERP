@@ -18,6 +18,9 @@ class ClienteGhl
     /** @var \Closure(string,string,array<string,mixed>):array<string,mixed> */
     private \Closure $http;
 
+    /** Id del campo cédula: false = sin consultar todavía, null = no existe. */
+    private string|false|null $idCedula = false;
+
     /**
      * @param ?\Closure(string,string,array<string,mixed>):array<string,mixed> $http solo para pruebas
      */
@@ -42,30 +45,53 @@ class ClienteGhl
         ]);
         $id = $respuesta['contact']['id'] ?? null;
         if (!is_string($id) || $id === '') {
-            throw new ErrorContrato('GHL no devolvió el contacto.', 502);
+            throw new ErrorContrato('No se pudo guardar el contacto en AGORA.', 502);
         }
         return $id;
     }
 
     /**
      * Busca contactos de la subcuenta por nombre, correo o teléfono.
-     * @return list<array{id:string,nombre:string,correo:string,telefono:string}>
+     * @return list<array{id:string,nombre:string,correo:string,telefono:string,cedula:string}>
      */
     public function buscarContactos(string $consulta): array
     {
         $url = self::BASE . '/contacts/?' . http_build_query(['locationId' => $this->locationId, 'query' => $consulta, 'limit' => 20]);
         $respuesta = ($this->http)('GET', $url, []);
+        $idCedula = $this->idCampoCedula();
         $salida = [];
         foreach ($respuesta['contacts'] ?? [] as $c) {
+            $cedula = '';
+            foreach ($c['customFields'] ?? [] as $campo) {
+                if (($idCedula !== null && ($campo['id'] ?? '') === $idCedula) || ($campo['key'] ?? '') === 'contact.cedula') {
+                    $cedula = trim((string) ($campo['value'] ?? ''));
+                }
+            }
             $nombre = trim(($c['firstName'] ?? '') . ' ' . ($c['lastName'] ?? ''));
             $salida[] = [
                 'id' => (string) ($c['id'] ?? ''),
                 'nombre' => $nombre !== '' ? $nombre : (string) ($c['contactName'] ?? ''),
                 'correo' => (string) ($c['email'] ?? ''),
                 'telefono' => (string) ($c['phone'] ?? ''),
+                'cedula' => $cedula,
             ];
         }
         return array_values(array_filter($salida, fn (array $c) => $c['id'] !== ''));
+    }
+
+    /** Id del campo personalizado cuya clave es contact.cedula (se consulta una vez por petición). */
+    private function idCampoCedula(): ?string
+    {
+        if ($this->idCedula === false) {
+            $this->idCedula = null;
+            $defs = ($this->http)('GET', self::BASE . '/locations/' . rawurlencode($this->locationId) . '/customFields', []);
+            foreach ($defs['customFields'] ?? [] as $d) {
+                if (($d['fieldKey'] ?? '') === 'contact.cedula') {
+                    $this->idCedula = (string) ($d['id'] ?? '') ?: null;
+                }
+            }
+        }
+        return $this->idCedula;
     }
 
     /** Envía un correo a un contacto ya existente. */
@@ -103,7 +129,7 @@ class ClienteGhl
         curl_close($ch);
         if ($respuesta === false || $codigo < 200 || $codigo >= 300) {
             error_log('[contratos] GHL respondió ' . $codigo . ' en ' . $url);
-            throw new ErrorContrato('No se pudo contactar con GHL.', 502);
+            throw new ErrorContrato('No se pudo conectar con AGORA. Intenta de nuevo.', 502);
         }
         $datos = json_decode((string) $respuesta, true);
         return is_array($datos) ? $datos : [];

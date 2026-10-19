@@ -60,6 +60,7 @@ export interface ContactoGhl {
   nombre: string;
   correo: string;
   telefono: string;
+  cedula: string;
 }
 
 export interface NuevoContrato {
@@ -103,7 +104,7 @@ export class ApiService {
     return this.http.post<EnvioResultado>(`/api/contratos/${uid}/enviar`, {}).pipe(catchError(mensajeDeError));
   }
 
-  /** Busca contactos en GHL (los que se agregan en GHL aparecen aquí). */
+  /** Busca contactos en AGORA (los que se agregan allí aparecen aquí). */
   buscarContactos(consulta: string): Observable<{ contactos: ContactoGhl[] }> {
     return this.http
       .post<{ contactos: ContactoGhl[] }>('/api/ghl/contactos/buscar', { consulta })

@@ -7,7 +7,7 @@
 
   @if (!elegido()) {
     <h2>1. Busca el contacto</h2>
-    <p class="suave">Busca al alumno o representante entre los contactos de GHL. Si no aparece, agrégalo en GHL y vuelve a buscar.</p>
+    <p class="suave">Busca al alumno o representante entre los contactos de AGORA. Si no aparece, agrégalo en AGORA y vuelve a buscar.</p>
 
     <form class="busqueda" (ngSubmit)="buscar()" role="search">
       <mat-form-field appearance="outline">
@@ -22,7 +22,7 @@
     @if (busquedaError()) {
       <p class="error" role="alert">{{ busquedaError() }}</p>
     } @else if (busquedaHecha() && resultados().length === 0) {
-      <p class="suave">No hay contactos con esa búsqueda. Revisa el nombre o agrégalo en GHL.</p>
+      <p class="suave">No hay contactos con esa búsqueda. Revisa el nombre o agrégalo en AGORA.</p>
     } @else if (resultados().length > 0) {
       <ul class="resultados">
         @for (c of resultados(); track c.id) {

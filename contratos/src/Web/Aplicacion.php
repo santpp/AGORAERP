@@ -69,7 +69,7 @@ final class Aplicacion
             if ($metodo === 'POST' && $ruta === '/api/ghl/contactos/buscar') {
                 $this->sesionDe($cabeceras, 'editar');
                 if ($this->ghl === null) {
-                    throw new ErrorContrato('GHL no está configurado en el servidor.', 500);
+                    throw new ErrorContrato('La conexión con AGORA no está configurada en el servidor.', 500);
                 }
                 $consulta = trim((string) ($this->json($cuerpo)['consulta'] ?? ''));
                 if (mb_strlen($consulta) < 2) {
@@ -190,7 +190,7 @@ final class Aplicacion
             }
             if ($m[2] === 'enviar') {
                 $envio = $this->servicio->enviar($m[1], $u['nombre']);
-                $base = rtrim((string) getenv('APP_URL') ?: 'https://asocim.agoradigital.app', '/');
+                $base = rtrim((string) getenv('APP_URL') ?: 'https://contratos.agoradigital.app', '/');
                 return [200, ['version' => $envio['version'], 'enlace' => $base . '/firmar?t=' . $envio['token'], 'vence' => $envio['vence']]];
             }
             $this->servicio->revocar($m[1]);

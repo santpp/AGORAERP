@@ -32,7 +32,7 @@ $generador = new GeneradorPdf(
 $documentos = $raiz . '/storage/documentos';
 $ghl = new ClienteGhl((string) getenv('GHL_TOKEN'), (string) getenv('GHL_LOCATION_ID'));
 $app = new Aplicacion(
-    new ContratoServicio($pdo, null, $generador, $documentos, $ghl, getenv('APP_URL') ?: 'https://asocim.agoradigital.app'),
+    new ContratoServicio($pdo, null, $generador, $documentos, $ghl, getenv('APP_URL') ?: 'https://contratos.agoradigital.app'),
     new UsuarioServicio($pdo),
     (string) getenv('GHL_WEBHOOK_SECRET'),
     $ghl,

@@ -53,10 +53,14 @@ final class ClienteGhlTest extends TestCase
     public function test_busqueda_devuelve_contactos_con_nombre_correo_y_telefono(): void
     {
         $cliente = new ClienteGhl('t', 'loc', function (string $m, string $url, array $cuerpo): array {
+            if (str_contains($url, '/customFields')) {
+                return ['customFields' => [['id' => 'f-ced', 'fieldKey' => 'contact.cedula', 'name' => 'Cédula']]];
+            }
             $this->assertSame('GET', $m);
             $this->assertTrue(str_contains($url, 'query=Yuly'));
             return ['contacts' => [
-                ['id' => 'c1', 'firstName' => 'Yuly', 'lastName' => 'Navas', 'email' => 'y@example.com', 'phone' => '0412'],
+                ['id' => 'c1', 'firstName' => 'Yuly', 'lastName' => 'Navas', 'email' => 'y@example.com', 'phone' => '0412',
+                    'customFields' => [['id' => 'f-ced', 'value' => '14943155']]],
                 ['id' => '', 'firstName' => 'Sin id'],
             ]];
         });
@@ -64,6 +68,6 @@ final class ClienteGhlTest extends TestCase
         $resultado = $cliente->buscarContactos('Yuly');
 
         $this->assertCount(1, $resultado);
-        $this->assertSame(['id' => 'c1', 'nombre' => 'Yuly Navas', 'correo' => 'y@example.com', 'telefono' => '0412'], $resultado[0]);
+        $this->assertSame(['id' => 'c1', 'nombre' => 'Yuly Navas', 'correo' => 'y@example.com', 'telefono' => '0412', 'cedula' => '14943155'], $resultado[0]);
     }
 }
