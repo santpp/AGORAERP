@@ -27,7 +27,7 @@ COL_N, COL_MES, COL_ANIO, COL_MOD = 61.5, 129.9, 231.4, 373.8
 FILAS_TABLA = 20           # filas con línea en el formato original
 # Cajas de firma del cliente (puntos PDF, origen arriba-izquierda): página, rectángulo
 CAJAS_CLIENTE = [
-    (1, (473, 79, 569, 104)),     # cláusula 3 (página 2)
+    (0, (473, 696, 569, 720)),    # cláusula 3 (página 1, junto a la última línea)
     (5, (361, 361, 502, 391)),    # cláusula 9 (página 6)
     (5, (48, 661, 297, 704)),     # estudiante (página 6)
 ]
@@ -155,6 +155,38 @@ def justificar(doc):
                 if i < len(tokens) - 1:
                     cursor += espacio
 
+def subir_clausula_3(doc):
+    """Sube el título y el párrafo de la cláusula 3 y trae a la página 1 las líneas que estaban en la 2.
+
+    La página 2 solo tenía el final de la cláusula 3 y la caja de firma; se elimina al final.
+    """
+    subida = 20
+    f_regular = pymupdf.Font(fontfile=FUENTE_INTER_R)
+    f_bold = pymupdf.Font(fontfile=FUENTE_INTER_B)
+    p = doc[0]
+    lineas = [
+        l for b in p.get_text("dict")["blocks"] if b.get("type") == 0
+        for l in b["lines"] if 610 < l["bbox"][1] < 680
+    ]
+    for l in lineas:
+        cubrir(p, pymupdf.Rect(l["bbox"]))
+    p.apply_redactions(images=0, graphics=0, text=pymupdf.PDF_REDACT_TEXT_REMOVE)
+    for l in lineas:
+        for s in l["spans"]:
+            if not s["text"].strip():
+                continue
+            fuente = f_bold if _es_negrita(s) else f_regular
+            escribir(p, (s["origin"][0], s["origin"][1] - subida), s["text"], fuente, 9)
+    # Líneas sobrantes (página 2) copiadas tal cual: la primera queda 18 pt (interlineado) bajo la última de la cláusula
+    primera_destino = 666.3 - subida + 18.0
+    desplazamiento = primera_destino - 37.0
+    original = pymupdf.open(ORIGINAL)
+    p.show_pdf_page(pymupdf.Rect(0, 30 + desplazamiento, 612, 69 + desplazamiento), original, 1, clip=pymupdf.Rect(0, 30, 612, 69))
+    p.show_pdf_page(pymupdf.Rect(0, 70 + desplazamiento, 320, 90 + desplazamiento), original, 1, clip=pymupdf.Rect(0, 70, 320, 90))
+    original.close()
+    p.draw_rect(pymupdf.Rect(473.6, 696, 568.9, 720), color=(0.9176, 0.9255, 0.9412), width=0.75)
+
+
 def llenar(datos, salida, firma_png):
     doc = pymupdf.open(ORIGINAL)
     f_inter_r = pymupdf.Font(fontfile=FUENTE_INTER_R)
@@ -187,6 +219,7 @@ def llenar(datos, salida, firma_png):
     escribir(p, (x_pre.x0, base_de(x_pre, 9)), datos["precio"], f_inter_b, 9)
     x_cuo = pymupdf.Rect(516.7, 270.3, 534.4, 281.2)
     escribir(p, (x_cuo.x0, base_de(x_cuo, 9)), datos["cuota"], f_inter_b, 9)
+    subir_clausula_3(doc)
 
     # ----- página 6
     p = doc[5]
@@ -281,6 +314,8 @@ def llenar(datos, salida, firma_png):
             caja = pymupdf.Rect(x0 + 6, y0 + 4, x1 - 6, y1 - 4)
             pg.insert_image(caja, filename=firma_png, keep_proportion=True)
 
+    # la página 2 quedó vacía: sus líneas y la caja de firma ya están en la página 1
+    doc.delete_page(1)
     justificar(doc)
     doc.save(salida, garbage=3, deflate=True)
     doc.close()
