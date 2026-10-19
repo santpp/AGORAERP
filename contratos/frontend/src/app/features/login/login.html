@@ -1,24 +1,32 @@
-<section class="entrada tarjeta">
-  <h1>Entrar</h1>
-  <p class="suave">Usa el correo y la clave que te dio la administración.</p>
+<section class="acceso">
+  <div class="acceso__hero">
+    <p class="acceso__etiqueta">ASOCIM · Contratos</p>
+    <h2 class="acceso__titulo">Convenios de pago, en un solo lugar</h2>
+    <p class="acceso__texto">Prepara, envía y da seguimiento a los convenios de los estudiantes, desde la solicitud hasta la firma.</p>
+  </div>
 
-  <form (ngSubmit)="entrar()" class="formulario">
-    <mat-form-field appearance="outline">
-      <mat-label>Correo</mat-label>
-      <input matInput type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
-    </mat-form-field>
+  <div class="entrada tarjeta">
+    <h1>Entrar</h1>
+    <p class="suave">Usa el correo y la clave que te dio la administración.</p>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Clave</mat-label>
-      <input matInput type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
-    </mat-form-field>
+    <form (ngSubmit)="entrar()" class="formulario">
+      <mat-form-field appearance="outline">
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
+      </mat-form-field>
 
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
-    }
+      <mat-form-field appearance="outline">
+        <mat-label>Clave</mat-label>
+        <input matInput type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
+      </mat-form-field>
 
-    <button mat-flat-button type="submit" class="boton-principal" [disabled]="enviando()">
-      {{ enviando() ? 'Entrando…' : 'Entrar' }}
-    </button>
-  </form>
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button mat-flat-button type="submit" class="boton-principal" [disabled]="enviando()">
+        {{ enviando() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+  </div>
 </section>
