@@ -418,6 +418,19 @@ final class ContratoServicio
     }
 
     /**
+     * Valida el correo del cliente. Si cambió respecto al que tiene el contacto en AGORA (o no tenía),
+     * lo guarda también en el contacto, porque los avisos salen por ese contacto.
+     */
+    public function guardarCorreoEnAgora(string $contactoId, string $correoAgora, string $correo): string
+    {
+        $correo = $this->correo(['correo' => $correo], 'cliente.correo');
+        if ($this->ghl !== null && $contactoId !== '' && $correo !== trim($correoAgora)) {
+            $this->ghl->actualizarCorreo($contactoId, $correo);
+        }
+        return $correo;
+    }
+
+    /**
      * Corrige los datos del cliente. Solo mientras el convenio es borrador: el PDF enviado no cambia.
      * @param array{nombre:string,cedula:string,telefono:string,correo:string} $datos
      */
@@ -433,7 +446,8 @@ final class ContratoServicio
         if ($nombre === '' || $cedula === '') {
             throw new ErrorContrato('El nombre y la cédula son obligatorios.');
         }
-        $correo = $this->correo(['correo' => $datos['correo'] ?? ''], 'correo');
+        $contactoId = empty($contrato['clave_webhook']) ? '' : explode(':', (string) $contrato['clave_webhook'])[0];
+        $correo = $this->guardarCorreoEnAgora($contactoId, (string) $contrato['cliente_correo'], (string) ($datos['correo'] ?? ''));
         $this->pdo->prepare('UPDATE contratos SET cliente_nombre = ?, cliente_cedula = ?, cliente_telefono = ?, cliente_correo = ? WHERE id = ?')
             ->execute([$nombre, $cedula, trim((string) ($datos['telefono'] ?? '')), $correo, $contrato['id']]);
         $this->evento((int) $contrato['id'], (int) $ultima['id'], 'CLIENTE_EDITADO', ['campos' => ['nombre', 'cedula', 'telefono', 'correo']]);

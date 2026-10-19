@@ -107,6 +107,12 @@ class ClienteGhl
         return $this->idCedula;
     }
 
+    /** Guarda el correo en el contacto de AGORA, para que los avisos le lleguen a esa dirección. */
+    public function actualizarCorreo(string $contactoId, string $correo): void
+    {
+        ($this->http)('PUT', self::BASE . '/contacts/' . rawurlencode($contactoId), ['email' => $correo]);
+    }
+
     /** Envía un correo a un contacto ya existente. */
     public function enviarCorreo(string $contactoId, string $asunto, string $html): void
     {

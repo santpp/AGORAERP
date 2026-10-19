@@ -34,6 +34,21 @@ final class ClienteGhlTest extends TestCase
         $cliente->contactoPara('x@example.com', 'X', null);
     }
 
+    public function test_actualizar_correo_hace_put_al_contacto(): void
+    {
+        $enviado = [];
+        $cliente = new ClienteGhl('t', 'loc', function (string $m, string $url, array $cuerpo) use (&$enviado): array {
+            $enviado[] = [$m, $url, $cuerpo];
+            return [];
+        });
+
+        $cliente->actualizarCorreo('abc123', 'nuevo@example.com');
+
+        $this->assertSame('PUT', $enviado[0][0]);
+        $this->assertTrue(str_ends_with($enviado[0][1], '/contacts/abc123'));
+        $this->assertSame(['email' => 'nuevo@example.com'], $enviado[0][2]);
+    }
+
     public function test_correo_va_como_email_al_contacto(): void
     {
         $enviado = [];

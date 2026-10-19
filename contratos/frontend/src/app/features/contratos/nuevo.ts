@@ -33,6 +33,7 @@ export class NuevoContrato {
 
   // Paso 2: datos del convenio para ese contacto
   protected cedula = '';
+  protected correo = '';
   protected nombre = '';
   protected readonly aviso = signal('');
   protected curso = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
@@ -66,6 +67,7 @@ export class NuevoContrato {
     this.elegido.set(contacto);
     this.nombre = contacto.nombre;
     this.cedula = contacto.cedula;
+    this.correo = contacto.correo;
     this.error.set('');
   }
 
@@ -88,7 +90,8 @@ export class NuevoContrato {
           nombre: this.nombre.trim(),
           cedula: this.cedula.trim(),
           telefono: contacto.telefono,
-          correo: contacto.correo,
+          correo: this.correo.trim(),
+          correo_agora: contacto.correo,
         },
         curso: {
           cuota_mensual: this.curso.cuota.trim(),

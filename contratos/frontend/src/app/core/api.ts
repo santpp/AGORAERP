@@ -74,6 +74,8 @@ export interface DatosCliente {
   cedula: string;
   telefono: string;
   correo: string;
+  /** Correo que tenía el contacto en AGORA al elegirlo (vacío si no tenía). Solo al crear. */
+  correo_agora?: string;
 }
 
 export interface Registro {
@@ -93,7 +95,7 @@ export interface ContactoGhl {
 }
 
 export interface NuevoContrato {
-  cliente: { contact_id: string; nombre: string; cedula: string; telefono: string; correo: string };
+  cliente: { contact_id: string; nombre: string; cedula: string; telefono: string; correo: string; correo_agora: string };
   curso: { cuota_mensual: string; meses: number; mes_inicio: string; cuotas_por_mes: number; cargos: Cargo[] };
   responsable: { nombre: string; correo: string };
 }

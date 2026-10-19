@@ -185,6 +185,9 @@ final class Aplicacion
             // Un contrato por cada vez que se crea: la clave lleva el id del contacto para poder avisarle.
             $p['clave'] = $contacto . ':panel:' . bin2hex(random_bytes(6));
             unset($p['cliente']['contact_id']);
+            $correoAgora = (string) ($p['cliente']['correo_agora'] ?? '');
+            unset($p['cliente']['correo_agora']);
+            $p['cliente']['correo'] = $this->servicio->guardarCorreoEnAgora($contacto, $correoAgora, (string) ($p['cliente']['correo'] ?? ''));
             $p['sub_cuenta'] = $p['sub_cuenta'] ?? 'panel';
             return [201, ['uid' => $this->servicio->crearDesdeWebhook($p)['uid']]];
         }
