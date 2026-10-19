@@ -146,6 +146,11 @@ export class ApiService {
     return this.http.post<{ uid: string }>('/api/contratos', datos).pipe(catchError(mensajeDeError));
   }
 
+  /** Elimina un borrador que nunca se envió. */
+  eliminar(uid: string): Observable<{ ok: boolean }> {
+    return this.http.delete<{ ok: boolean }>(`/api/contratos/${uid}`).pipe(catchError(mensajeDeError));
+  }
+
   editar(uid: string, cambios: CambiosCalculo): Observable<{ version: number }> {
     return this.http.post<{ version: number }>(`/api/contratos/${uid}/editar`, cambios).pipe(catchError(mensajeDeError));
   }

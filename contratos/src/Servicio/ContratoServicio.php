@@ -249,6 +249,27 @@ final class ContratoServicio
     }
 
     /** Revoca el enlace activo: el cliente ya no puede firmar esa versión. */
+    /** Elimina un borrador que nunca se envió, con su historial. Un convenio con alguna versión enviada no se borra. */
+    public function eliminarBorrador(string $uid): void
+    {
+        $contrato = $this->contrato($uid);
+        $id = (int) $contrato['id'];
+        $enviadas = $this->fila("SELECT COUNT(*) AS n FROM versiones WHERE contrato_id = ? AND estado <> 'BORRADOR'", [$id]);
+        if ((int) $enviadas['n'] > 0) {
+            throw new ErrorContrato('Solo se pueden eliminar borradores que nunca se enviaron.', 409);
+        }
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare('DELETE FROM eventos WHERE contrato_id = ?')->execute([$id]);
+            $this->pdo->prepare('DELETE FROM versiones WHERE contrato_id = ?')->execute([$id]);
+            $this->pdo->prepare('DELETE FROM contratos WHERE id = ?')->execute([$id]);
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public function revocar(string $uid): void
     {
         $contrato = $this->contrato($uid);

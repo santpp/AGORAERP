@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ApiService, Cargo, CambiosCalculo, ContratoDetalle, DatosCliente, EnvioResultado } from '../../core/api';
 import { dinero, etiquetaEstado, fecha } from '../../core/formato';
@@ -27,6 +27,7 @@ export class DetalleContrato implements OnInit {
   private readonly ruta = inject(ActivatedRoute);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly sesion = inject(SesionService);
+  private readonly router = inject(Router);
 
   protected readonly uid = this.ruta.snapshot.paramMap.get('uid') ?? '';
   protected readonly puedeActuar = computed(() => this.sesion.usuario()?.rol !== 'VISOR');
@@ -137,6 +138,25 @@ export class DetalleContrato implements OnInit {
       this.envio.set(resultado as EnvioResultado);
       this.copiado.set(false);
       this.verPrevia.set(false);
+    });
+  }
+
+  protected readonly confirmarEliminar = signal(false);
+
+  /** Borra el borrador y vuelve a la lista. Se pide confirmar con un segundo clic. */
+  protected eliminar(): void {
+    if (!this.confirmarEliminar()) {
+      this.confirmarEliminar.set(true);
+      return;
+    }
+    this.confirmarEliminar.set(false);
+    this.ocupado.set(true);
+    this.api.eliminar(this.uid).subscribe({
+      next: () => this.router.navigateByUrl('/contratos'),
+      error: (e: Error) => {
+        this.accionError.set(e.message);
+        this.ocupado.set(false);
+      },
     });
   }
 

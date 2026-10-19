@@ -208,6 +208,12 @@
           <button mat-flat-button type="button" class="boton-principal" [disabled]="ocupado() || editando()" (click)="enviar()">
             {{ ocupado() ? 'Enviando…' : 'Enviar al cliente' }}
           </button>
+          <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="eliminar()">
+            {{ confirmarEliminar() ? 'Confirmar eliminación' : 'Eliminar borrador' }}
+          </button>
+          @if (confirmarEliminar()) {
+            <p class="suave">Se borrará el borrador y su historial. No se puede deshacer.</p>
+          }
         }
       }
       @case ('ENVIADO') {

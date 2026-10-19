@@ -78,7 +78,7 @@ final class Aplicacion
                 // Solo se muestran los contactos asignados a quien busca (su usuario de AGORA en GHL).
                 $idGhl = $this->ghl->usuarioPorCorreo((string) $u['correo']);
                 if ($idGhl === null) {
-                    return [200, ['contactos' => [], 'aviso' => 'Tu correo no está registrado como usuario en AGORA. Pide a la administración que te agregue.']];
+                    return [200, ['contactos' => [], 'aviso' => 'No encontramos el correo ' . $u['correo'] . ' entre los usuarios de AGORA. Revisa que sea el mismo de tu cuenta en AGORA o pide a la administración que te agregue.']];
                 }
                 $propios = array_values(array_filter($this->ghl->buscarContactos($consulta), fn (array $c) => $c['asignado'] === $idGhl));
                 return [200, ['contactos' => $propios]];
@@ -202,6 +202,11 @@ final class Aplicacion
         if ($metodo === 'GET' && $ruta === '/api/contratos') {
             $this->sesionDe($cabeceras, 'ver');
             return [200, ['contratos' => $this->servicio->listar()]];
+        }
+        if ($metodo === 'DELETE' && preg_match('#^/api/contratos/([a-f0-9]{24})$#', $ruta, $m)) {
+            $this->sesionDe($cabeceras, 'editar');
+            $this->servicio->eliminarBorrador($m[1]);
+            return [200, ['ok' => true]];
         }
         if ($metodo === 'GET' && preg_match('#^/api/contratos/([a-f0-9]{24})$#', $ruta, $m)) {
             $this->sesionDe($cabeceras, 'ver');
