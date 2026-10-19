@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { sesionActiva } from './core/sesion.guard';
+import { soloAdmin, sesionActiva } from './core/sesion.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'contratos', pathMatch: 'full' },
@@ -11,6 +11,11 @@ export const routes: Routes = [
     path: 'contratos',
     canActivate: [sesionActiva],
     loadComponent: () => import('./features/contratos/lista').then((m) => m.ListaContratos),
+  },
+  {
+    path: 'usuarios',
+    canActivate: [soloAdmin],
+    loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.UsuariosPage),
   },
   {
     path: 'contratos/nuevo',

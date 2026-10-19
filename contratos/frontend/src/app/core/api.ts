@@ -9,6 +9,16 @@ export interface Usuario {
   rol: 'ADMIN' | 'REMITENTE' | 'VISOR';
 }
 
+export type Rol = 'ADMIN' | 'REMITENTE' | 'VISOR';
+
+export interface PersonaAdmin {
+  id: number;
+  correo: string;
+  nombre: string;
+  rol: Rol;
+  activo: boolean;
+}
+
 export type Estado = 'BORRADOR' | 'ENVIADO' | 'FIRMADO' | 'REVOCADA';
 
 export interface ContratoResumen {
@@ -122,6 +132,30 @@ export class ApiService {
   /** Ruta relativa del PDF (mismo dominio, la sesión viaja con la cookie). */
   urlPdf(uid: string, tipo: 'enviado' | 'firmado'): string {
     return `/api/contratos/${uid}/pdf/${tipo}`;
+  }
+
+  usuarios(): Observable<{ usuarios: PersonaAdmin[] }> {
+    return this.http.get<{ usuarios: PersonaAdmin[] }>('/api/usuarios').pipe(catchError(mensajeDeError));
+  }
+
+  crearUsuario(datos: { correo: string; nombre: string; clave: string; rol: Rol }): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>('/api/usuarios', datos).pipe(catchError(mensajeDeError));
+  }
+
+  cambiarRol(id: number, rol: Rol): Observable<unknown> {
+    return this.http.post('/api/usuarios/rol', { id, rol }).pipe(catchError(mensajeDeError));
+  }
+
+  desactivarUsuario(id: number): Observable<unknown> {
+    return this.http.post('/api/usuarios/desactivar', { id }).pipe(catchError(mensajeDeError));
+  }
+
+  activarUsuario(id: number): Observable<unknown> {
+    return this.http.post('/api/usuarios/activar', { id }).pipe(catchError(mensajeDeError));
+  }
+
+  restablecerClave(id: number, clave: string): Observable<unknown> {
+    return this.http.post('/api/usuarios/clave', { id, clave }).pipe(catchError(mensajeDeError));
   }
 
   revocar(uid: string): Observable<unknown> {

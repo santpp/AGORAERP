@@ -73,6 +73,22 @@ final class UsuarioServicio
         $this->cerrarSesiones($usuarioId);
     }
 
+    public function reactivar(int $usuarioId): void
+    {
+        $this->pdo->prepare('UPDATE usuarios SET activo = 1, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?')->execute([$usuarioId]);
+    }
+
+    /** El administrador fija una clave nueva a otra persona. Cierra sus sesiones abiertas. */
+    public function restablecerClave(int $usuarioId, string $claveNueva): void
+    {
+        if (mb_strlen($claveNueva) < self::CLAVE_MINIMA) {
+            throw new ErrorContrato('La clave debe tener al menos ' . self::CLAVE_MINIMA . ' caracteres.');
+        }
+        $this->pdo->prepare('UPDATE usuarios SET clave_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?')
+            ->execute([password_hash($claveNueva, PASSWORD_DEFAULT), $usuarioId]);
+        $this->cerrarSesiones($usuarioId);
+    }
+
     public function desactivar(int $usuarioId, int $administradorId): void
     {
         if ($usuarioId === $administradorId) {

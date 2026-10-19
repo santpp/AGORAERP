@@ -5,6 +5,9 @@
   </a>
   @if (sesion.usuario(); as usuario) {
     <div class="barra__usuario">
+      @if (usuario.rol === 'ADMIN') {
+        <a mat-button routerLink="/usuarios" class="barra__enlace">Personas</a>
+      }
       <span class="barra__nombre">{{ usuario.nombre }}</span>
       <button mat-button type="button" (click)="salir()">Salir</button>
     </div>

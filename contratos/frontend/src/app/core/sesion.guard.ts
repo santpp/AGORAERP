@@ -12,3 +12,14 @@ export const sesionActiva: CanActivateFn = async () => {
   const usuario = await sesion.cargar();
   return usuario ? true : router.createUrlTree(['/entrar']);
 };
+
+/** Solo administradoras y administradores. Los demás vuelven a Contratos. */
+export const soloAdmin: CanActivateFn = async () => {
+  const sesion = inject(SesionService);
+  const router = inject(Router);
+  const usuario = sesion.usuario() ?? (await sesion.cargar());
+  if (!usuario) {
+    return router.createUrlTree(['/entrar']);
+  }
+  return usuario.rol === 'ADMIN' ? true : router.createUrlTree(['/contratos']);
+};

@@ -124,6 +124,15 @@ final class Aplicacion
             $this->usuarios->cambiarRol((int) ($d['id'] ?? 0), (string) ($d['rol'] ?? ''), $admin['id']);
             return [200, ['ok' => true]];
         }
+        if ($metodo === 'POST' && $ruta === '/api/usuarios/activar') {
+            $this->usuarios->reactivar((int) ($this->json($cuerpo)['id'] ?? 0));
+            return [200, ['ok' => true]];
+        }
+        if ($metodo === 'POST' && $ruta === '/api/usuarios/clave') {
+            $d = $this->json($cuerpo);
+            $this->usuarios->restablecerClave((int) ($d['id'] ?? 0), (string) ($d['clave'] ?? ''));
+            return [200, ['ok' => true]];
+        }
         if ($metodo === 'POST' && $ruta === '/api/usuarios/desactivar') {
             $d = $this->json($cuerpo);
             $this->usuarios->desactivar((int) ($d['id'] ?? 0), $admin['id']);
