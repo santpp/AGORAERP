@@ -1,0 +1,165 @@
+.volver {
+  margin: 8px 0 12px;
+  font-size: 14px;
+
+  a {
+    color: var(--color-marca);
+    font-weight: 600;
+  }
+}
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bloque {
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 20px 0 8px;
+    font-size: 15px;
+    color: var(--color-marca);
+  }
+}
+
+.resumen {
+  margin: 12px 0 0;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-linea);
+  }
+
+  dt {
+    color: var(--color-suave);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.resumen__total {
+  border-bottom: none !important;
+  padding-top: 12px !important;
+
+  dt,
+  dd {
+    color: var(--color-marca) !important;
+    font-weight: 700 !important;
+  }
+}
+
+.cuotas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+
+  th,
+  td {
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-linea);
+    text-align: left;
+  }
+
+  th {
+    color: var(--color-suave);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .numero {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.boton-principal {
+  --mdc-filled-button-container-color: var(--color-acento);
+  --mdc-filled-button-label-text-color: #fff;
+  background-color: var(--color-acento) !important;
+  min-height: 48px;
+  padding: 0 20px;
+  background: var(--color-acento);
+  color: #fff;
+  font-weight: 700;
+}
+
+.boton-secundario {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-linea);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-peligro {
+  color: var(--color-error);
+  border-color: #efc2bd;
+}
+
+.enlace {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px dashed var(--color-marca);
+  border-radius: 8px;
+  background: #f7f7fc;
+
+  p {
+    margin: 0 0 8px;
+  }
+}
+
+.enlace__url {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px;
+  word-break: break-all;
+  color: var(--color-marca);
+}
+
+.estado {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.estado--borrador {
+  background: #fff4e6;
+  color: #8a4a00;
+  border-color: #f5c58a;
+}
+
+.estado--enviado {
+  background: #e8eaf8;
+  color: var(--color-marca);
+  border-color: #b9bde3;
+}
+
+.estado--firmado {
+  background: #e6f4ea;
+  color: #1e6b34;
+  border-color: #a7d7b3;
+}
+
+.estado--revocada {
+  background: #f1f1f4;
+  color: var(--color-suave);
+  border-color: var(--color-linea);
+}

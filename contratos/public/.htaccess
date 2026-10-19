@@ -1,3 +1,7 @@
 RewriteEngine On
 RewriteRule ^api/ index.php [L,QSA]
 RewriteRule ^firmar$ firmar.php [L,QSA]
+# Panel del personal (Angular): los archivos existentes se sirven tal cual; el resto cae en app/index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^app/ app/index.html [L]

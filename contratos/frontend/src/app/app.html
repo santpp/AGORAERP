@@ -1,0 +1,16 @@
+<header class="barra">
+  <a class="marca" routerLink="/contratos">
+    <span class="marca__nombre">ASOCIM</span>
+    <span class="marca__area">Contratos</span>
+  </a>
+  @if (sesion.usuario(); as usuario) {
+    <div class="barra__usuario">
+      <span class="barra__nombre">{{ usuario.nombre }}</span>
+      <button mat-button type="button" (click)="salir()">Salir</button>
+    </div>
+  }
+</header>
+
+<main class="contenido">
+  <router-outlet />
+</main>

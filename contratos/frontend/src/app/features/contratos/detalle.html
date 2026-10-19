@@ -1,0 +1,103 @@
+<nav class="volver">
+  <a routerLink="/contratos">← Contratos</a>
+</nav>
+
+@if (cargando()) {
+  <p class="suave">Cargando contrato…</p>
+} @else if (error()) {
+  <div class="tarjeta">
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" class="boton-secundario" (click)="cargar()">Intentar de nuevo</button>
+  </div>
+} @else if (contrato(); as c) {
+  <section class="cabecera tarjeta">
+    <div>
+      <h1>{{ c.cliente.nombre }}</h1>
+      <p class="suave">{{ c.cliente.correo }} · Versión {{ c.version }}</p>
+    </div>
+    <span class="estado estado--{{ c.estado.toLowerCase() }}">{{ etiqueta(c.estado) }}</span>
+  </section>
+
+  <section class="tarjeta bloque">
+    <h2>Cálculo</h2>
+    <dl class="resumen">
+      <div>
+        <dt>Precio del curso</dt>
+        <dd>{{ dinero(c.calculo.precio_curso) }}</dd>
+      </div>
+      @for (cargo of c.calculo.cargos; track cargo.concepto) {
+        <div>
+          <dt>{{ cargo.concepto }}</dt>
+          <dd>{{ dinero(cargo.monto) }}</dd>
+        </div>
+      }
+      <div class="resumen__total">
+        <dt>Total a pagar</dt>
+        <dd>{{ dinero(c.calculo.total_a_pagar) }}</dd>
+      </div>
+    </dl>
+
+    <h3>Cuotas</h3>
+    <table class="cuotas">
+      <thead>
+        <tr>
+          <th scope="col">Cuota</th>
+          <th scope="col">Vence</th>
+          <th scope="col" class="numero">Monto</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (q of c.calculo.cuotas; track q.numero) {
+          <tr>
+            <td>{{ q.numero }}</td>
+            <td>{{ fecha(q.vencimiento) }}</td>
+            <td class="numero">{{ dinero(q.monto) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <section class="tarjeta bloque">
+    <h2>Enlace de firma</h2>
+
+    @switch (c.estado) {
+      @case ('BORRADOR') {
+        <p class="suave">Revisa el cálculo antes de enviar. Al enviar se genera el enlace para que el cliente firme.</p>
+        <button mat-flat-button type="button" class="boton-principal" [disabled]="ocupado()" (click)="enviar()">
+          {{ ocupado() ? 'Enviando…' : 'Enviar al cliente' }}
+        </button>
+      }
+      @case ('ENVIADO') {
+        <p class="suave">El enlace está activo y el cliente todavía no ha firmado.</p>
+        <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="revocar()">
+          {{ confirmarRevocar() ? 'Confirmar revocación' : 'Revocar enlace' }}
+        </button>
+        @if (confirmarRevocar()) {
+          <p class="suave">El cliente no podrá firmar con el enlace actual. Después tendrás que crear una versión nueva.</p>
+        }
+      }
+      @case ('FIRMADO') {
+        <p class="suave">El convenio está firmado. La copia firmada se envía al cliente por correo.</p>
+      }
+      @case ('REVOCADA') {
+        <p class="suave">Este enlace fue revocado y ya no sirve para firmar.</p>
+      }
+    }
+
+    @if (accionError()) {
+      <p class="error" role="alert">{{ accionError() }}</p>
+    }
+
+    @if (envio(); as e) {
+      <div class="enlace">
+        <p class="enlace__aviso"><strong>Copia el enlace ahora.</strong> Solo se muestra una vez.</p>
+        <p class="enlace__url">{{ e.enlace }}</p>
+        <p class="suave">Vence el {{ fecha(e.vence) }}.</p>
+        <button type="button" class="boton-secundario" (click)="copiarEnlace()">
+          {{ copiado() ? 'Enlace copiado' : 'Copiar enlace' }}
+        </button>
+      </div>
+    }
+  </section>
+}

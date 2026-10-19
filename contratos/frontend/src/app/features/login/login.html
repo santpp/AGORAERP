@@ -1,0 +1,24 @@
+<section class="entrada tarjeta">
+  <h1>Entrar</h1>
+  <p class="suave">Usa el correo y la clave que te dio la administración.</p>
+
+  <form (ngSubmit)="entrar()" class="formulario">
+    <mat-form-field appearance="outline">
+      <mat-label>Correo</mat-label>
+      <input matInput type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Clave</mat-label>
+      <input matInput type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <button mat-flat-button type="submit" class="boton-principal" [disabled]="enviando()">
+      {{ enviando() ? 'Entrando…' : 'Entrar' }}
+    </button>
+  </form>
+</section>

@@ -1,0 +1,54 @@
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.marca {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.marca__nombre {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.marca__area {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.barra__usuario {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+
+  button {
+    color: #fff;
+  }
+}
+
+.barra__nombre {
+  display: none;
+
+  @media (min-width: 600px) {
+    display: inline;
+    margin-right: 4px;
+  }
+}
+
+.contenido {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px;
+}
