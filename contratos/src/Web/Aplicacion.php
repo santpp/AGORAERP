@@ -75,7 +75,11 @@ final class Aplicacion
                 if (mb_strlen($consulta) < 2) {
                     return [200, ['contactos' => []]];
                 }
-                // Solo se muestran los contactos asignados a quien busca (su usuario de AGORA en GHL).
+                // La administración ve todos los contactos de la subcuenta, aunque su usuario no esté en GHL.
+                if ($u['rol'] === 'ADMIN') {
+                    return [200, ['contactos' => $this->ghl->buscarContactos($consulta)]];
+                }
+                // Quien no es administración solo ve los contactos asignados a su usuario de AGORA en GHL.
                 $idGhl = $this->ghl->usuarioPorCorreo((string) $u['correo']);
                 if ($idGhl === null) {
                     return [200, ['contactos' => [], 'aviso' => 'No encontramos el correo ' . $u['correo'] . ' entre los usuarios de AGORA. Revisa que sea el mismo de tu cuenta en AGORA o pide a la administración que te agregue.']];
