@@ -24,19 +24,6 @@
   text-align: left;
 }
 
-.reintentar {
-  margin-top: 8px;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--color-linea);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--color-marca);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 .lista {
   list-style: none;
   margin: 0;
@@ -102,53 +89,9 @@
   font-size: 13px;
 }
 
-.estado {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  border: 1px solid transparent;
-}
-
-.estado--borrador {
-  background: #fff4e6;
-  color: #8a4a00;
-  border-color: #f5c58a;
-}
-
-.estado--enviado {
-  background: #e8eaf8;
-  color: var(--color-marca);
-  border-color: #b9bde3;
-}
-
-.estado--firmado {
-  background: #e6f4ea;
-  color: #1e6b34;
-  border-color: #a7d7b3;
-}
-
-.estado--revocada {
-  background: #f1f1f4;
-  color: var(--color-suave);
-  border-color: var(--color-linea);
-}
-
 .encabezado__acciones {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.nuevo {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: 6px;
-  background: var(--color-acento);
-  color: #fff;
-  font-weight: 700;
-  text-decoration: none;
-}

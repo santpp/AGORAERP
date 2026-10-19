@@ -3,60 +3,113 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 4px 12px;
-  min-height: 56px;
-  padding: 8px 16px;
-  background: var(--color-marca);
-  color: #fff;
+  gap: 8px 24px;
+  min-height: 72px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 4px solid var(--color-acento);
 }
 
 .marca {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  color: #fff;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-marca);
   text-decoration: none;
 }
 
-.marca__nombre {
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.marca__logo {
+  display: block;
+  height: 56px;
+  width: auto;
 }
 
 .marca__area {
-  font-size: 14px;
-  opacity: 0.85;
+  padding-left: 12px;
+  border-left: 1px solid var(--color-linea);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-marca);
+}
+
+.barra__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.barra__enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 3px solid transparent;
+  color: var(--color-marca);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--color-marca-suave);
+  }
+
+  &.activo {
+    border-bottom-color: var(--color-acento);
+    font-weight: 800;
+  }
 }
 
 .barra__usuario {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0 4px;
+  gap: 12px;
   font-size: 14px;
-
-  button {
-    color: #fff;
-  }
 }
 
 .barra__nombre {
-  display: none;
+  color: var(--color-suave);
+  font-weight: 600;
 
-  @media (min-width: 600px) {
-    display: inline;
-    margin-right: 4px;
+  @media (max-width: 599px) {
+    display: none;
+  }
+}
+
+.barra__salir {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-linea);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-marca);
   }
 }
 
 .contenido {
   max-width: 880px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px 16px 48px;
 }
 
-.barra__enlace,
-.barra__enlace .mdc-button__label {
-  color: #fff !important;
-  --mdc-text-button-label-text-color: #fff;
+@media (max-width: 599px) {
+  .marca__area {
+    display: none;
+  }
+
+  .barra__nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .barra__usuario {
+    margin-left: auto;
+  }
 }
