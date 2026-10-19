@@ -1,34 +1,45 @@
 <section class="acceso">
   <div class="fondo" aria-hidden="true">
     @for (e of escenas; track e.clase; let i = $index) {
-      <div
-        class="fondo__capa {{ e.clase }}"
-        [class.activa]="i === actual()"
-        [style.background-image]="e.foto ? 'url(' + e.foto + ')' : null"
-      ></div>
+      <div class="fondo__capa {{ e.clase }}" [class.activa]="i === actual()"></div>
     }
-    <div class="fondo__velo"></div>
+    <div class="fondo__grano"></div>
+    <div class="fondo__vineta"></div>
   </div>
 
-  <div class="acceso__contenido">
-    <div class="acceso__presentacion">
-      <p class="acceso__etiqueta">ASOCIM · Contratos</p>
-      <h2 class="acceso__titulo" aria-live="polite">{{ escenas[actual()].titulo }}</h2>
-      <p class="acceso__texto">{{ escenas[actual()].texto }}</p>
+  <header class="acceso__marca">
+    <span class="acceso__nombre">ASOCIM</span>
+    <span class="acceso__area">Contratos</span>
+  </header>
+
+  <div class="acceso__cuerpo">
+    <div class="presentacion">
+      @for (e of [escenas[actual()]]; track e.primera) {
+        <h2 class="presentacion__titulo" aria-live="polite">
+          <span class="presentacion__linea">{{ e.primera }}</span>
+          <em class="presentacion__linea presentacion__linea--acento">{{ e.segunda }}</em>
+        </h2>
+        <p class="presentacion__texto">{{ e.texto }}</p>
+      }
 
       <div class="controles">
-        <div class="puntos" role="group" aria-label="Escena del fondo">
+        <ol class="progreso" aria-label="Escenas">
           @for (e of escenas; track e.clase; let i = $index) {
-            <button
-              type="button"
-              class="punto"
-              [class.activo]="i === actual()"
-              [attr.aria-label]="'Mostrar escena ' + (i + 1)"
-              [attr.aria-current]="i === actual()"
-              (click)="ir(i)"
-            ></button>
+            <li>
+              <button
+                type="button"
+                class="progreso__punto"
+                [class.activo]="i === actual()"
+                [attr.aria-label]="'Ver escena ' + (i + 1)"
+                [attr.aria-current]="i === actual()"
+                (click)="ir(i)"
+              >
+                <span class="progreso__numero">0{{ i + 1 }}</span>
+                <span class="progreso__linea"></span>
+              </button>
+            </li>
           }
-        </div>
+        </ol>
         <button type="button" class="pausa" (click)="alternarPausa()">
           {{ pausado() ? 'Reanudar' : 'Pausar' }}
         </button>
@@ -36,26 +47,25 @@
     </div>
 
     <div class="entrada">
-      <img class="entrada__logo" src="/logo.png" alt="ASOCIM" width="79" height="56" />
-      <h1>Entrar</h1>
-      <p class="suave">Usa el correo y la clave que te dio la administración.</p>
+      <h1 class="entrada__titulo">Entrar</h1>
+      <p class="entrada__ayuda">Usa el correo y la clave que te dio la administración.</p>
 
       <form (ngSubmit)="entrar()" class="formulario">
-        <mat-form-field appearance="outline">
-          <mat-label>Correo</mat-label>
-          <input matInput type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
-        </mat-form-field>
+        <label class="campo">
+          <span class="campo__etiqueta">Correo</span>
+          <input type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
+        </label>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Clave</mat-label>
-          <input matInput type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
-        </mat-form-field>
+        <label class="campo">
+          <span class="campo__etiqueta">Clave</span>
+          <input type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
+        </label>
 
         @if (error()) {
-          <p class="error" role="alert">{{ error() }}</p>
+          <p class="entrada__error" role="alert">{{ error() }}</p>
         }
 
-        <button mat-flat-button type="submit" class="boton-principal" [disabled]="enviando()">
+        <button type="submit" class="entrar" [disabled]="enviando()">
           {{ enviando() ? 'Entrando…' : 'Entrar' }}
         </button>
       </form>

@@ -1,23 +1,20 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api';
 import { SesionService } from '../../core/sesion';
 
-/** Una escena del fondo: su luz (clase CSS) y, si existe, una foto propia en public/panel/fondos/. */
+/** Una escena: su atmósfera (clase CSS) y el texto editorial que la acompaña. */
 interface Escena {
   clase: string;
-  titulo: string;
+  primera: string;
+  segunda: string;
   texto: string;
-  foto?: string;
 }
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -28,24 +25,28 @@ export class LoginPage implements OnInit, OnDestroy {
 
   protected readonly escenas: Escena[] = [
     {
-      clase: 'escena--atardecer',
-      titulo: 'Convenios de pago, en un solo lugar',
-      texto: 'Prepara, envía y da seguimiento a los convenios de los estudiantes.',
+      clase: 'escena--crepusculo',
+      primera: 'Convenios de pago',
+      segunda: 'con toda la claridad',
+      texto: 'Cada contrato, desde la solicitud hasta la firma.',
     },
     {
       clase: 'escena--noche',
-      titulo: 'Cada contrato, con su historial',
-      texto: 'Cada cambio queda registrado: quién lo hizo y cuándo.',
+      primera: 'Cada acción',
+      segunda: 'queda registrada',
+      texto: 'Un historial completo de cada convenio, a la vista.',
     },
     {
-      clase: 'escena--dia',
-      titulo: 'Firma desde cualquier dispositivo',
-      texto: 'El estudiante recibe un enlace por correo y firma en su teléfono.',
+      clase: 'escena--bruma',
+      primera: 'Firma',
+      segunda: 'desde cualquier lugar',
+      texto: 'El estudiante firma desde su teléfono, con el enlace que recibe por correo.',
     },
     {
       clase: 'escena--brasa',
-      titulo: 'Claridad desde la solicitud hasta la firma',
-      texto: 'Un solo convenio, con cuotas, fechas y montos siempre a la vista.',
+      primera: 'Un solo convenio',
+      segunda: 'siempre a la vista',
+      texto: 'Cuotas, fechas y montos en un mismo documento.',
     },
   ];
 
@@ -57,7 +58,7 @@ export class LoginPage implements OnInit, OnDestroy {
   protected readonly pausado = signal(false);
 
   private temporizador: ReturnType<typeof setInterval> | undefined;
-  private readonly intervaloMs = 9000;
+  private readonly intervaloMs = 10000;
 
   ngOnInit(): void {
     const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
