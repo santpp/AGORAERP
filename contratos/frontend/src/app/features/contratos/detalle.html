@@ -20,6 +20,52 @@
 
   <section class="tarjeta bloque">
     <div class="bloque__cabecera">
+      <h2>Cliente</h2>
+      @if (puedeActuar() && c.estado === 'BORRADOR' && !editandoCliente()) {
+        <button type="button" class="boton-secundario" (click)="abrirEdicionCliente()">Corregir datos</button>
+      }
+    </div>
+
+    @if (editandoCliente()) {
+      <form class="edicion" (ngSubmit)="guardarCliente()">
+        <div class="edicion__campos">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre completo</mat-label>
+            <input matInput name="nombre" required [(ngModel)]="datosCliente.nombre" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Cédula</mat-label>
+            <input matInput name="cedula" required [(ngModel)]="datosCliente.cedula" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput name="telefono" inputmode="tel" [(ngModel)]="datosCliente.telefono" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Correo</mat-label>
+            <input matInput type="email" name="correo" required [(ngModel)]="datosCliente.correo" />
+          </mat-form-field>
+        </div>
+        @if (editarError()) {
+          <p class="error" role="alert">{{ editarError() }}</p>
+        }
+        <div class="fila-botones">
+          <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">Guardar datos</button>
+          <button type="button" class="boton-secundario" (click)="editandoCliente.set(false)">Cancelar</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="resumen">
+        <div><dt>Nombre</dt><dd>{{ c.cliente.nombre }}</dd></div>
+        <div><dt>Cédula</dt><dd>{{ c.cliente.cedula }}</dd></div>
+        <div><dt>Teléfono</dt><dd>{{ c.cliente.telefono || '—' }}</dd></div>
+        <div><dt>Correo</dt><dd>{{ c.cliente.correo }}</dd></div>
+      </dl>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
       <h2>Cálculo</h2>
       @if (puedeActuar() && c.estado !== 'FIRMADO' && !editando()) {
         <button type="button" class="boton-secundario" (click)="abrirEdicion()">Editar cálculo</button>
@@ -63,6 +109,14 @@
               <mat-option [value]="2">2 cuotas</mat-option>
               <mat-option [value]="4">4 cuotas</mat-option>
             </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Valor de la inscripción</mat-label>
+            <input matInput name="inscripcion" inputmode="decimal" [(ngModel)]="inscripcion" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Descuento 1.ª cuota (%)</mat-label>
+            <input matInput name="descuento" inputmode="decimal" [(ngModel)]="cambios.descuento" />
           </mat-form-field>
         </div>
         @if (editarError()) {

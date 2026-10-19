@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.UsuariosPage),
   },
   {
+    path: 'registro',
+    canActivate: [soloAdmin],
+    loadComponent: () => import('./features/registro/registro').then((m) => m.RegistroPage),
+  },
+  {
     path: 'contratos/nuevo',
     canActivate: [sesionActiva],
     loadComponent: () => import('./features/contratos/nuevo').then((m) => m.NuevoContrato),

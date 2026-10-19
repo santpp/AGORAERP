@@ -46,7 +46,8 @@ export interface ContratoDetalle {
   uid: string;
   estado: Estado;
   version: number;
-  cliente: { nombre: string; correo: string };
+  cliente: { nombre: string; correo: string; cedula: string; telefono: string };
+  descuento: string;
   pdfs: { enviado: boolean; firmado: boolean };
   calculo: {
     precio_curso: string;
@@ -63,6 +64,23 @@ export interface CambiosCalculo {
   anio: number;
   mes: number;
   cuotas_por_mes: number;
+  cargos: Cargo[];
+  descuento: string;
+}
+
+export interface DatosCliente {
+  nombre: string;
+  cedula: string;
+  telefono: string;
+  correo: string;
+}
+
+export interface Registro {
+  tipo: string;
+  detalle: Record<string, unknown>;
+  creado_en: string;
+  uid: string | null;
+  cliente: string | null;
 }
 
 export interface ContactoGhl {
@@ -156,6 +174,14 @@ export class ApiService {
 
   restablecerClave(id: number, clave: string): Observable<unknown> {
     return this.http.post('/api/usuarios/clave', { id, clave }).pipe(catchError(mensajeDeError));
+  }
+
+  actualizarCliente(uid: string, datos: DatosCliente): Observable<unknown> {
+    return this.http.post(`/api/contratos/${uid}/cliente`, datos).pipe(catchError(mensajeDeError));
+  }
+
+  registro(): Observable<{ eventos: Registro[] }> {
+    return this.http.get<{ eventos: Registro[] }>('/api/registro').pipe(catchError(mensajeDeError));
   }
 
   revocar(uid: string): Observable<unknown> {

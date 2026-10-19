@@ -7,10 +7,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
-import { ApiService, CambiosCalculo, ContratoDetalle, EnvioResultado } from '../../core/api';
+import { ApiService, Cargo, CambiosCalculo, ContratoDetalle, DatosCliente, EnvioResultado } from '../../core/api';
 import { dinero, etiquetaEstado, fecha } from '../../core/formato';
 import { MESES } from '../../core/meses';
 import { SesionService } from '../../core/sesion';
+
+function esInscripcion(cargo: Cargo): boolean {
+  return /inscrip/i.test(cargo.concepto);
+}
 
 @Component({
   selector: 'app-detalle-contrato',
@@ -40,7 +44,10 @@ export class DetalleContrato implements OnInit {
   protected readonly editarError = signal('');
   protected readonly anios = [new Date().getFullYear(), new Date().getFullYear() + 1];
   protected readonly meses = MESES;
-  protected cambios: CambiosCalculo = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotas_por_mes: 1 };
+  protected cambios: CambiosCalculo = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotas_por_mes: 1, cargos: [], descuento: '0' };
+  protected inscripcion = '';
+  protected readonly editandoCliente = signal(false);
+  protected datosCliente: DatosCliente = { nombre: '', cedula: '', telefono: '', correo: '' };
 
   protected readonly pdfTipo = signal<'enviado' | 'firmado'>('enviado');
   protected readonly pdfHref = computed<string | null>(() => {
@@ -92,7 +99,9 @@ export class DetalleContrato implements OnInit {
         ...this.cambios,
         cuota: c.calculo.cuotas[0]?.monto ?? '',
         meses: c.calculo.cuotas.length,
+        descuento: c.descuento,
       };
+      this.inscripcion = c.calculo.cargos.find((g) => esInscripcion(g))?.monto ?? '0';
     }
     this.editarError.set('');
     this.editando.set(true);
@@ -100,7 +109,27 @@ export class DetalleContrato implements OnInit {
 
   protected guardarEdicion(): void {
     this.editarError.set('');
-    this.accion(() => this.api.editar(this.uid, { ...this.cambios, cuota: this.cambios.cuota.trim() }), () => this.editando.set(false));
+    const c = this.contrato();
+    const otros = (c?.calculo.cargos ?? []).filter((g) => !esInscripcion(g));
+    const cargos: Cargo[] = [{ concepto: 'Inscripción', monto: this.inscripcion.trim() || '0' }, ...otros];
+    this.accion(
+      () => this.api.editar(this.uid, { ...this.cambios, cuota: this.cambios.cuota.trim(), cargos, descuento: String(this.cambios.descuento).trim() }),
+      () => this.editando.set(false),
+    );
+  }
+
+  protected abrirEdicionCliente(): void {
+    const c = this.contrato();
+    if (c) {
+      this.datosCliente = { nombre: c.cliente.nombre, cedula: c.cliente.cedula, telefono: c.cliente.telefono, correo: c.cliente.correo };
+    }
+    this.editarError.set('');
+    this.editandoCliente.set(true);
+  }
+
+  protected guardarCliente(): void {
+    this.editarError.set('');
+    this.accion(() => this.api.actualizarCliente(this.uid, this.datosCliente), () => this.editandoCliente.set(false));
   }
 
   protected enviar(): void {

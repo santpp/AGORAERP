@@ -77,6 +77,15 @@ final class Aplicacion
                 }
                 return [200, ['contactos' => $this->ghl->buscarContactos($consulta)]];
             }
+            if ($metodo === 'GET' && $ruta === '/api/registro') {
+                $this->sesionDe($cabeceras, 'usuarios');
+                return [200, ['eventos' => $this->servicio->eventos()]];
+            }
+            if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/cliente$#', $ruta, $m)) {
+                $this->sesionDe($cabeceras, 'editar');
+                $this->servicio->actualizarCliente($m[1], $this->json($cuerpo));
+                return [200, ['ok' => true]];
+            }
             if (str_starts_with($ruta, '/api/contratos')) {
                 return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }

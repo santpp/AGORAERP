@@ -234,7 +234,7 @@ final class ContratoServicio
             'precio' => Formato::dinero($r->precioCurso),
             'cuota' => Formato::dinero(\Asocim\Contratos\Calculo\Dinero::desde((string) $terminos['cuota'])),
             'inscripcion' => $inscripcion,
-            'descuento' => '0',
+            'descuento' => (string) ($terminos['descuento'] ?? '0'),
             'modalidad' => Formato::modalidad($cuotasPorMes),
             'fecha_dia' => $hoy->format('j'),
             'fecha_mes' => Formato::mes((int) $hoy->format('n')),
@@ -368,12 +368,19 @@ final class ContratoServicio
         $contrato = $this->contrato($uid);
         $versiones = $this->fila_todas('SELECT * FROM versiones WHERE contrato_id = ? ORDER BY numero', [$contrato['id']]);
         $ultima = end($versiones);
+        $terminos = json_decode($ultima['terminos'], true);
         return [
             'uid' => $contrato['uid'],
-            'cliente' => ['nombre' => $contrato['cliente_nombre'], 'correo' => $contrato['cliente_correo']],
+            'cliente' => [
+                'nombre' => $contrato['cliente_nombre'],
+                'correo' => $contrato['cliente_correo'],
+                'cedula' => $contrato['cliente_cedula'],
+                'telefono' => $contrato['cliente_telefono'] ?? '',
+            ],
             'estado' => $ultima['estado'],
             'version' => (int) $ultima['numero'],
             'calculo' => $this->calcular($ultima),
+            'descuento' => (string) ($terminos['descuento'] ?? '0'),
             'pdfs' => [
                 'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
                 'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,
@@ -402,6 +409,48 @@ final class ContratoServicio
             'version' => (int) $f['numero'],
             'estado' => $f['estado'],
             'creado_en' => $f['creado_en'],
+        ], $filas);
+    }
+
+    /**
+     * Corrige los datos del cliente. Solo mientras el convenio es borrador: el PDF enviado no cambia.
+     * @param array{nombre:string,cedula:string,telefono:string,correo:string} $datos
+     */
+    public function actualizarCliente(string $uid, array $datos): void
+    {
+        $contrato = $this->contrato($uid);
+        $ultima = $this->ultimaVersion((int) $contrato['id']);
+        if ($ultima['estado'] !== 'BORRADOR') {
+            throw new ErrorContrato('Solo se pueden corregir los datos de un borrador. Crea una versión nueva para cambiarlos.', 409);
+        }
+        $nombre = trim((string) ($datos['nombre'] ?? ''));
+        $cedula = trim((string) ($datos['cedula'] ?? ''));
+        if ($nombre === '' || $cedula === '') {
+            throw new ErrorContrato('El nombre y la cédula son obligatorios.');
+        }
+        $correo = $this->correo(['correo' => $datos['correo'] ?? ''], 'correo');
+        $this->pdo->prepare('UPDATE contratos SET cliente_nombre = ?, cliente_cedula = ?, cliente_telefono = ?, cliente_correo = ? WHERE id = ?')
+            ->execute([$nombre, $cedula, trim((string) ($datos['telefono'] ?? '')), $correo, $contrato['id']]);
+        $this->evento((int) $contrato['id'], (int) $ultima['id'], 'CLIENTE_EDITADO', ['campos' => ['nombre', 'cedula', 'telefono', 'correo']]);
+    }
+
+    /**
+     * Registro de actividad para administración (últimos eventos, más recientes primero).
+     * @return list<array<string,mixed>>
+     */
+    public function eventos(int $limite = 200): array
+    {
+        $filas = $this->fila_todas(
+            'SELECT e.tipo, e.detalle, e.creado_en, c.uid, c.cliente_nombre
+               FROM eventos e LEFT JOIN contratos c ON c.id = e.contrato_id
+              ORDER BY e.id DESC LIMIT ' . max(1, min(500, $limite))
+        );
+        return array_map(fn (array $f) => [
+            'tipo' => $f['tipo'],
+            'detalle' => json_decode((string) $f['detalle'], true) ?: [],
+            'creado_en' => $f['creado_en'],
+            'uid' => $f['uid'],
+            'cliente' => $f['cliente_nombre'],
         ], $filas);
     }
 
@@ -713,7 +762,7 @@ final class ContratoServicio
     private function terminosDesdeCambios(array $c): array
     {
         $salida = [];
-        foreach (['cuota', 'meses', 'anio', 'mes', 'cuotas_por_mes', 'cargos'] as $campo) {
+        foreach (['cuota', 'meses', 'anio', 'mes', 'cuotas_por_mes', 'cargos', 'descuento'] as $campo) {
             if (array_key_exists($campo, $c)) {
                 $salida[$campo] = $c[$campo];
             }

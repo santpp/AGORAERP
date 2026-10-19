@@ -1,10 +1,11 @@
 .barra {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
   min-height: 56px;
-  padding: 0 16px;
+  padding: 8px 16px;
   background: var(--color-marca);
   color: #fff;
 }
@@ -29,8 +30,9 @@
 
 .barra__usuario {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 0 4px;
   font-size: 14px;
 
   button {
@@ -53,6 +55,8 @@
   padding: 16px;
 }
 
-.barra__enlace {
-  color: #fff;
+.barra__enlace,
+.barra__enlace .mdc-button__label {
+  color: #fff !important;
+  --mdc-text-button-label-text-color: #fff;
 }
