@@ -35,6 +35,7 @@ $app = new Aplicacion(
     new ContratoServicio($pdo, null, $generador, $documentos, $ghl, getenv('APP_URL') ?: 'https://asocim.agoradigital.app'),
     new UsuarioServicio($pdo),
     (string) getenv('GHL_WEBHOOK_SECRET'),
+    $ghl,
 );
 
 $cabeceras = [];

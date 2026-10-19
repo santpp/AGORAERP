@@ -1,13 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { ApiService } from '../../core/api';
-import { SesionService } from '../../core/sesion';
+import { ApiService, ContactoGhl } from '../../core/api';
 import { MESES, mesInicio } from '../../core/meses';
+import { SesionService } from '../../core/sesion';
 
 @Component({
   selector: 'app-nuevo-contrato',
@@ -23,25 +23,67 @@ export class NuevoContrato {
   protected readonly meses = MESES;
   protected readonly anios = [new Date().getFullYear(), new Date().getFullYear() + 1];
 
-  protected cliente = { nombre: '', cedula: '', telefono: '', correo: '' };
-  protected curso = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
+  // Paso 1: buscar el contacto en GHL
+  protected consulta = '';
+  protected readonly buscando = signal(false);
+  protected readonly busquedaHecha = signal(false);
+  protected readonly busquedaError = signal('');
+  protected readonly resultados = signal<ContactoGhl[]>([]);
+  protected readonly elegido = signal<ContactoGhl | null>(null);
 
+  // Paso 2: datos del convenio para ese contacto
+  protected cedula = '';
+  protected curso = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
 
+  protected readonly listoParaCrear = computed(() => this.elegido() !== null);
+
+  protected buscar(): void {
+    const texto = this.consulta.trim();
+    if (texto.length < 2 || this.buscando()) {
+      return;
+    }
+    this.buscando.set(true);
+    this.busquedaError.set('');
+    this.api.buscarContactos(texto).subscribe({
+      next: ({ contactos }) => {
+        this.resultados.set(contactos);
+        this.busquedaHecha.set(true);
+        this.buscando.set(false);
+      },
+      error: (e: Error) => {
+        this.busquedaError.set(e.message);
+        this.buscando.set(false);
+      },
+    });
+  }
+
+  protected elegir(contacto: ContactoGhl): void {
+    this.elegido.set(contacto);
+    this.error.set('');
+  }
+
+  protected cambiarContacto(): void {
+    this.elegido.set(null);
+  }
+
   protected crear(): void {
-    if (this.guardando()) {
+    const contacto = this.elegido();
+    if (!contacto || this.guardando()) {
       return;
     }
     this.guardando.set(true);
     this.error.set('');
+    const responsable = this.sesion.usuario();
     this.api
       .crear({
         cliente: {
-          nombre: this.cliente.nombre.trim(),
-          cedula: this.cliente.cedula.trim(),
-          telefono: this.cliente.telefono.trim(),
-          correo: this.cliente.correo.trim(),
+          contact_id: contacto.id,
+          nombre: contacto.nombre,
+          cedula: this.cedula.trim(),
+          telefono: contacto.telefono,
+          correo: contacto.correo,
         },
         curso: {
           cuota_mensual: this.curso.cuota.trim(),
@@ -50,8 +92,8 @@ export class NuevoContrato {
           cuotas_por_mes: Number(this.curso.cuotasPorMes),
           cargos: [],
         },
-        // Quien crea el convenio es la persona responsable: recibe el aviso cuando se firma.
-        responsable: { nombre: this.sesion.usuario()?.nombre ?? '', correo: this.sesion.usuario()?.correo ?? '' },
+        // Quien crea el convenio recibe el aviso cuando el cliente firma.
+        responsable: { nombre: responsable?.nombre ?? '', correo: responsable?.correo ?? '' },
       })
       .subscribe({
         next: ({ uid }) => this.router.navigateByUrl(`/contratos/${uid}`),

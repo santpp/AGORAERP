@@ -49,4 +49,21 @@ final class ClienteGhlTest extends TestCase
         $this->assertSame('abc123', $enviado[0][1]['contactId']);
         $this->assertSame('Asunto', $enviado[0][1]['subject']);
     }
+
+    public function test_busqueda_devuelve_contactos_con_nombre_correo_y_telefono(): void
+    {
+        $cliente = new ClienteGhl('t', 'loc', function (string $m, string $url, array $cuerpo): array {
+            $this->assertSame('GET', $m);
+            $this->assertTrue(str_contains($url, 'query=Yuly'));
+            return ['contacts' => [
+                ['id' => 'c1', 'firstName' => 'Yuly', 'lastName' => 'Navas', 'email' => 'y@example.com', 'phone' => '0412'],
+                ['id' => '', 'firstName' => 'Sin id'],
+            ]];
+        });
+
+        $resultado = $cliente->buscarContactos('Yuly');
+
+        $this->assertCount(1, $resultado);
+        $this->assertSame(['id' => 'c1', 'nombre' => 'Yuly Navas', 'correo' => 'y@example.com', 'telefono' => '0412'], $resultado[0]);
+    }
 }

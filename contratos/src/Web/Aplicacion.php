@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Asocim\Contratos\Web;
 
+use Asocim\Contratos\Ghl\ClienteGhl;
 use Asocim\Contratos\Seguridad\Roles;
 use Asocim\Contratos\Servicio\ContratoServicio;
 use Asocim\Contratos\Servicio\ErrorContrato;
@@ -19,6 +20,7 @@ final class Aplicacion
         private readonly ContratoServicio $servicio,
         private readonly UsuarioServicio $usuarios,
         private readonly string $secretoWebhook,
+        private readonly ?ClienteGhl $ghl = null,
     ) {
     }
 
@@ -63,6 +65,17 @@ final class Aplicacion
                     ]);
                     return [200, ['ok' => true]];
                 }
+            }
+            if ($metodo === 'POST' && $ruta === '/api/ghl/contactos/buscar') {
+                $this->sesionDe($cabeceras, 'editar');
+                if ($this->ghl === null) {
+                    throw new ErrorContrato('GHL no está configurado en el servidor.', 500);
+                }
+                $consulta = trim((string) ($this->json($cuerpo)['consulta'] ?? ''));
+                if (mb_strlen($consulta) < 2) {
+                    return [200, ['contactos' => []]];
+                }
+                return [200, ['contactos' => $this->ghl->buscarContactos($consulta)]];
             }
             if (str_starts_with($ruta, '/api/contratos')) {
                 return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
@@ -141,6 +154,13 @@ final class Aplicacion
         if ($metodo === 'POST' && $ruta === '/api/contratos') {
             $this->sesionDe($cabeceras, 'editar');
             $p = $this->json($cuerpo);
+            $contacto = trim((string) ($p['cliente']['contact_id'] ?? ''));
+            if ($contacto === '') {
+                throw new ErrorContrato('Elige un contacto de GHL antes de crear el convenio.');
+            }
+            // Un contrato por cada vez que se crea: la clave lleva el id del contacto para poder avisarle.
+            $p['clave'] = $contacto . ':panel:' . bin2hex(random_bytes(6));
+            unset($p['cliente']['contact_id']);
             $p['sub_cuenta'] = $p['sub_cuenta'] ?? 'panel';
             return [201, ['uid' => $this->servicio->crearDesdeWebhook($p)['uid']]];
         }

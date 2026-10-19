@@ -4,74 +4,98 @@
 
 <section class="tarjeta">
   <h1>Nuevo convenio</h1>
-  <p class="suave">Se crea como borrador. Revisa el cálculo y envíalo al cliente desde su ficha.</p>
 
-  <form class="formulario" (ngSubmit)="crear()">
-    <h2>Cliente</h2>
-    <div class="campos">
-      <mat-form-field appearance="outline">
-        <mat-label>Nombre completo</mat-label>
-        <input matInput name="nombre" required autocomplete="off" [(ngModel)]="cliente.nombre" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Cédula</mat-label>
-        <input matInput name="cedula" required inputmode="numeric" [(ngModel)]="cliente.cedula" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Teléfono</mat-label>
-        <input matInput name="telefono" inputmode="tel" [(ngModel)]="cliente.telefono" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Correo</mat-label>
-        <input matInput type="email" name="correo" required [(ngModel)]="cliente.correo" />
-      </mat-form-field>
-    </div>
+  @if (!elegido()) {
+    <h2>1. Busca el contacto</h2>
+    <p class="suave">Busca al alumno o representante entre los contactos de GHL. Si no aparece, agrégalo en GHL y vuelve a buscar.</p>
 
-    <h2>Curso</h2>
-    <div class="campos">
+    <form class="busqueda" (ngSubmit)="buscar()" role="search">
       <mat-form-field appearance="outline">
-        <mat-label>Cuota mensual</mat-label>
-        <input matInput name="cuota" required inputmode="decimal" placeholder="105" [(ngModel)]="curso.cuota" />
+        <mat-label>Nombre, correo o teléfono</mat-label>
+        <input matInput type="search" name="consulta" autocomplete="off" [(ngModel)]="consulta" />
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Meses</mat-label>
-        <input matInput type="number" name="meses" min="1" max="20" required [(ngModel)]="curso.meses" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Año de inicio</mat-label>
-        <mat-select name="anio" [(ngModel)]="curso.anio">
-          @for (a of anios; track a) {
-            <mat-option [value]="a">{{ a }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Mes de inicio</mat-label>
-        <mat-select name="mes" [(ngModel)]="curso.mes">
-          @for (m of meses; track m; let i = $index) {
-            <mat-option [value]="i + 1">{{ m }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Cuotas por mes</mat-label>
-        <mat-select name="cuotasPorMes" [(ngModel)]="curso.cuotasPorMes">
-          <mat-option [value]="1">1 cuota</mat-option>
-          <mat-option [value]="2">2 cuotas</mat-option>
-          <mat-option [value]="4">4 cuotas</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    @if (error()) {
-      <p class="error" role="alert">{{ error() }}</p>
-    }
-
-    <div class="botones">
-      <button mat-flat-button type="submit" class="boton-principal" [disabled]="guardando()">
-        {{ guardando() ? 'Creando…' : 'Crear borrador' }}
+      <button mat-flat-button type="submit" class="boton-principal" [disabled]="buscando() || consulta.trim().length < 2">
+        {{ buscando() ? 'Buscando…' : 'Buscar' }}
       </button>
-      <a class="boton-secundario" routerLink="/contratos">Cancelar</a>
+    </form>
+
+    @if (busquedaError()) {
+      <p class="error" role="alert">{{ busquedaError() }}</p>
+    } @else if (busquedaHecha() && resultados().length === 0) {
+      <p class="suave">No hay contactos con esa búsqueda. Revisa el nombre o agrégalo en GHL.</p>
+    } @else if (resultados().length > 0) {
+      <ul class="resultados">
+        @for (c of resultados(); track c.id) {
+          <li>
+            <button type="button" class="resultado" (click)="elegir(c)">
+              <span class="resultado__nombre">{{ c.nombre || 'Sin nombre' }}</span>
+              <span class="suave">{{ c.correo || 'Sin correo' }}{{ c.telefono ? ' · ' + c.telefono : '' }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <div class="elegido">
+      <div>
+        <p class="suave">Contacto</p>
+        <p class="elegido__nombre">{{ elegido()!.nombre }}</p>
+        <p class="suave">{{ elegido()!.correo }}{{ elegido()!.telefono ? ' · ' + elegido()!.telefono : '' }}</p>
+      </div>
+      <button type="button" class="boton-secundario" (click)="cambiarContacto()">Cambiar</button>
     </div>
-  </form>
+
+    <form class="formulario" (ngSubmit)="crear()">
+      <h2>2. Datos del convenio</h2>
+      <div class="campos">
+        <mat-form-field appearance="outline">
+          <mat-label>Cédula</mat-label>
+          <input matInput name="cedula" required inputmode="numeric" [(ngModel)]="cedula" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Cuota mensual</mat-label>
+          <input matInput name="cuota" required inputmode="decimal" placeholder="105" [(ngModel)]="curso.cuota" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Meses</mat-label>
+          <input matInput type="number" name="meses" min="1" max="20" required [(ngModel)]="curso.meses" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Año de inicio</mat-label>
+          <mat-select name="anio" [(ngModel)]="curso.anio">
+            @for (a of anios; track a) {
+              <mat-option [value]="a">{{ a }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Mes de inicio</mat-label>
+          <mat-select name="mes" [(ngModel)]="curso.mes">
+            @for (m of meses; track m; let i = $index) {
+              <mat-option [value]="i + 1">{{ m }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Cuotas por mes</mat-label>
+          <mat-select name="cuotasPorMes" [(ngModel)]="curso.cuotasPorMes">
+            <mat-option [value]="1">1 cuota</mat-option>
+            <mat-option [value]="2">2 cuotas</mat-option>
+            <mat-option [value]="4">4 cuotas</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <div class="botones">
+        <button mat-flat-button type="submit" class="boton-principal" [disabled]="guardando() || !listoParaCrear()">
+          {{ guardando() ? 'Creando…' : 'Crear borrador' }}
+        </button>
+        <a class="boton-secundario" routerLink="/contratos">Cancelar</a>
+      </div>
+    </form>
+  }
 </section>

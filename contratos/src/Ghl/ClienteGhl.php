@@ -47,6 +47,27 @@ class ClienteGhl
         return $id;
     }
 
+    /**
+     * Busca contactos de la subcuenta por nombre, correo o teléfono.
+     * @return list<array{id:string,nombre:string,correo:string,telefono:string}>
+     */
+    public function buscarContactos(string $consulta): array
+    {
+        $url = self::BASE . '/contacts/?' . http_build_query(['locationId' => $this->locationId, 'query' => $consulta, 'limit' => 20]);
+        $respuesta = ($this->http)('GET', $url, []);
+        $salida = [];
+        foreach ($respuesta['contacts'] ?? [] as $c) {
+            $nombre = trim(($c['firstName'] ?? '') . ' ' . ($c['lastName'] ?? ''));
+            $salida[] = [
+                'id' => (string) ($c['id'] ?? ''),
+                'nombre' => $nombre !== '' ? $nombre : (string) ($c['contactName'] ?? ''),
+                'correo' => (string) ($c['email'] ?? ''),
+                'telefono' => (string) ($c['phone'] ?? ''),
+            ];
+        }
+        return array_values(array_filter($salida, fn (array $c) => $c['id'] !== ''));
+    }
+
     /** Envía un correo a un contacto ya existente. */
     public function enviarCorreo(string $contactoId, string $asunto, string $html): void
     {
@@ -67,7 +88,7 @@ class ClienteGhl
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_CUSTOMREQUEST => $metodo,
-            CURLOPT_POSTFIELDS => json_encode($cuerpo, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            CURLOPT_POSTFIELDS => $metodo === 'GET' ? null : json_encode($cuerpo, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 20,
             CURLOPT_HTTPHEADER => [

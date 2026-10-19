@@ -55,8 +55,15 @@ export interface CambiosCalculo {
   cuotas_por_mes: number;
 }
 
+export interface ContactoGhl {
+  id: string;
+  nombre: string;
+  correo: string;
+  telefono: string;
+}
+
 export interface NuevoContrato {
-  cliente: { nombre: string; cedula: string; telefono: string; correo: string };
+  cliente: { contact_id: string; nombre: string; cedula: string; telefono: string; correo: string };
   curso: { cuota_mensual: string; meses: number; mes_inicio: string; cuotas_por_mes: number; cargos: Cargo[] };
   responsable: { nombre: string; correo: string };
 }
@@ -94,6 +101,13 @@ export class ApiService {
 
   enviar(uid: string): Observable<EnvioResultado> {
     return this.http.post<EnvioResultado>(`/api/contratos/${uid}/enviar`, {}).pipe(catchError(mensajeDeError));
+  }
+
+  /** Busca contactos en GHL (los que se agregan en GHL aparecen aquí). */
+  buscarContactos(consulta: string): Observable<{ contactos: ContactoGhl[] }> {
+    return this.http
+      .post<{ contactos: ContactoGhl[] }>('/api/ghl/contactos/buscar', { consulta })
+      .pipe(catchError(mensajeDeError));
   }
 
   crear(datos: NuevoContrato): Observable<{ uid: string }> {
