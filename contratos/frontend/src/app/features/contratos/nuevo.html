@@ -58,11 +58,13 @@
           <mat-label>Cédula</mat-label>
           <input matInput name="cedula" required inputmode="numeric" [(ngModel)]="cedula" />
         </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Correo</mat-label>
-          <input matInput type="email" name="correo" required autocomplete="off" [(ngModel)]="correo" />
-          <mat-hint>Si el contacto no tiene correo, escríbelo aquí. Se guarda también en AGORA.</mat-hint>
-        </mat-form-field>
+        <div class="campo-correo">
+          <mat-form-field appearance="outline">
+            <mat-label>Correo</mat-label>
+            <input matInput type="email" name="correo" required autocomplete="off" [(ngModel)]="correo" />
+          </mat-form-field>
+          <p class="suave ayuda">Si el contacto no tiene correo, escríbelo aquí. Se guarda también en AGORA.</p>
+        </div>
         <mat-form-field appearance="outline">
           <mat-label>Cuota mensual</mat-label>
           <input matInput name="cuota" required inputmode="decimal" placeholder="105" [(ngModel)]="curso.cuota" />

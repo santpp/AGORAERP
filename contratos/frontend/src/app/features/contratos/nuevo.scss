@@ -105,3 +105,14 @@ h1 {
   font-weight: 700;
   color: var(--color-marca);
 }
+
+.campo-correo {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.ayuda {
+  margin: 0;
+  font-size: 13px;
+}
