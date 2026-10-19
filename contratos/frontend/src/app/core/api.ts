@@ -37,6 +37,7 @@ export interface ContratoDetalle {
   estado: Estado;
   version: number;
   cliente: { nombre: string; correo: string };
+  pdfs: { enviado: boolean; firmado: boolean };
   calculo: {
     precio_curso: string;
     cargos: Cargo[];
@@ -44,6 +45,20 @@ export interface ContratoDetalle {
     total_a_pagar: string;
     cuotas: Cuota[];
   };
+}
+
+export interface CambiosCalculo {
+  cuota: string;
+  meses: number;
+  anio: number;
+  mes: number;
+  cuotas_por_mes: number;
+}
+
+export interface NuevoContrato {
+  cliente: { nombre: string; cedula: string; telefono: string; correo: string };
+  curso: { cuota_mensual: string; meses: number; mes_inicio: string; cuotas_por_mes: number; cargos: Cargo[] };
+  responsable: { nombre: string; correo: string };
 }
 
 export interface EnvioResultado {
@@ -79,6 +94,19 @@ export class ApiService {
 
   enviar(uid: string): Observable<EnvioResultado> {
     return this.http.post<EnvioResultado>(`/api/contratos/${uid}/enviar`, {}).pipe(catchError(mensajeDeError));
+  }
+
+  crear(datos: NuevoContrato): Observable<{ uid: string }> {
+    return this.http.post<{ uid: string }>('/api/contratos', datos).pipe(catchError(mensajeDeError));
+  }
+
+  editar(uid: string, cambios: CambiosCalculo): Observable<{ version: number }> {
+    return this.http.post<{ version: number }>(`/api/contratos/${uid}/editar`, cambios).pipe(catchError(mensajeDeError));
+  }
+
+  /** Ruta relativa del PDF (mismo dominio, la sesión viaja con la cookie). */
+  urlPdf(uid: string, tipo: 'enviado' | 'firmado'): string {
+    return `/api/contratos/${uid}/pdf/${tipo}`;
   }
 
   revocar(uid: string): Observable<unknown> {

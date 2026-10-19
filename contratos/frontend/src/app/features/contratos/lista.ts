@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { ApiService, ContratoResumen, Estado } from '../../core/api';
+import { SesionService } from '../../core/sesion';
 import { etiquetaEstado, fecha } from '../../core/formato';
 
 type Filtro = 'TODOS' | Estado;
@@ -17,6 +18,9 @@ type Filtro = 'TODOS' | Estado;
 })
 export class ListaContratos implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly sesion = inject(SesionService);
+
+  protected readonly puedeActuar = computed(() => this.sesion.usuario()?.rol !== 'VISOR');
 
   protected readonly cargando = signal(true);
   protected readonly error = signal('');

@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/contratos/lista').then((m) => m.ListaContratos),
   },
   {
+    path: 'contratos/nuevo',
+    canActivate: [sesionActiva],
+    loadComponent: () => import('./features/contratos/nuevo').then((m) => m.NuevoContrato),
+  },
+  {
     path: 'contratos/:uid',
     canActivate: [sesionActiva],
     loadComponent: () => import('./features/contratos/detalle').then((m) => m.DetalleContrato),

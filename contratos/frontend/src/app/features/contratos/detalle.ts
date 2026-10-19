@@ -1,20 +1,31 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ApiService, ContratoDetalle, EnvioResultado } from '../../core/api';
+import { Observable } from 'rxjs';
+import { ApiService, CambiosCalculo, ContratoDetalle, EnvioResultado } from '../../core/api';
 import { dinero, etiquetaEstado, fecha } from '../../core/formato';
+import { MESES } from '../../core/meses';
+import { SesionService } from '../../core/sesion';
 
 @Component({
   selector: 'app-detalle-contrato',
-  imports: [RouterLink, MatButtonModule],
+  imports: [FormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
 export class DetalleContrato implements OnInit {
   private readonly api = inject(ApiService);
   private readonly ruta = inject(ActivatedRoute);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly sesion = inject(SesionService);
 
   protected readonly uid = this.ruta.snapshot.paramMap.get('uid') ?? '';
+  protected readonly puedeActuar = computed(() => this.sesion.usuario()?.rol !== 'VISOR');
   protected readonly cargando = signal(true);
   protected readonly error = signal('');
   protected readonly contrato = signal<ContratoDetalle | null>(null);
@@ -24,6 +35,31 @@ export class DetalleContrato implements OnInit {
   protected readonly envio = signal<EnvioResultado | null>(null);
   protected readonly confirmarRevocar = signal(false);
   protected readonly copiado = signal(false);
+
+  protected readonly editando = signal(false);
+  protected readonly editarError = signal('');
+  protected readonly anios = [new Date().getFullYear(), new Date().getFullYear() + 1];
+  protected readonly meses = MESES;
+  protected cambios: CambiosCalculo = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotas_por_mes: 1 };
+
+  protected readonly pdfTipo = signal<'enviado' | 'firmado'>('enviado');
+  protected readonly pdfHref = computed<string | null>(() => {
+    const c = this.contrato();
+    const tipo = this.pdfTipo();
+    return c && c.pdfs[tipo] ? this.api.urlPdf(this.uid, tipo) : null;
+  });
+
+  protected readonly pdfUrl = computed<SafeResourceUrl | null>(() => {
+    const c = this.contrato();
+    if (!c) {
+      return null;
+    }
+    const tipo = this.pdfTipo();
+    if (!c.pdfs[tipo]) {
+      return null;
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.api.urlPdf(this.uid, tipo));
+  });
 
   protected readonly etiqueta = etiquetaEstado;
   protected readonly dinero = dinero;
@@ -39,6 +75,7 @@ export class DetalleContrato implements OnInit {
     this.api.contrato(this.uid).subscribe({
       next: (c) => {
         this.contrato.set(c);
+        this.pdfTipo.set(c.estado === 'FIRMADO' ? 'firmado' : 'enviado');
         this.cargando.set(false);
       },
       error: (e: Error) => {
@@ -46,6 +83,24 @@ export class DetalleContrato implements OnInit {
         this.cargando.set(false);
       },
     });
+  }
+
+  protected abrirEdicion(): void {
+    const c = this.contrato();
+    if (c) {
+      this.cambios = {
+        ...this.cambios,
+        cuota: c.calculo.cuotas[0]?.monto ?? '',
+        meses: c.calculo.cuotas.length,
+      };
+    }
+    this.editarError.set('');
+    this.editando.set(true);
+  }
+
+  protected guardarEdicion(): void {
+    this.editarError.set('');
+    this.accion(() => this.api.editar(this.uid, { ...this.cambios, cuota: this.cambios.cuota.trim() }), () => this.editando.set(false));
   }
 
   protected enviar(): void {
@@ -74,7 +129,7 @@ export class DetalleContrato implements OnInit {
     this.copiado.set(true);
   }
 
-  private accion<T>(ejecutar: () => import('rxjs').Observable<T>, alTerminar?: (resultado: T) => void): void {
+  private accion<T>(ejecutar: () => Observable<T>, alTerminar?: (resultado: T) => void): void {
     this.ocupado.set(true);
     this.accionError.set('');
     ejecutar().subscribe({
@@ -84,7 +139,11 @@ export class DetalleContrato implements OnInit {
         this.cargar();
       },
       error: (e: Error) => {
-        this.accionError.set(e.message);
+        if (this.editando()) {
+          this.editarError.set(e.message);
+        } else {
+          this.accionError.set(e.message);
+        }
         this.ocupado.set(false);
       },
     });

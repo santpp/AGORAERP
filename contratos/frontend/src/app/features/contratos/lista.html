@@ -1,6 +1,11 @@
 <div class="encabezado">
   <h1>Contratos</h1>
-  <span class="suave">{{ contratos().length }} en total</span>
+  <div class="encabezado__acciones">
+    <span class="suave">{{ contratos().length }} en total</span>
+    @if (puedeActuar()) {
+      <a class="nuevo" routerLink="/contratos/nuevo">Nuevo convenio</a>
+    }
+  </div>
 </div>
 
 <div class="herramientas">

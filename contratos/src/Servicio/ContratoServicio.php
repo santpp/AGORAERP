@@ -189,6 +189,7 @@ final class ContratoServicio
             $this->pdo->rollBack();
             throw $e;
         }
+        $this->avisarEnvio($contrato, $token, $vence);
         return ['token' => $token, 'version' => (int) $version['numero'], 'vence' => $vence];
     }
 
@@ -355,6 +356,7 @@ final class ContratoServicio
 
         if ($descarga !== null) {
             $this->avisarCliente($contrato, $descarga);
+            $this->avisarStaff($contrato);
         }
     }
 
@@ -372,6 +374,10 @@ final class ContratoServicio
             'estado' => $ultima['estado'],
             'version' => (int) $ultima['numero'],
             'calculo' => $this->calcular($ultima),
+            'pdfs' => [
+                'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
+                'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,
+            ],
         ];
     }
 
@@ -399,6 +405,19 @@ final class ContratoServicio
         ], $filas);
     }
 
+    /** Ruta del PDF de la última versión: el enviado o el firmado. */
+    public function archivoDeContrato(string $uid, string $tipo): string
+    {
+        $contrato = $this->contrato($uid);
+        $version = $this->ultimaVersion((int) $contrato['id']);
+        $tabla = $tipo === 'firmado' ? 'documentos_firmados' : 'documentos';
+        $fila = $this->fila("SELECT ruta FROM {$tabla} WHERE version_id = ?", [$version['id']]);
+        if (!$fila || !is_file($fila['ruta'])) {
+            throw new ErrorContrato('Ese documento todavía no existe.', 404);
+        }
+        return $fila['ruta'];
+    }
+
     /** Vista previa de cálculo sin guardar nada (lo que el personal ve al editar). */
     public function previsualizar(array $terminos): Resultado
     {
@@ -407,6 +426,49 @@ final class ContratoServicio
     }
 
     // ------------------------------------------------------------------ internos
+
+    /** Id del contacto en GHL: el de clave_webhook, o el que se busca o crea por correo. */
+    private function contactoDelCliente(array $contrato): string
+    {
+        return empty($contrato['clave_webhook'])
+            ? $this->ghl->contactoPara((string) $contrato['cliente_correo'], (string) $contrato['cliente_nombre'], $contrato['cliente_telefono'] ?? null)
+            : explode(':', (string) $contrato['clave_webhook'])[0];
+    }
+
+    /** Correo al cliente con el enlace para firmar. */
+    private function avisarEnvio(array $contrato, string $token, string $vence): void
+    {
+        if ($this->ghl === null) {
+            return;
+        }
+        try {
+            $enlace = rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
+            $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
+                . '<p>Tu convenio de pago con ASOCIM está listo para revisar y firmar:</p>'
+                . '<p><a href="' . $enlace . '">Revisar y firmar el convenio</a></p>'
+                . '<p>El enlace vence el ' . date('m/d/Y', strtotime($vence)) . '.</p>';
+            $this->ghl->enviarCorreo($this->contactoDelCliente($contrato), 'Tu convenio de pago · ASOCIM', $html);
+        } catch (\Throwable $e) {
+            error_log('[contratos] No se envió el correo con el enlace: ' . $e->getMessage());
+        }
+    }
+
+    /** Aviso al personal responsable cuando el cliente firma (si el contrato tiene responsable con correo). */
+    private function avisarStaff(array $contrato): void
+    {
+        if ($this->ghl === null || empty($contrato['responsable_correo'])) {
+            return;
+        }
+        try {
+            $contactoId = $this->ghl->contactoPara((string) $contrato['responsable_correo'], (string) ($contrato['responsable_nombre'] ?? ''), null);
+            $enlace = rtrim($this->appUrl, '/') . '/app/contratos/' . $contrato['uid'];
+            $html = '<p>' . htmlspecialchars((string) $contrato['cliente_nombre']) . ' firmó el convenio de pago.</p>'
+                . '<p><a href="' . $enlace . '">Ver el convenio en el panel</a></p>';
+            $this->ghl->enviarCorreo($contactoId, 'Convenio firmado · ' . $contrato['cliente_nombre'], $html);
+        } catch (\Throwable $e) {
+            error_log('[contratos] No se avisó al personal: ' . $e->getMessage());
+        }
+    }
 
     /** Ruta del convenio firmado para el enlace de descarga (vence a los 30 días). */
     public function documentoFirmadoDeDescarga(string $token): string
@@ -435,10 +497,7 @@ final class ContratoServicio
             return;
         }
         try {
-            // Si el webhook no trajo el contact_id de GHL, se busca o crea el contacto por correo.
-            $contactoId = empty($contrato['clave_webhook'])
-                ? $this->ghl->contactoPara((string) $contrato['cliente_correo'], (string) $contrato['cliente_nombre'], $contrato['cliente_telefono'] ?? null)
-                : explode(':', (string) $contrato['clave_webhook'])[0];
+            $contactoId = $this->contactoDelCliente($contrato);
             $enlace = rtrim($this->appUrl, '/') . '/firmar?descarga=' . $descarga;
             $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
                 . '<p>Tu convenio de pago con ASOCIM ya está firmado. Puedes descargar tu copia aquí:</p>'

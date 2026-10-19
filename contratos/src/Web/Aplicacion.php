@@ -138,6 +138,16 @@ final class Aplicacion
     /** @return array{0:int,1:array<string,mixed>} */
     private function contratosApi(string $metodo, string $ruta, array $cabeceras, string $cuerpo): array
     {
+        if ($metodo === 'POST' && $ruta === '/api/contratos') {
+            $this->sesionDe($cabeceras, 'editar');
+            $p = $this->json($cuerpo);
+            $p['sub_cuenta'] = $p['sub_cuenta'] ?? 'panel';
+            return [201, ['uid' => $this->servicio->crearDesdeWebhook($p)['uid']]];
+        }
+        if ($metodo === 'GET' && preg_match('#^/api/contratos/([a-f0-9]{24})/pdf/(enviado|firmado)$#', $ruta, $m)) {
+            $this->sesionDe($cabeceras, 'ver');
+            return [200, ['__archivo' => $this->servicio->archivoDeContrato($m[1], $m[2]), '__nombre' => $m[2] . '-convenio.pdf']];
+        }
         if ($metodo === 'GET' && $ruta === '/api/contratos') {
             $this->sesionDe($cabeceras, 'ver');
             return [200, ['contratos' => $this->servicio->listar()]];

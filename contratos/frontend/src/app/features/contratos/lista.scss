@@ -134,3 +134,21 @@
   color: var(--color-suave);
   border-color: var(--color-linea);
 }
+
+.encabezado__acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nuevo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: var(--color-acento);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}

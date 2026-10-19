@@ -19,43 +19,121 @@
   </section>
 
   <section class="tarjeta bloque">
-    <h2>Cálculo</h2>
-    <dl class="resumen">
-      <div>
-        <dt>Precio del curso</dt>
-        <dd>{{ dinero(c.calculo.precio_curso) }}</dd>
-      </div>
-      @for (cargo of c.calculo.cargos; track cargo.concepto) {
+    <div class="bloque__cabecera">
+      <h2>Cálculo</h2>
+      @if (puedeActuar() && c.estado !== 'FIRMADO' && !editando()) {
+        <button type="button" class="boton-secundario" (click)="abrirEdicion()">Editar cálculo</button>
+      }
+    </div>
+
+    @if (editando()) {
+      <form class="edicion" (ngSubmit)="guardarEdicion()">
+        @if (c.estado !== 'BORRADOR') {
+          <p class="suave">Este convenio ya fue enviado. Guardar crea la versión {{ c.version + 1 }} y el enlace actual deja de servir.</p>
+        }
+        <div class="edicion__campos">
+          <mat-form-field appearance="outline">
+            <mat-label>Cuota mensual</mat-label>
+            <input matInput name="cuota" required inputmode="decimal" [(ngModel)]="cambios.cuota" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Meses</mat-label>
+            <input matInput type="number" name="meses" min="1" max="20" required [(ngModel)]="cambios.meses" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Año de inicio</mat-label>
+            <mat-select name="anio" [(ngModel)]="cambios.anio">
+              @for (a of anios; track a) {
+                <mat-option [value]="a">{{ a }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mes de inicio</mat-label>
+            <mat-select name="mes" [(ngModel)]="cambios.mes">
+              @for (m of meses; track m; let i = $index) {
+                <mat-option [value]="i + 1">{{ m }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Cuotas por mes</mat-label>
+            <mat-select name="cuotas_por_mes" [(ngModel)]="cambios.cuotas_por_mes">
+              <mat-option [value]="1">1 cuota</mat-option>
+              <mat-option [value]="2">2 cuotas</mat-option>
+              <mat-option [value]="4">4 cuotas</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        @if (editarError()) {
+          <p class="error" role="alert">{{ editarError() }}</p>
+        }
+        <div class="fila-botones">
+          <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">
+            {{ ocupado() ? 'Guardando…' : 'Guardar cálculo' }}
+          </button>
+          <button type="button" class="boton-secundario" (click)="editando.set(false)">Cancelar</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="resumen">
         <div>
-          <dt>{{ cargo.concepto }}</dt>
-          <dd>{{ dinero(cargo.monto) }}</dd>
+          <dt>Precio del curso</dt>
+          <dd>{{ dinero(c.calculo.precio_curso) }}</dd>
+        </div>
+        @for (cargo of c.calculo.cargos; track cargo.concepto) {
+          <div>
+            <dt>{{ cargo.concepto }}</dt>
+            <dd>{{ dinero(cargo.monto) }}</dd>
+          </div>
+        }
+        <div class="resumen__total">
+          <dt>Total a pagar</dt>
+          <dd>{{ dinero(c.calculo.total_a_pagar) }}</dd>
+        </div>
+      </dl>
+
+      <h3>Cuotas</h3>
+      <div class="tabla-cuotas">
+        <table class="cuotas">
+          <thead>
+            <tr>
+              <th scope="col">Cuota</th>
+              <th scope="col">Vence</th>
+              <th scope="col" class="numero">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (q of c.calculo.cuotas; track q.numero) {
+              <tr>
+                <td>{{ q.numero }}</td>
+                <td>{{ fecha(q.vencimiento) }}</td>
+                <td class="numero">{{ dinero(q.monto) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
+      <h2>Convenio</h2>
+      @if (c.pdfs.enviado && c.pdfs.firmado) {
+        <div class="pestanas" role="group" aria-label="Versión del convenio">
+          <button type="button" [class.activa]="pdfTipo() === 'enviado'" (click)="pdfTipo.set('enviado')">Enviado</button>
+          <button type="button" [class.activa]="pdfTipo() === 'firmado'" (click)="pdfTipo.set('firmado')">Firmado</button>
         </div>
       }
-      <div class="resumen__total">
-        <dt>Total a pagar</dt>
-        <dd>{{ dinero(c.calculo.total_a_pagar) }}</dd>
-      </div>
-    </dl>
+    </div>
 
-    <h3>Cuotas</h3>
-    <table class="cuotas">
-      <thead>
-        <tr>
-          <th scope="col">Cuota</th>
-          <th scope="col">Vence</th>
-          <th scope="col" class="numero">Monto</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (q of c.calculo.cuotas; track q.numero) {
-          <tr>
-            <td>{{ q.numero }}</td>
-            <td>{{ fecha(q.vencimiento) }}</td>
-            <td class="numero">{{ dinero(q.monto) }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    @if (pdfUrl(); as url) {
+      <a class="boton-secundario abrir-pdf" [href]="pdfHref()" target="_blank" rel="noopener">Abrir PDF en otra pestaña</a>
+      <iframe class="visor" [src]="url" title="Convenio en PDF"></iframe>
+    } @else {
+      <p class="suave">Todavía no hay un PDF para este convenio. Se genera al enviarlo al cliente.</p>
+    }
   </section>
 
   <section class="tarjeta bloque">
@@ -63,25 +141,29 @@
 
     @switch (c.estado) {
       @case ('BORRADOR') {
-        <p class="suave">Revisa el cálculo antes de enviar. Al enviar se genera el enlace para que el cliente firme.</p>
-        <button mat-flat-button type="button" class="boton-principal" [disabled]="ocupado()" (click)="enviar()">
-          {{ ocupado() ? 'Enviando…' : 'Enviar al cliente' }}
-        </button>
+        <p class="suave">Revisa el cálculo y el convenio antes de enviar. Al enviar, el cliente recibe el enlace por correo.</p>
+        @if (puedeActuar()) {
+          <button mat-flat-button type="button" class="boton-principal" [disabled]="ocupado() || editando()" (click)="enviar()">
+            {{ ocupado() ? 'Enviando…' : 'Enviar al cliente' }}
+          </button>
+        }
       }
       @case ('ENVIADO') {
         <p class="suave">El enlace está activo y el cliente todavía no ha firmado.</p>
-        <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="revocar()">
-          {{ confirmarRevocar() ? 'Confirmar revocación' : 'Revocar enlace' }}
-        </button>
-        @if (confirmarRevocar()) {
-          <p class="suave">El cliente no podrá firmar con el enlace actual. Después tendrás que crear una versión nueva.</p>
+        @if (puedeActuar()) {
+          <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="revocar()">
+            {{ confirmarRevocar() ? 'Confirmar revocación' : 'Revocar enlace' }}
+          </button>
+          @if (confirmarRevocar()) {
+            <p class="suave">El cliente no podrá firmar con el enlace actual. Para volver a enviarlo, edita el cálculo y crea una versión nueva.</p>
+          }
         }
       }
       @case ('FIRMADO') {
-        <p class="suave">El convenio está firmado. La copia firmada se envía al cliente por correo.</p>
+        <p class="suave">El convenio está firmado. El cliente y el personal responsable reciben la copia por correo.</p>
       }
       @case ('REVOCADA') {
-        <p class="suave">Este enlace fue revocado y ya no sirve para firmar.</p>
+        <p class="suave">Este enlace fue revocado. Edita el cálculo para crear una versión nueva y enviarla otra vez.</p>
       }
     }
 
