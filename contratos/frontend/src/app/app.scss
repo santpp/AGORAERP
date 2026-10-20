@@ -96,6 +96,11 @@
   }
 }
 
+// Cada página entra con el mismo movimiento que la pantalla de entrada.
+.contenido > * {
+  animation: asentar 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 .contenido {
   max-width: 880px;
   margin: 0 auto;

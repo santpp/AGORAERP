@@ -1,29 +1,85 @@
-// Pantalla de entrada: atmósfera de luz con grano de película, tipografía editorial y
-// un panel discreto. Sin fotos ni formas decorativas: la luz y el espacio hacen el trabajo.
-$tinta: #fff;
+// Pantalla de entrada con el mismo lenguaje que la referencia: tarjeta con marco, imagen
+// redondeada a la izquierda y formulario estrecho sobre un fondo oscuro con rayas de luz.
+// En lugar de foto, la atmósfera de la marca ASOCIM (azul y naranja).
 $acento: #f86000;
 $marca: #1a1070;
+$negro: #07061a;
 
 .acceso {
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr;
+  place-items: center;
   min-height: 100vh;
   min-height: 100dvh;
+  padding: 32px 20px;
   overflow: hidden;
-  color: $tinta;
-  background: #0d0a3a;
+  background: $negro;
 }
 
-// ----- atmósfera
-
-.fondo {
+// Halo borroso de color detrás de la tarjeta, como en la referencia.
+.acceso__halo {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  inset: -10%;
+  background:
+    radial-gradient(40% 45% at 18% 30%, rgba(248, 96, 0, 0.55), transparent 70%),
+    radial-gradient(45% 50% at 85% 75%, rgba(88, 60, 230, 0.5), transparent 70%),
+    radial-gradient(35% 40% at 60% 10%, rgba(26, 16, 112, 0.7), transparent 70%);
+  filter: blur(70px);
+  animation: respirar 14s ease-in-out infinite alternate;
 }
 
-.fondo__capa {
+@keyframes respirar {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+.tarjeta-acceso {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  width: 100%;
+  max-width: 1040px;
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: $negro;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6);
+  animation: aparecer 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ----- lado izquierdo: imagen con marco interior
+
+.lado-imagen {
+  position: relative;
+  padding: 14px;
+}
+
+.lienzo {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  isolation: isolate;
+}
+
+.lienzo__capa {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -62,8 +118,7 @@ $marca: #1a1070;
     linear-gradient(170deg, #120d50 0%, $marca 60%, #09062b 100%);
 }
 
-// Grano fino, como película: ruido generado en línea, sin imágenes.
-.fondo__grano {
+.lienzo__grano {
   position: absolute;
   inset: 0;
   opacity: 0.14;
@@ -71,54 +126,63 @@ $marca: #1a1070;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-.fondo__vineta {
+.lienzo__vineta {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(5, 3, 25, 0.78) 100%);
+  background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(5, 3, 25, 0.65) 100%);
 }
 
-// ----- marca
-
-.acceso__marca {
-  position: relative;
+// Logos sobre la imagen, sin fondo: en blanco para que se vean sobre el azul oscuro.
+.marcas {
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 28px 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  pointer-events: none;
 }
 
-.acceso__nombre {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.42em;
+.marcas__logo {
+  display: block;
+  width: auto;
+  height: 96px;
 }
 
-.acceso__area {
-  padding-left: 14px;
-  border-left: 1px solid rgba(255, 255, 255, 0.25);
-  font-size: 11px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+.marcas__logo--asocim {
+  height: 88px;
 }
 
-// ----- cuerpo
+.marcas__separador {
+  width: 1px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.45);
+}
 
-.acceso__cuerpo {
+// ----- lado derecho: fondo con rayas de luz y formulario
+
+.lado-formulario {
   position: relative;
-  z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-  gap: 72px;
-  align-items: end;
-  padding: 24px 48px 64px;
+  place-items: center;
+  padding: 40px 32px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(248, 96, 0, 0.08) 34%, rgba(88, 60, 230, 0.14) 62%, transparent 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 58px),
+    $negro;
+}
+
+.formulario-columna {
+  width: 100%;
+  max-width: 320px;
+  animation: asentar 1.2s 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes asentar {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -126,199 +190,94 @@ $marca: #1a1070;
   }
 }
 
-.presentacion {
-  animation: asentar 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.presentacion__titulo {
+.titulo {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 300;
-  font-size: clamp(44px, 6.6vw, 100px);
-  line-height: 0.98;
+  font-size: 26px;
+  font-weight: 700;
   letter-spacing: -0.01em;
-  color: $tinta;
-  animation: asentar 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  color: #fff;
 }
 
-.presentacion__linea {
-  display: block;
-}
-
-.presentacion__linea--acento {
-  font-style: italic;
-  font-weight: 300;
-  color: #ffb27a;
-}
-
-.presentacion__texto {
-  max-width: 34ch;
-  margin: 28px 0 0;
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.78);
-  animation: asentar 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.controles {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 40px;
-  max-width: 520px;
-  margin-top: 44px;
-}
-
-.progreso {
-  display: flex;
-  gap: 22px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.progreso__punto {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 44px;
-  padding: 8px 0;
-  border: 0;
-  background: none;
-  color: rgba(255, 255, 255, 0.5);
-  font: inherit;
-  cursor: pointer;
-
-  &:hover {
-    color: #fff;
-  }
-
-  &.activo {
-    color: #fff;
-
-    .progreso__linea {
-      height: 2px;
-      background: $acento;
-    }
-  }
-}
-
-.progreso__numero {
-  font-size: 11px;
-  letter-spacing: 0.2em;
-}
-
-.progreso__linea {
-  height: 1px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.pausa {
-  padding: 8px 0;
-  border: 0;
-  background: none;
-  color: rgba(255, 255, 255, 0.7);
-  font: inherit;
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  cursor: pointer;
-
-  &:hover {
-    color: #fff;
-  }
-}
-
-// ----- panel de entrada
-
-.entrada {
-  padding: 40px 36px 36px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 2px;
-  background: rgba(8, 6, 36, 0.45);
-  backdrop-filter: blur(18px);
-  animation: asentar 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.entrada__titulo {
-  margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 44px;
-  font-weight: 300;
-  line-height: 1;
-  color: $tinta;
-}
-
-.entrada__ayuda {
-  margin: 14px 0 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.7);
+.subtitulo {
+  margin: 8px 0 28px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .formulario {
   display: grid;
-  gap: 26px;
-  margin-top: 32px;
+  gap: 16px;
 }
 
 .campo {
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .campo__etiqueta {
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .campo input {
+  box-sizing: border-box;
   width: 100%;
-  padding: 10px 0;
-  border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 0;
-  background: transparent;
-  color: $tinta;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #2b2942;
+  border-radius: 8px;
+  background: #0d0c1f;
+  color: #fff;
   font: inherit;
-  font-size: 16px; // evita el zoom automático en iOS
+  font-size: 15px; // evita el zoom automático en iOS
   outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 
   &:focus {
-    border-bottom-color: $acento;
+    border-color: $acento;
+    box-shadow: 0 0 0 3px rgba(248, 96, 0, 0.22);
   }
 }
 
-.entrada__error {
+.error {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #ffb8a6;
 }
 
+// Botón con degradado de la marca: naranja a azul, texto blanco.
 .entrar {
-  height: 54px;
-  margin-top: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 46px;
+  margin-top: 6px;
   border: 0;
-  border-radius: 2px;
-  background: $acento;
-  color: $marca;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f86000 0%, #b43a4a 55%, $marca 100%);
+  color: #fff;
   font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition:
+    filter 0.2s,
+    transform 0.2s;
 
   &:hover {
-    background: #ff7a26;
+    filter: brightness(1.08);
+  }
+
+  &:active {
+    transform: scale(0.99);
   }
 
   &:disabled {
-    opacity: 0.55;
+    opacity: 0.6;
     cursor: default;
   }
 }
@@ -326,35 +285,52 @@ $marca: #1a1070;
 // ----- móvil
 
 @media (max-width: 860px) {
-  .acceso__marca {
-    padding: 24px 24px 0;
+  .acceso {
+    padding: 0;
+    place-items: stretch;
   }
 
-  .acceso__cuerpo {
+  .tarjeta-acceso {
     grid-template-columns: 1fr;
-    gap: 40px;
-    align-items: start;
-    padding: 40px 24px 48px;
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
   }
 
-  .presentacion__titulo {
-    font-size: clamp(42px, 12vw, 64px);
+  .lado-imagen {
+    min-height: 220px;
   }
 
-  .entrada {
-    padding: 28px 24px;
+  .marcas {
+    gap: 22px;
+  }
+
+  .marcas__logo {
+    height: 76px;
+  }
+
+  .marcas__logo--asocim {
+    height: 68px;
+  }
+
+  .marcas__separador {
+    height: 52px;
+  }
+
+  .lado-formulario {
+    padding: 36px 24px 48px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fondo__capa,
-  .fondo__capa.activa,
-  .presentacion,
-  .presentacion__titulo,
-  .presentacion__texto,
-  .entrada {
+  .acceso__halo,
+  .tarjeta-acceso,
+  .formulario-columna {
+    animation: none;
+  }
+
+  .lienzo__capa {
     transition: none;
     transform: none;
-    animation: none;
   }
 }
