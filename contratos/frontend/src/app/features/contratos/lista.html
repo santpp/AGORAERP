@@ -8,6 +8,10 @@
   </div>
 </div>
 
+@if (!esAdmin()) {
+  <p class="suave">Ves solo los convenios que tienes asignados.</p>
+}
+
 <div class="herramientas">
   <mat-form-field appearance="outline" class="buscar">
     <mat-label>Buscar por nombre o correo</mat-label>

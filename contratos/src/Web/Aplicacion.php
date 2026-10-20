@@ -91,6 +91,10 @@ final class Aplicacion
                 $this->sesionDe($cabeceras, 'usuarios');
                 return [200, ['eventos' => $this->servicio->eventos()]];
             }
+            // Quien no es administración solo puede abrir los contratos que tiene asignados.
+            if (preg_match('#^/api/contratos/([a-f0-9]{24})(?:/|$)#', $ruta, $mc)) {
+                $this->accesoAContrato($this->sesionDe($cabeceras), $mc[1]);
+            }
             if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/cliente$#', $ruta, $m)) {
                 $this->sesionDe($cabeceras, 'editar');
                 $this->servicio->actualizarCliente($m[1], $this->json($cuerpo));
@@ -176,6 +180,15 @@ final class Aplicacion
         return $u;
     }
 
+    /** @param array<string,mixed> $u */
+    private function accesoAContrato(array $u, string $uid): void
+    {
+        if ($u['rol'] !== 'ADMIN' && !$this->servicio->esResponsable($uid, (string) $u['correo'])) {
+            // 404 y no 403: no se revela que el contrato existe.
+            throw new ErrorContrato('Contrato no encontrado.', 404);
+        }
+    }
+
     /** @return array{0:int,1:array<string,mixed>} */
     private function contratosApi(string $metodo, string $ruta, array $cabeceras, string $cuerpo): array
     {
@@ -204,8 +217,8 @@ final class Aplicacion
             return [200, ['__archivo' => $this->servicio->archivoDeContrato($m[1], $m[2]), '__nombre' => $m[2] . '-convenio.pdf']];
         }
         if ($metodo === 'GET' && $ruta === '/api/contratos') {
-            $this->sesionDe($cabeceras, 'ver');
-            return [200, ['contratos' => $this->servicio->listar()]];
+            $u = $this->sesionDe($cabeceras, 'ver');
+            return [200, ['contratos' => $this->servicio->listar($u['rol'] === 'ADMIN' ? null : (string) $u['correo'])]];
         }
         if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/enlace$#', $ruta, $m)) {
             $this->sesionDe($cabeceras, 'enviar');

@@ -453,15 +453,18 @@ final class ContratoServicio
      * Lista de contratos con el estado de su última versión (más recientes primero).
      * @return list<array<string,mixed>>
      */
-    public function listar(): array
+    /** @param ?string $responsable correo de la persona asignada; null lista todos (administración). */
+    public function listar(?string $responsable = null): array
     {
+        $filtro = $responsable === null ? '' : ' AND LOWER(c.responsable_correo) = LOWER(?)';
         $filas = $this->fila_todas(
             'SELECT c.uid, c.cliente_nombre, c.cliente_correo, c.creado_en,
                     v.numero, v.estado
                FROM contratos c
                JOIN versiones v ON v.contrato_id = c.id
-              WHERE v.numero = (SELECT MAX(numero) FROM versiones WHERE contrato_id = c.id)
-              ORDER BY c.creado_en DESC, c.id DESC'
+              WHERE v.numero = (SELECT MAX(numero) FROM versiones WHERE contrato_id = c.id)' . $filtro . '
+              ORDER BY c.creado_en DESC, c.id DESC',
+            $responsable === null ? [] : [trim($responsable)]
         );
         return array_map(fn (array $f) => [
             'uid' => $f['uid'],
@@ -471,6 +474,13 @@ final class ContratoServicio
             'estado' => $f['estado'],
             'creado_en' => $f['creado_en'],
         ], $filas);
+    }
+
+    /** Si la persona con ese correo es la responsable asignada del contrato. */
+    public function esResponsable(string $uid, string $correo): bool
+    {
+        $asignado = trim((string) ($this->contrato($uid)['responsable_correo'] ?? ''));
+        return $asignado !== '' && strcasecmp($asignado, trim($correo)) === 0;
     }
 
     /**

@@ -21,6 +21,7 @@ export class ListaContratos implements OnInit {
   private readonly sesion = inject(SesionService);
 
   protected readonly puedeActuar = computed(() => this.sesion.usuario()?.rol !== 'VISOR');
+  protected readonly esAdmin = computed(() => this.sesion.usuario()?.rol === 'ADMIN');
 
   protected readonly cargando = signal(true);
   protected readonly error = signal('');

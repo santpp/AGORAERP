@@ -132,6 +132,19 @@ final class ServicioContratoTest extends TestCase
         $this->servicio->firmar($token, $this->firma());
     }
 
+    public function test_lista_filtrada_por_responsable(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->servicio->crearDesdeWebhook($this->webhook(['responsable' => ['correo' => 'otra@example.com']], 'evt-2'));
+
+        $propios = $this->servicio->listar('VENDEDOR@example.com');
+        $this->assertSame(1, count($propios));
+        $this->assertSame($uid, $propios[0]['uid']);
+        $this->assertSame(2, count($this->servicio->listar()));
+        $this->assertTrue($this->servicio->esResponsable($uid, 'vendedor@example.com'));
+        $this->assertTrue(!$this->servicio->esResponsable($uid, 'otra@example.com'));
+    }
+
     public function test_enlace_nuevo_reemplaza_al_anterior(): void
     {
         $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
