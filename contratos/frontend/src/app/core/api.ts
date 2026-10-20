@@ -49,6 +49,8 @@ export interface ContratoDetalle {
   cliente: { nombre: string; correo: string; cedula: string; telefono: string };
   descuento: string;
   enlace: string | null;
+  /** false si el servidor no tiene APP_CLAVE: el enlace solo se ve al generarlo. */
+  enlace_guardable: boolean;
   pdfs: { enviado: boolean; firmado: boolean };
   calculo: {
     precio_curso: string;
@@ -195,6 +197,13 @@ export class ApiService {
 
   registro(): Observable<{ eventos: Registro[] }> {
     return this.http.get<{ eventos: Registro[] }>('/api/registro').pipe(catchError(mensajeDeError));
+  }
+
+  /** Enlace de firma nuevo para un convenio enviado; el anterior deja de servir. */
+  nuevoEnlace(uid: string): Observable<{ enlace: string; vence: string }> {
+    return this.http
+      .post<{ enlace: string; vence: string }>(`/api/contratos/${uid}/enlace`, {})
+      .pipe(catchError(mensajeDeError));
   }
 
   revocar(uid: string): Observable<unknown> {

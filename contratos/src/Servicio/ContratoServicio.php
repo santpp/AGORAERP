@@ -249,6 +249,39 @@ final class ContratoServicio
     }
 
     /** Revoca el enlace activo: el cliente ya no puede firmar esa versión. */
+    /**
+     * Enlace de firma nuevo para un convenio enviado y sin firmar, para compartirlo por otra vía
+     * (por ejemplo, si el cliente no recibe el correo). El enlace anterior deja de servir.
+     * @return array{enlace:string,vence:string}
+     */
+    public function nuevoEnlace(string $uid): array
+    {
+        $contrato = $this->contrato($uid);
+        $version = $this->ultimaVersion((int) $contrato['id']);
+        if ($version['estado'] !== 'ENVIADO') {
+            throw new ErrorContrato('Solo un convenio enviado y sin firmar puede tener un enlace nuevo.', 409);
+        }
+        $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $vence = $this->sumarDias(self::DIAS_VALIDEZ_ENLACE);
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare('UPDATE tokens_firma SET revocado_en = ? WHERE version_id = ? AND revocado_en IS NULL AND usado_en IS NULL')
+                ->execute([$this->ahora(), $version['id']]);
+            $this->insertar('tokens_firma', [
+                'version_id' => $version['id'],
+                'hash' => hash('sha256', $token),
+                'expira_en' => $vence,
+            ]);
+            $this->guardarEnlaceCifrado((int) $version['id'], $token);
+            $this->evento((int) $contrato['id'], (int) $version['id'], 'ENLACE_NUEVO', ['vence' => $vence]);
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+        return ['enlace' => rtrim($this->appUrl, '/') . '/firmar?t=' . $token, 'vence' => $vence];
+    }
+
     /** Elimina un borrador que nunca se envió, con su historial. Un convenio con alguna versión enviada no se borra. */
     public function eliminarBorrador(string $uid): void
     {
@@ -407,6 +440,8 @@ final class ContratoServicio
             'calculo' => $this->calcular($ultima),
             'descuento' => (string) ($terminos['descuento'] ?? '0'),
             'enlace' => $this->enlaceVigente($ultima),
+            // Sin APP_CLAVE el enlace no se puede guardar cifrado: solo se ve al generarlo.
+            'enlace_guardable' => (getenv('APP_CLAVE') ?: '') !== '',
             'pdfs' => [
                 'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
                 'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,

@@ -132,6 +132,27 @@ final class ServicioContratoTest extends TestCase
         $this->servicio->firmar($token, $this->firma());
     }
 
+    public function test_enlace_nuevo_reemplaza_al_anterior(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $viejo = $this->servicio->enviar($uid)['token'];
+        $nuevo = $this->servicio->nuevoEnlace($uid);
+
+        parse_str((string) parse_url($nuevo['enlace'], PHP_URL_QUERY), $q);
+        $this->assertTrue($viejo !== $q['t']);
+        $this->assertSame('1260.00', $this->servicio->paraFirmar($q['t'])['resultado']['precio_curso']);
+
+        $this->expectException(ErrorContrato::class);
+        $this->servicio->paraFirmar($viejo);
+    }
+
+    public function test_enlace_nuevo_solo_para_enviados(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->expectException(ErrorContrato::class);
+        $this->servicio->nuevoEnlace($uid);
+    }
+
     public function test_firma_que_no_es_png_falla(): void
     {
         $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];

@@ -40,6 +40,8 @@ export class DetalleContrato implements OnInit {
   protected readonly envio = signal<EnvioResultado | null>(null);
   protected readonly confirmarRevocar = signal(false);
   protected readonly copiado = signal(false);
+  /** Enlace recién generado: se muestra aunque el servidor no lo pueda guardar. */
+  protected readonly enlaceGenerado = signal<string | null>(null);
 
   protected readonly editando = signal(false);
   protected readonly editarError = signal('');
@@ -158,6 +160,11 @@ export class DetalleContrato implements OnInit {
         this.ocupado.set(false);
       },
     });
+  }
+
+  protected generarEnlace(): void {
+    this.copiado.set(false);
+    this.accion(() => this.api.nuevoEnlace(this.uid), (r) => this.enlaceGenerado.set(r.enlace));
   }
 
   protected revocar(): void {

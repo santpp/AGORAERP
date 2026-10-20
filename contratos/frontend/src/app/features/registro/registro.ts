@@ -11,6 +11,7 @@ const ETIQUETAS: Record<string, string> = {
   ENVIADO: 'Convenio enviado',
   FIRMADO: 'Convenio firmado',
   REVOCADO: 'Enlace revocado',
+  ENLACE_NUEVO: 'Enlace de firma nuevo',
   NUEVA_VERSION: 'Nueva versión',
   CLIENTE_EDITADO: 'Datos del cliente corregidos',
 };

@@ -226,6 +226,15 @@
             <p class="suave">El cliente no podrá firmar con el enlace actual. Para volver a enviarlo, edita el cálculo y crea una versión nueva.</p>
           }
         }
+        @if (!c.enlace && !enlaceGenerado()) {
+          <p class="suave">No hay un enlace guardado para mostrar. Genera uno nuevo para compartirlo por otra vía; el anterior dejará de servir.</p>
+          @if (!c.enlace_guardable) {
+            <p class="suave">Falta APP_CLAVE en el servidor: el enlace se verá solo al generarlo.</p>
+          }
+          @if (puedeActuar()) {
+            <button type="button" class="boton-secundario" [disabled]="ocupado()" (click)="generarEnlace()">Generar enlace nuevo</button>
+          }
+        }
       }
       @case ('FIRMADO') {
         <p class="suave">El convenio está firmado. El cliente y el personal responsable reciben la copia por correo.</p>
@@ -239,7 +248,7 @@
       <p class="error" role="alert">{{ accionError() }}</p>
     }
 
-    @if (c.enlace; as enlace) {
+    @if (c.estado === 'ENVIADO' ? (c.enlace ?? enlaceGenerado()) : null; as enlace) {
       <div class="enlace">
         <p class="enlace__aviso">Enlace para el cliente. Puedes copiarlo cuando quieras mientras siga vigente.</p>
         <p class="enlace__url">{{ enlace }}</p>

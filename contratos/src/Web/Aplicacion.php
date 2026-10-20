@@ -207,6 +207,10 @@ final class Aplicacion
             $this->sesionDe($cabeceras, 'ver');
             return [200, ['contratos' => $this->servicio->listar()]];
         }
+        if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/enlace$#', $ruta, $m)) {
+            $this->sesionDe($cabeceras, 'enviar');
+            return [200, $this->servicio->nuevoEnlace($m[1])];
+        }
         if ($metodo === 'DELETE' && preg_match('#^/api/contratos/([a-f0-9]{24})$#', $ruta, $m)) {
             $this->sesionDe($cabeceras, 'editar');
             $this->servicio->eliminarBorrador($m[1]);
