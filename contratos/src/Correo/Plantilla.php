@@ -15,6 +15,7 @@ final class Plantilla
     private const TEXTO = '#1B1B2F';
     private const SUAVE = '#5D6075';
     private const FONDO = '#F4F5F9';
+    private const FONDO_OSCURO = '#0B0930';
 
     public function __construct(private readonly string $appUrl)
     {
@@ -61,17 +62,16 @@ final class Plantilla
 
     private function pagina(string $titulo, string $intro, string $bloque, string $boton, string $nota): string
     {
-        $logo = $this->e(rtrim($this->appUrl, '/') . '/logo.png');
+        $base = rtrim($this->appUrl, '/');
+        $asocim = $this->e($base . '/asocim-blanco.png');
         return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<title>' . $this->e($titulo) . '</title></head>'
             . '<body style="margin:0;padding:0;background:' . self::FONDO . ';">'
             . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' . self::FONDO . ';padding:24px 12px;"><tr><td align="center">'
             . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;font-family:Helvetica,Arial,sans-serif;">'
-            // Cabecera
-            . '<tr><td style="background:' . self::NAVY . ';padding:22px 28px;">'
-            . '<img src="' . $logo . '" width="44" height="44" alt="ASOCIM" style="display:inline-block;vertical-align:middle;border:0;background:#ffffff;border-radius:8px;">'
-            . '<span style="display:inline-block;vertical-align:middle;margin-left:12px;color:#ffffff;font-size:17px;font-weight:700;letter-spacing:0.04em;">ASOCIM</span>'
-            . '<span style="display:inline-block;vertical-align:middle;margin-left:8px;color:#D9D7F2;font-size:14px;">Convenios</span>'
+            // Cabecera: logo de ASOCIM en blanco sobre el mismo fondo oscuro de la pantalla de entrada
+            . '<tr><td align="center" style="background:' . self::FONDO_OSCURO . ';padding:30px 28px;">'
+            . '<img src="' . $asocim . '" width="70" height="50" alt="ASOCIM" style="display:inline-block;vertical-align:middle;border:0;">'
             . '</td></tr>'
             // Cuerpo
             . '<tr><td style="padding:32px 28px 8px 28px;color:' . self::TEXTO . ';">'
