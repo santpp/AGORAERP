@@ -37,6 +37,13 @@ def base_de(rect, tamano):
     return rect.y1 - 0.244 * tamano
 
 
+def ajustar_tamano(fuente, texto, ancho, tamano, minimo):
+    """Reduce el tamaño hasta que el texto quepa en el hueco original (sin pisar el texto vecino)."""
+    while tamano > minimo and fuente.text_length(texto, fontsize=tamano) > ancho:
+        tamano -= 0.25
+    return tamano
+
+
 def buscar(pagina, texto, zona=None, nth=0):
     rects = pagina.search_for(texto, clip=zona) if zona else pagina.search_for(texto)
     if len(rects) <= nth:
@@ -211,7 +218,9 @@ def llenar(datos, salida, firma_png):
     p.apply_redactions(images=0, graphics=0, text=pymupdf.PDF_REDACT_TEXT_REMOVE)
     r = pymupdf.Rect(275.9, 162.3, 347.5, 173.2)
     escribir(p, (r.x0, base_de(r, 9)), f'{datos["meses_texto"]} ({n}) meses', f_inter_b, 9)
-    escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), 9)), datos["nombre"].upper(), f_inter_b, 9)
+    nombre = datos["nombre"].upper()
+    tamano_nombre = ajustar_tamano(f_inter_b, nombre, 209.8 - 61.0 - 2, 9, 7)
+    escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre, f_inter_b, tamano_nombre)
     escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_inter_r, 9)
     x_ced = pymupdf.Rect(380.8, 108.3, 423.6, 119.2)
     escribir(p, (x_ced.x0, base_de(x_ced, 9)), datos["cedula"], f_inter_b, 9)
@@ -251,7 +260,8 @@ def llenar(datos, salida, firma_png):
     poner("mes", datos["fecha_mes"].lower(), f_inter_r)
     poner("anio", datos["fecha_anio"], f_inter_r)
     # Inter, no Open Sans: la fuente embebida del original no tiene todas las letras (p. ej. la "d" minúscula)
-    escribir(p, (48.0, 633.0), datos["nombre"].upper(), f_inter_r, 12)
+    nombre_firma = datos["nombre"].upper()
+    escribir(p, (48.0, 633.0), nombre_firma, f_inter_r, ajustar_tamano(f_inter_r, nombre_firma, 300 - 48 - 4, 12, 9))
     escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_inter_r, 12)
     escribir(p, (310.1, 633.0), datos["staff"], f_inter_r, 12)
 
