@@ -132,6 +132,25 @@ final class ServicioContratoTest extends TestCase
         $this->servicio->firmar($token, $this->firma());
     }
 
+    public function test_enlace_visible_sin_app_clave_con_clave_en_storage(): void
+    {
+        putenv('APP_CLAVE');
+        $carpeta = sys_get_temp_dir() . '/contratos-prueba-' . bin2hex(random_bytes(4));
+        $servicio = new ContratoServicio($this->pdo, fn () => $this->hora, null, $carpeta . '/documentos');
+        $uid = $servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $token = $servicio->enviar($uid)['token'];
+
+        $detalle = $servicio->ver($uid);
+        $this->assertTrue($detalle['enlace_guardable']);
+        $this->assertSame('https://contratos.agoradigital.app/firmar?t=' . $token, $detalle['enlace']);
+        $this->assertTrue(is_file($carpeta . '/clave-enlaces.key'));
+        // Otra instancia (otra petición) usa la misma clave y sigue viendo el enlace.
+        $otra = new ContratoServicio($this->pdo, fn () => $this->hora, null, $carpeta . '/documentos');
+        $this->assertSame($detalle['enlace'], $otra->ver($uid)['enlace']);
+        @unlink($carpeta . '/clave-enlaces.key');
+        @rmdir($carpeta);
+    }
+
     public function test_lista_filtrada_por_responsable(): void
     {
         $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];

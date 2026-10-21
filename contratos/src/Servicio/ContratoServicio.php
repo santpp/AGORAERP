@@ -440,8 +440,8 @@ final class ContratoServicio
             'calculo' => $this->calcular($ultima),
             'descuento' => (string) ($terminos['descuento'] ?? '0'),
             'enlace' => $this->enlaceVigente($ultima),
-            // Sin APP_CLAVE el enlace no se puede guardar cifrado: solo se ve al generarlo.
-            'enlace_guardable' => (getenv('APP_CLAVE') ?: '') !== '',
+            // Sin clave (ni APP_CLAVE ni storage/ escribible) el enlace solo se ve al generarlo.
+            'enlace_guardable' => $this->claveEnlaces() !== null,
             'pdfs' => [
                 'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
                 'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,
@@ -606,16 +606,47 @@ final class ContratoServicio
     }
 
     /** Guarda el enlace de firma cifrado para poder mostrarlo otra vez en el panel. */
+    /**
+     * Clave para cifrar los enlaces que se muestran en el panel. Usa APP_CLAVE si está en .env; si no,
+     * una clave aleatoria que se crea una sola vez en storage/ (fuera de la carpeta pública).
+     */
+    private function claveEnlaces(): ?string
+    {
+        $env = getenv('APP_CLAVE') ?: '';
+        if ($env !== '') {
+            return hash('sha256', $env, true);
+        }
+        if ($this->carpetaDocumentos === null) {
+            return null;
+        }
+        $ruta = dirname($this->carpetaDocumentos) . '/clave-enlaces.key';
+        if (!is_file($ruta)) {
+            @mkdir(dirname($ruta), 0700, true);
+            // 'x' crea el archivo solo si no existe: dos peticiones a la vez no generan claves distintas.
+            $f = @fopen($ruta, 'x');
+            if ($f !== false) {
+                fwrite($f, base64_encode(random_bytes(32)));
+                fclose($f);
+                @chmod($ruta, 0600);
+            }
+        }
+        $clave = base64_decode(trim((string) @file_get_contents($ruta)), true);
+        if ($clave === false || strlen($clave) !== 32) {
+            error_log('[contratos] No se pudo crear ni leer storage/clave-enlaces.key: el enlace no se podrá mostrar en el panel.');
+            return null;
+        }
+        return $clave;
+    }
+
     private function guardarEnlaceCifrado(int $versionId, string $token): void
     {
-        $clave = getenv('APP_CLAVE') ?: '';
-        if ($clave === '') {
-            error_log('[contratos] Falta APP_CLAVE en .env: el enlace no se podrá mostrar en el panel.');
+        $clave = $this->claveEnlaces();
+        if ($clave === null) {
             return;
         }
         $iv = random_bytes(12);
         $tag = '';
-        $cifrado = openssl_encrypt($token, 'aes-256-gcm', hash('sha256', $clave, true), OPENSSL_RAW_DATA, $iv, $tag);
+        $cifrado = openssl_encrypt($token, 'aes-256-gcm', $clave, OPENSSL_RAW_DATA, $iv, $tag);
         $this->pdo->prepare('INSERT OR REPLACE INTO enlaces_firma (version_id, token_cifrado, creado_en) VALUES (?, ?, ?)')
             ->execute([$versionId, base64_encode($iv . $tag . $cifrado), $this->ahora()]);
     }
@@ -623,8 +654,8 @@ final class ContratoServicio
     /** Enlace de firma vigente de la última versión, o null si ya no sirve. */
     private function enlaceVigente(array $version): ?string
     {
-        $clave = getenv('APP_CLAVE') ?: '';
-        if ($clave === '' || $version['estado'] !== 'ENVIADO') {
+        $clave = $this->claveEnlaces();
+        if ($clave === null || $version['estado'] !== 'ENVIADO') {
             return null;
         }
         $fila = $this->fila(
@@ -640,7 +671,7 @@ final class ContratoServicio
         if ($bruto === false || strlen($bruto) < 28) {
             return null;
         }
-        $token = openssl_decrypt(substr($bruto, 28), 'aes-256-gcm', hash('sha256', $clave, true), OPENSSL_RAW_DATA, substr($bruto, 0, 12), substr($bruto, 12, 16));
+        $token = openssl_decrypt(substr($bruto, 28), 'aes-256-gcm', $clave, OPENSSL_RAW_DATA, substr($bruto, 0, 12), substr($bruto, 12, 16));
         return $token === false ? null : rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
     }
 

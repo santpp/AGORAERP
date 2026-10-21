@@ -229,7 +229,7 @@
         @if (!c.enlace && !enlaceGenerado()) {
           <p class="suave">No hay un enlace guardado para mostrar. Genera uno nuevo para compartirlo por otra vía; el anterior dejará de servir.</p>
           @if (!c.enlace_guardable) {
-            <p class="suave">Falta APP_CLAVE en el servidor: el enlace se verá solo al generarlo.</p>
+            <p class="suave">El servidor no puede guardar el enlace (no puede escribir en la carpeta storage/): se verá solo al generarlo.</p>
           }
           @if (puedeActuar()) {
             <button type="button" class="boton-secundario" [disabled]="ocupado()" (click)="generarEnlace()">Generar enlace nuevo</button>
