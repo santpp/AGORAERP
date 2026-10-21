@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Asocim\Contratos\Tests;
 
-use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Servicio\ContratoServicio;
 use Asocim\Contratos\Servicio\ErrorContrato;
 use PDO;
@@ -18,7 +17,7 @@ final class ServicioContratoTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = Base::conectar('sqlite::memory:');
+        $this->pdo = BasePrueba::conectar();
         $this->servicio = new ContratoServicio($this->pdo, fn () => $this->hora);
     }
 

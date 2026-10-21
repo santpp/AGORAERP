@@ -11,7 +11,7 @@ Sistema de convenios de pago con ciclo completo: creación desde contactos de Go
 | Capa | Tecnología | Tamaño | Notas |
 |---|---|---|---|
 | Backend | PHP ≥ 8.1 (probado en 8.3), PSR-4 `Asocim\Contratos\` | 25 archivos, ~3.500 líneas | Sin framework. Front controller en `public/index.php` y `src/Web/Aplicacion.php` (router por expresiones regulares). |
-| Persistencia | PDO con SQLite (desarrollo y producción) | 11 tablas | Esquema en `esquema.sql`, aplicado con `CREATE IF NOT EXISTS` en cada conexión (`Persistencia/Base.php`). El código usa sentencias propias de SQLite (`PRAGMA`, `INSERT OR REPLACE`): hoy no funciona con MySQL. |
+| Persistencia | PDO con SQLite o MySQL/MariaDB | 11 tablas | Al escribir este informe: solo SQLite, con el esquema aplicado en cada conexión. Desde la fase 1: migraciones versionadas por motor (`src/Persistencia/migraciones/`) y soporte de MySQL/MariaDB (`docs/mysql.md`). |
 | PDF | Python 3 + PyMuPDF (`tools/pdf/llenar_convenio.py`, 337 líneas) | 1 script | Invocado desde PHP con `exec` y `escapeshellarg`. Edita el PDF original: redacción, inserción de texto con Inter, firma PNG, justificación de párrafos. |
 | Panel | Angular 21, Angular Material, signals, control flow nuevo | ~2.900 líneas (ts/html/scss) | Build estático en `public/panel/`. Rutas perezosas, guards (`sesionActiva`, `soloAdmin`), View Transitions. |
 | Integración | API REST de GHL (LeadConnector), versión `2021-07-28` | `ClienteGhl.php` | Contactos (upsert, búsqueda, actualización de correo), usuarios, campos personalizados (`contact.cedula`), conversaciones (envío de correo). |

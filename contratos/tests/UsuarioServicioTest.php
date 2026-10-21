@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Asocim\Contratos\Tests;
 
-use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Seguridad\Roles;
 use Asocim\Contratos\Servicio\ErrorContrato;
 use Asocim\Contratos\Servicio\UsuarioServicio;
@@ -19,7 +18,7 @@ final class UsuarioServicioTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = Base::conectar('sqlite::memory:');
+        $this->pdo = BasePrueba::conectar();
         $this->usuarios = new UsuarioServicio($this->pdo, fn () => $this->hora);
     }
 

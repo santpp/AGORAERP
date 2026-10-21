@@ -21,8 +21,7 @@ use Asocim\Contratos\Servicio\ContratoServicio;
 use Asocim\Contratos\Servicio\UsuarioServicio;
 use Asocim\Contratos\Web\Aplicacion;
 
-$bd = getenv('CONTRATOS_BD') ?: 'sqlite:' . __DIR__ . '/../../storage/contratos.sqlite';
-$pdo = Base::conectar($bd);
+$pdo = Base::desdeEntorno('sqlite:' . __DIR__ . '/../../storage/contratos.sqlite');
 $raiz = dirname(__DIR__, 2);
 $generador = new GeneradorPdf(
     getenv('PDF_PYTHON') ?: '/opt/agora-pdf/bin/python',

@@ -33,7 +33,8 @@ de trabajo (RPO) y volver a operar en **menos de 2 horas** (RTO).
 - **Conservación legal.** Los convenios firmados deben conservarse el tiempo que indique el asesor legal de cada
   empresa; la retención de 12 meses de la capa 2 no sustituye ese archivo. Se recomienda un archivo anual de
   los PDF firmados, aparte de los respaldos.
-- **Con MySQL (fase 1)** el script usará `mysqldump --single-transaction`; la estrategia no cambia.
+- **Con MySQL** el script usa `mysqldump --single-transaction` y el simulacro completo importa el volcado en una base
+  de simulacro vacía (ver `docs/mysql.md`); la estrategia no cambia.
 
 ### Cron recomendado
 ```
@@ -47,7 +48,8 @@ o copiando el primer respaldo de cada mes a una carpeta `mensuales/`.
 
 ## Qué se respalda
 `scripts/respaldo.php` crea `respaldos/respaldo-AAAAMMDD-HHMMSS.tar.gz` (permisos 0600) con:
-- `storage/contratos.sqlite`: instantánea consistente de la base (`VACUUM INTO`), aunque la app esté escribiendo.
+- La base, en una instantánea consistente aunque la app esté escribiendo: `storage/contratos.sqlite` (`VACUUM INTO`)
+  con SQLite, o `storage/contratos.sql` (`mysqldump --single-transaction`) con MySQL/MariaDB.
 - `storage/documentos/`: todos los PDF enviados y firmados.
 - `storage/clave-enlaces.key`: clave de los enlaces de firma guardados (si existe).
 - `.env`: configuración y secretos.

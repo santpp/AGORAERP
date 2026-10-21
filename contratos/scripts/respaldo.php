@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 /**
  * Copia de seguridad completa: base de datos (instantánea consistente), PDF de convenios, clave de enlaces y .env.
+ * Base SQLite (storage/contratos.sqlite) o MySQL/MariaDB (storage/contratos.sql, volcado con mysqldump).
  *
  * Uso:   php scripts/respaldo.php [--destino=/ruta/respaldos] [--conservar=14]
  * Cron:  15 3 * * * php /ruta/contratos/scripts/respaldo.php >> /ruta/contratos/respaldos/respaldo.log 2>&1
@@ -27,12 +28,14 @@ function fallar(string $mensaje): never
 }
 
 $dsn = getenv('CONTRATOS_BD') ?: 'sqlite:' . $raiz . '/storage/contratos.sqlite';
-if (!str_starts_with($dsn, 'sqlite:')) {
-    fallar('Solo se admite SQLite (CONTRATOS_BD empieza por sqlite:).');
+$usuario = getenv('CONTRATOS_BD_USUARIO') ?: null;
+$clave = getenv('CONTRATOS_BD_CLAVE') ?: null;
+$mysql = str_starts_with($dsn, 'mysql:');
+if (!$mysql && !str_starts_with($dsn, 'sqlite:')) {
+    fallar('CONTRATOS_BD debe empezar por sqlite: o mysql:.');
 }
-$archivoBd = substr($dsn, strlen('sqlite:'));
-if (!is_file($archivoBd)) {
-    fallar("No existe la base {$archivoBd}.");
+if (!$mysql && !is_file(substr($dsn, strlen('sqlite:')))) {
+    fallar('No existe la base ' . substr($dsn, strlen('sqlite:')) . '.');
 }
 
 if (!is_dir($destino) && !mkdir($destino, 0700, true)) {
@@ -43,16 +46,35 @@ $trabajo = sys_get_temp_dir() . '/respaldo-' . $marca . '-' . bin2hex(random_byt
 mkdir($trabajo . '/storage/documentos', 0700, true);
 
 // 1. Base: instantánea consistente aunque la aplicación esté escribiendo.
-$copiaBd = $trabajo . '/storage/contratos.sqlite';
+//    SQLite: VACUUM INTO. MySQL/MariaDB: mysqldump --single-transaction (sin bloquear la aplicación).
+$conteos = [];
 try {
-    $pdo = new PDO($dsn, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-    $pdo->exec('VACUUM INTO ' . $pdo->quote($copiaBd));
-    $conteos = [];
+    $pdo = new PDO($dsn, $usuario, $clave, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    if ($mysql) {
+        require __DIR__ . '/lib/mysql.php';
+        $partes = mysql_partes($dsn);
+        $credenciales = mysql_credenciales($partes, $usuario, $clave);
+        $volcado = $trabajo . '/storage/contratos.sql';
+        $orden = escapeshellarg(mysql_programa('mariadb-dump', 'mysqldump'))
+            . ' --defaults-extra-file=' . escapeshellarg($credenciales)
+            . ' --single-transaction --quick --hex-blob --no-tablespaces --default-character-set=utf8mb4 '
+            . escapeshellarg($partes['dbname']) . ' > ' . escapeshellarg($volcado) . ' 2> ' . escapeshellarg($volcado . '.err');
+        exec($orden, $salida, $codigo);
+        unlink($credenciales);
+        $errores = trim((string) @file_get_contents($volcado . '.err'));
+        @unlink($volcado . '.err');
+        if ($codigo !== 0 || !str_contains((string) shell_exec('tail -c 200 ' . escapeshellarg($volcado)), 'Dump completed')) {
+            throw new RuntimeException('mysqldump falló: ' . $errores);
+        }
+    } else {
+        $pdo->exec('VACUUM INTO ' . $pdo->quote($trabajo . '/storage/contratos.sqlite'));
+    }
     foreach (['contratos', 'versiones', 'firmas', 'documentos', 'documentos_firmados', 'usuarios', 'eventos'] as $tabla) {
         $conteos[$tabla] = (int) $pdo->query("SELECT COUNT(*) FROM {$tabla}")->fetchColumn();
     }
     $pdo = null;
 } catch (Throwable $e) {
+    exec('rm -rf ' . escapeshellarg($trabajo));
     fallar('No se pudo copiar la base: ' . $e->getMessage());
 }
 
@@ -80,6 +102,7 @@ ksort($archivos);
 file_put_contents($trabajo . '/manifest.json', json_encode([
     'creado_en' => date('c'),
     'raiz_origen' => $raiz,
+    'motor' => $mysql ? 'mysql' : 'sqlite',
     'conteos' => $conteos,
     'archivos' => $archivos,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

@@ -30,8 +30,7 @@ use Asocim\Contratos\Persistencia\Base;
 use Asocim\Contratos\Seguridad\Roles;
 use Asocim\Contratos\Servicio\UsuarioServicio;
 
-$bd = getenv('CONTRATOS_BD') ?: 'sqlite:' . __DIR__ . '/../storage/contratos.sqlite';
-$servicio = new UsuarioServicio(Base::conectar($bd));
+$servicio = new UsuarioServicio(Base::desdeEntorno('sqlite:' . __DIR__ . '/../storage/contratos.sqlite'));
 
 echo "Clave del administrador (mínimo 10 caracteres): ";
 system('stty -echo');

@@ -1,4 +1,4 @@
--- Contratos ASOCIM · esquema de la base (SQLite en desarrollo, MySQL en producción)
+-- 001 · Esquema inicial (SQLite). Igual al esquema histórico: con IF NOT EXISTS, una base existente pasa sin cambios.
 
 CREATE TABLE IF NOT EXISTS contratos (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,

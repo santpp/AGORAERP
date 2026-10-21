@@ -647,7 +647,9 @@ final class ContratoServicio
         $iv = random_bytes(12);
         $tag = '';
         $cifrado = openssl_encrypt($token, 'aes-256-gcm', $clave, OPENSSL_RAW_DATA, $iv, $tag);
-        $this->pdo->prepare('INSERT OR REPLACE INTO enlaces_firma (version_id, token_cifrado, creado_en) VALUES (?, ?, ?)')
+        // Borrar e insertar (en lugar de INSERT OR REPLACE) funciona igual en SQLite y MySQL; se llama dentro de la transacción del envío.
+        $this->pdo->prepare('DELETE FROM enlaces_firma WHERE version_id = ?')->execute([$versionId]);
+        $this->pdo->prepare('INSERT INTO enlaces_firma (version_id, token_cifrado, creado_en) VALUES (?, ?, ?)')
             ->execute([$versionId, base64_encode($iv . $tag . $cifrado), $this->ahora()]);
     }
 

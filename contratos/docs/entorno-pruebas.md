@@ -13,7 +13,9 @@ Objetivo: probar cada cambio en un sitio idéntico al de producción, con datos 
 
 ## 2. Configuración (`.env` propio)
 ```
-CONTRATOS_BD=sqlite:/home/<usuario>/contratos-pruebas/storage/contratos.sqlite
+CONTRATOS_BD=mysql:host=localhost;dbname=<base_de_tests>;charset=utf8mb4
+CONTRATOS_BD_USUARIO=<usuario_de_tests>
+CONTRATOS_BD_CLAVE=<clave_de_tests>
 APP_URL=https://tests.agoradigital.app
 GHL_WEBHOOK_SECRET=<distinto del de producción>
 GHL_TOKEN=<token de la subcuenta de pruebas>
@@ -22,6 +24,7 @@ PDF_PYTHON=/opt/agora-pdf/bin/python
 ```
 - **GHL:** lo ideal es una subcuenta de pruebas. Si no hay, usar la misma subcuenta solo con contactos de
   prueba (correo propio del equipo) y sin workflows de WhatsApp activos para esos contactos.
+- Base propia, distinta de la de producción (ver `docs/mysql.md`); el traspaso de SQLite a MySQL se ensaya aquí primero.
 - Nunca copiar la base de producción a pruebas: tiene datos personales. Si hace falta, anonimizarla antes.
 
 ## 3. Acceso restringido
