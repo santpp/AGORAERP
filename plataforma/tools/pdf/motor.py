@@ -64,15 +64,32 @@ def aplicar_borrado(pagina):
 _ALIAS = {}
 
 
-def escribir(pagina, punto, texto, fuente, tamano, centro=None):
-    """Escribe texto en negro. Con centro, el texto se centra en esa coordenada x."""
+def escribir(pagina, punto, texto, fuente, tamano, centro=None, estrechar=1.0):
+    """Escribe texto en negro. Con centro, el texto se centra en esa coordenada x.
+    estrechar < 1 comprime el texto en horizontal desde su inicio (lo usa escribir_en_ancho)."""
     if centro is not None:
-        ancho = fuente.text_length(texto, fontsize=tamano)
+        ancho = fuente.text_length(texto, fontsize=tamano) * estrechar
         punto = (centro - ancho / 2, punto[1])
     alias = f"ZX{len(_ALIAS)}"
     _ALIAS[alias] = True
     pagina.insert_font(fontname=alias, fontbuffer=fuente.buffer)
-    pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0))
+    if estrechar < 1.0:
+        pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0),
+                           morph=(pymupdf.Point(punto), pymupdf.Matrix(estrechar, 1)))
+    else:
+        pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0))
+
+
+def escribir_en_ancho(pagina, punto, texto, fuente, ancho, tamano, minimo):
+    """Escribe el texto sin pasar del ancho disponible, para que nunca pise el texto vecino.
+
+    Primero reduce el tamaño hasta el mínimo legible; si aun así no cabe, lo estrecha en horizontal lo justo.
+    Devuelve el tamaño usado.
+    """
+    tamano = ajustar_tamano(fuente, texto, ancho, tamano, minimo)
+    largo = fuente.text_length(texto, fontsize=tamano)
+    escribir(pagina, punto, texto, fuente, tamano, estrechar=min(1.0, ancho / largo) if largo > 0 else 1.0)
+    return tamano
 
 
 def es_negrita(span):

@@ -36,8 +36,8 @@ Pueden avanzar en paralelo: A con E1 (diseño de pagos), y D1 (inventario de pla
 - **Salida:** restauración probada; inventario aprobado; decisiones D-001 y D-002 cerradas.
 
 ### Fase 1: Fundamentos (A) (3–4 semanas)
-Estado (21/10/2026): **A0 y A1 hechos en código** (MySQL/MariaDB y migraciones; ver `docs/mysql.md`). Falta el traspaso
-real en tests y en producción. Pendientes: A2 a A6.
+Estado (21/10/2026): **A0, A1 y A2 hechos** (MySQL/MariaDB, migraciones e integración continua en GitHub Actions:
+`.github/workflows/plataforma.yml`). Falta el traspaso real a MySQL en tests. Pendientes: A3 a A6.
 - A0 **MySQL** como base de producción, para poder consultarla de forma remota. Cambios: esquema con
   `AUTO_INCREMENT`, `VARCHAR` en las columnas únicas y `LONGBLOB` para la firma; conexión con usuario y clave
   (`CONTRATOS_BD_USUARIO`, `CONTRATOS_BD_CLAVE`); `INSERT OR REPLACE` y `PRAGMA` sustituidos por SQL válido en

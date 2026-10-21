@@ -5,7 +5,8 @@ que sigue en producción sin cambios) y evoluciona según `docs/hoja-de-ruta.md`
 
 - **Dominio de trabajo:** `tests.agoradigital.app` (ver `docs/entorno-pruebas.md`).
 - **Espacio de nombres PHP:** `Agora\Plataforma`.
-- **Estado:** fase 1 en curso. Hecho: MySQL/MariaDB y migraciones (A0, A1). Pendiente: A2 a A6.
+- **Estado:** fase 1 en curso. Hecho: MySQL/MariaDB, migraciones e integración continua (A0 a A2). Pendiente: A3 a A6.
+- **Integración continua:** `.github/workflows/plataforma.yml` en cada envío (PHP en SQLite y MariaDB, PDF, panel).
 - **Decisiones:** `docs/decisiones/` (D-001 modelo mixto, D-002 calibración manual de PDF).
 
 ## Estructura

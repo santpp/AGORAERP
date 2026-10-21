@@ -27,7 +27,8 @@ repetitivo; el formato solo contiene coordenadas y textos de búsqueda.
    - Localiza el texto de ejemplo con `buscar(pagina, texto, zona=...)`. La zona evita confundirlo con otra aparición.
    - Márcalo con `cubrir()` y borra con `aplicar_borrado()` **una vez por página**, después de marcar todo.
    - Escribe el dato con `escribir()` en `origen_y()` (la línea base real del original).
-   - Si el dato puede ser más largo que el hueco, usa `ajustar_tamano()` con un mínimo legible.
+   - Si el dato puede ser más largo que el hueco (nombres), usa `escribir_en_ancho()`: reduce el tamaño hasta un
+     mínimo legible y, si aun así no cabe, estrecha el texto lo justo. Nunca pisa el texto vecino.
    - Si un dato no tiene texto de ejemplo, usa coordenadas fijas medidas en la rejilla.
    - Fuentes: `fuentes_inter()` para texto nuevo; si el original usa otra fuente embebida, se puede extraer del PDF (ver `asocim_convenio.py`, Open Sans).
 5. **Firmas**: medir cada caja y listarlas en `CAJAS_CLIENTE` como `(página desde 0, (x0, y0, x1, y1))`.
@@ -42,8 +43,10 @@ repetitivo; el formato solo contiene coordenadas y textos de búsqueda.
    ```
    python3 tools/pdf/regresion.py <empresa>_<contrato> --aprobar
    ```
-8. **Antes de cada despliegue**: `python3 tools/pdf/regresion.py` (todos los formatos). Cualquier cambio de
-   posición aparece como «falta … / sobra …» con la palabra y sus coordenadas.
+8. **Antes de cada despliegue**: `python3 tools/pdf/regresion.py --estricto` en el servidor (todos los formatos,
+   y falla si falta algún PDF original). Cualquier cambio de posición aparece como «falta … / sobra …» con la
+   palabra y sus coordenadas. En la integración continua no hay originales: esos formatos salen como OMITIDO y
+   se prueba el formato sintético `prueba_sintetica` (plantilla en `plantillas/pruebas/`, sin datos de clientes).
 
 ## Reglas
 - Nunca cambiar coordenadas de un formato aprobado sin volver a aprobar sus casos y revisar el PDF.

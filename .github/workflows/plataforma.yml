@@ -1,0 +1,93 @@
+# Comprobaciones de plataforma/ en cada envío: PHP (SQLite y MariaDB 10.11), PDF y build del panel.
+name: Plataforma
+
+on:
+  push:
+    paths:
+      - 'plataforma/**'
+      - '.github/workflows/plataforma.yml'
+  pull_request:
+    paths:
+      - 'plataforma/**'
+      - '.github/workflows/plataforma.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plataforma-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP · SQLite y MariaDB
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: plataforma
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: raiz-solo-para-ci
+          MARIADB_DATABASE: contratos_prueba
+          MARIADB_USER: contratos
+          MARIADB_PASSWORD: clave-solo-para-ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, pdo_mysql, openssl, curl, mbstring
+          coverage: none
+      - name: Sintaxis de todos los archivos PHP
+        run: find src public scripts tools tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: Pruebas en SQLite
+        run: php tests/run.php
+      - name: Pruebas en MariaDB 10.11
+        env:
+          CONTRATOS_PRUEBAS_BD: 'mysql:host=127.0.0.1;port=3306;dbname=contratos_prueba;charset=utf8mb4'
+          CONTRATOS_PRUEBAS_BD_USUARIO: contratos
+          CONTRATOS_PRUEBAS_BD_CLAVE: clave-solo-para-ci
+        run: php tests/run.php
+
+  pdf:
+    name: PDF · regresión
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: plataforma
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencias (versiones fijas, iguales a las del servidor de desarrollo)
+        run: pip install pymupdf==1.28.2 pillow==12.3.0
+      # Los PDF originales de las empresas no están en Git: aquí se prueba el formato sintético
+      # y los demás aparecen como OMITIDO. En el servidor se usa --estricto.
+      - name: Regresión de formatos
+        run: python3 tools/pdf/regresion.py
+
+  panel:
+    name: Panel · build de producción
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: plataforma/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: plataforma/frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx ng build --configuration production --base-href / --output-path "$RUNNER_TEMP/panel"

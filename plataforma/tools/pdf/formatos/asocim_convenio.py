@@ -12,7 +12,7 @@ import pymupdf
 from PIL import Image
 
 from motor import (CARPETA_PLANTILLAS, ajustar_tamano, aplicar_borrado, base_de, buscar, cubrir, es_negrita,
-                   escribir, fuentes_inter, justificar, origen_y, poner_firmas)
+                   escribir, escribir_en_ancho, fuentes_inter, justificar, origen_y, poner_firmas)
 
 NOMBRE = "ASOCIM · Convenio de pago"
 ORIGINAL = os.path.join(CARPETA_PLANTILLAS, "convenio_original.pdf")
@@ -92,9 +92,12 @@ def llenar(datos, salida, firma_png):
     aplicar_borrado(p)
     r = pymupdf.Rect(275.9, 162.3, 347.5, 173.2)
     escribir(p, (r.x0, base_de(r, 9)), f'{datos["meses_texto"]} ({n}) meses', f_inter_b, 9)
+    # Nombre: cabe en su hueco (reduce hasta 7 pt y, si es muy largo, se estrecha) sin pisar «, titular de…».
     nombre = datos["nombre"].upper()
-    tamano_nombre = ajustar_tamano(f_inter_b, nombre, 209.8 - 61.0 - 2, 9, 7)
-    escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre, f_inter_b, tamano_nombre)
+    ancho_nombre = 209.8 - 61.0 - 2
+    tamano_nombre = ajustar_tamano(f_inter_b, nombre, ancho_nombre, 9, 7)
+    escribir_en_ancho(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre,
+                      f_inter_b, ancho_nombre, tamano_nombre, 7)
     escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_inter_r, 9)
     x_ced = pymupdf.Rect(380.8, 108.3, 423.6, 119.2)
     escribir(p, (x_ced.x0, base_de(x_ced, 9)), datos["cedula"], f_inter_b, 9)
@@ -133,8 +136,7 @@ def llenar(datos, salida, firma_png):
     poner("mod", datos["modalidad"], f_inter_b)
     poner("cierre", frase_de_cierre(datos), f_inter_r)
     # Inter, no Open Sans: la fuente embebida del original no tiene todas las letras (p. ej. la "d" minúscula)
-    nombre_firma = datos["nombre"].upper()
-    escribir(p, (48.0, 633.0), nombre_firma, f_inter_r, ajustar_tamano(f_inter_r, nombre_firma, 300 - 48 - 4, 12, 9))
+    escribir_en_ancho(p, (48.0, 633.0), datos["nombre"].upper(), f_inter_r, 300 - 48 - 4, 12, 9)
     escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_inter_r, 12)
     escribir(p, (310.1, 633.0), datos["staff"], f_inter_r, 12)
 
