@@ -15,6 +15,8 @@ use JsonException;
 final class Aplicacion
 {
     public const COOKIE = 'contratos_sesion';
+    /** Cookie legible por el panel; Angular la devuelve en la cabecera X-XSRF-TOKEN. */
+    public const COOKIE_CSRF = 'XSRF-TOKEN';
 
     public function __construct(
         private readonly ContratoServicio $servicio,
@@ -31,6 +33,12 @@ final class Aplicacion
             if ($metodo === 'POST' && $ruta === '/webhook.php') {
                 return $this->webhookGhl($cabeceras, $cuerpo);
             }
+            // CSRF: toda acción con sesión debe traer la cabecera X-XSRF-TOKEN. Se exceptúan el login (aún no hay
+            // sesión) y la firma del cliente (pública; su acceso es el token del enlace).
+            if (!in_array($metodo, ['GET', 'HEAD'], true) && str_starts_with($ruta, '/api/')
+                && $ruta !== '/api/login' && !str_starts_with($ruta, '/api/firmar/')) {
+                $this->comprobarCsrf($cabeceras);
+            }
             if ($metodo === 'POST' && $ruta === '/api/login') {
                 return $this->login($cuerpo);
             }
@@ -39,7 +47,8 @@ final class Aplicacion
             }
             if ($metodo === 'GET' && $ruta === '/api/yo') {
                 $u = $this->sesionDe($cabeceras);
-                return [200, ['usuario' => $u]];
+                // También aquí: las sesiones abiertas antes de existir el token CSRF lo reciben al cargar el panel.
+                return [200, ['usuario' => $u, 'cookies' => [$this->cookieCsrf((string) $this->tokenDe($cabeceras))]]];
             }
             if (str_starts_with($ruta, '/api/usuarios')) {
                 return $this->usuariosApi($metodo, $ruta, $cabeceras, $cuerpo);
@@ -117,7 +126,7 @@ final class Aplicacion
     {
         $d = $this->json($cuerpo);
         $r = $this->usuarios->iniciarSesion((string) ($d['correo'] ?? ''), (string) ($d['clave'] ?? ''));
-        return [200, ['usuario' => $r['usuario'], 'cookie' => $this->cookie($r['token'])]];
+        return [200, ['usuario' => $r['usuario'], 'cookies' => [$this->cookie($r['token']), $this->cookieCsrf($r['token'])]]];
     }
 
     /** @return array{0:int,1:array<string,mixed>} */
@@ -127,7 +136,7 @@ final class Aplicacion
         if ($token !== null) {
             $this->usuarios->cerrarSesion($token);
         }
-        return [200, ['ok' => true, 'cookie' => $this->cookie('', true)]];
+        return [200, ['ok' => true, 'cookies' => [$this->cookie('', true), $this->cookieCsrf('', true)]]];
     }
 
     /** @return array{0:int,1:array<string,mixed>} */
@@ -277,8 +286,34 @@ final class Aplicacion
 
     private function cookie(string $valor, bool $borrar = false): string
     {
-        $expira = $borrar ? 'Thu, 01 Jan 1970 00:00:00 GMT' : gmdate('D, d M Y H:i:s', time() + UsuarioServicio::HORAS_SESION * 3600) . ' GMT';
-        return self::COOKIE . '=' . $valor . '; Path=/; HttpOnly; Secure; SameSite=Strict; Expires=' . $expira;
+        return self::COOKIE . '=' . $valor . '; Path=/; HttpOnly; Secure; SameSite=Strict; Expires=' . $this->expiracion($borrar);
+    }
+
+    /** Sin HttpOnly: el panel la lee para copiarla en la cabecera. */
+    private function cookieCsrf(string $sesion, bool $borrar = false): string
+    {
+        $valor = $borrar ? '' : self::csrfDe($sesion);
+        return self::COOKIE_CSRF . '=' . $valor . '; Path=/; Secure; SameSite=Strict; Expires=' . $this->expiracion($borrar);
+    }
+
+    private function expiracion(bool $borrar): string
+    {
+        return $borrar ? 'Thu, 01 Jan 1970 00:00:00 GMT' : gmdate('D, d M Y H:i:s', time() + UsuarioServicio::HORAS_SESION * 3600) . ' GMT';
+    }
+
+    /** Token CSRF derivado del token de sesión: no se guarda nada y cambia con cada sesión. */
+    public static function csrfDe(string $sesion): string
+    {
+        return hash_hmac('sha256', 'csrf', $sesion);
+    }
+
+    /** Sin cookie de sesión no hay nada que proteger: la ruta responderá 401 si la necesita. */
+    private function comprobarCsrf(array $cabeceras): void
+    {
+        $sesion = (string) $this->tokenDe($cabeceras);
+        if ($sesion !== '' && !hash_equals(self::csrfDe($sesion), (string) ($cabeceras['x-xsrf-token'] ?? ''))) {
+            throw new ErrorContrato('La sesión no es válida. Recarga la página e inténtalo de nuevo.', 403);
+        }
     }
 
     /** @return array<string,mixed> */

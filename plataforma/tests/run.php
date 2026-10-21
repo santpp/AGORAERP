@@ -30,6 +30,7 @@ $clases = [
     'Agora\\Plataforma\\Tests\\ServicioContratoTest',
     'Agora\\Plataforma\\Tests\\UsuarioServicioTest',
     'Agora\\Plataforma\\Tests\\ClienteGhlTest',
+    'Agora\\Plataforma\\Tests\\AplicacionTest',
 ];
 
 $pasadas = 0;

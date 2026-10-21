@@ -28,9 +28,8 @@ if (isset($cuerpo['__archivo'])) {
 
 header('Content-Type: application/json; charset=utf-8');
 header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
-$cookie = $cuerpo['cookie'] ?? null;
-unset($cuerpo['cookie']);
-if ($cookie !== null) {
-    header('Set-Cookie: ' . $cookie);
+foreach ($cuerpo['cookies'] ?? [] as $cookie) {
+    header('Set-Cookie: ' . $cookie, false);
 }
+unset($cuerpo['cookies']);
 echo json_encode($cuerpo, JSON_UNESCAPED_UNICODE);
