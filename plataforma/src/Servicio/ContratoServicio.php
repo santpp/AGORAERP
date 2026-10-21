@@ -14,6 +14,7 @@ use Agora\Plataforma\Documento\Formato;
 use Agora\Plataforma\Documento\GeneradorPdf;
 use Agora\Plataforma\Correo\Plantilla;
 use Agora\Plataforma\Ghl\ClienteGhl;
+use Agora\Plataforma\Seguridad\Llavero;
 use PDO;
 
 /**
@@ -27,6 +28,7 @@ final class ContratoServicio
 
     private CalculadoraContrato $calculadora;
     private Plantilla $plantilla;
+    private ?Llavero $llavero = null;
 
     public function __construct(
         private readonly PDO $pdo,
@@ -440,8 +442,8 @@ final class ContratoServicio
             'calculo' => $this->calcular($ultima),
             'descuento' => (string) ($terminos['descuento'] ?? '0'),
             'enlace' => $this->enlaceVigente($ultima),
-            // Sin clave (ni APP_CLAVE ni storage/ escribible) el enlace solo se ve al generarlo.
-            'enlace_guardable' => $this->claveEnlaces() !== null,
+            // Sin storage/claves escribible el enlace solo se ve al generarlo.
+            'enlace_guardable' => $this->llavero()->disponible(),
             'pdfs' => [
                 'enviado' => $this->fila('SELECT 1 FROM documentos WHERE version_id = ?', [$ultima['id']]) !== null,
                 'firmado' => $this->fila('SELECT 1 FROM documentos_firmados WHERE version_id = ?', [$ultima['id']]) !== null,
@@ -605,59 +607,35 @@ final class ContratoServicio
         }
     }
 
-    /** Guarda el enlace de firma cifrado para poder mostrarlo otra vez en el panel. */
-    /**
-     * Clave para cifrar los enlaces que se muestran en el panel. Usa APP_CLAVE si está en .env; si no,
-     * una clave aleatoria que se crea una sola vez en storage/ (fuera de la carpeta pública).
-     */
-    private function claveEnlaces(): ?string
+    /** Uso de la clave para los enlaces de firma (info de HKDF en el Llavero). */
+    public const USO_ENLACES = 'enlaces-firma';
+
+    /** Llavero en storage/ (junto a documentos/). Sin carpeta de documentos no se guardan enlaces. */
+    private function llavero(): Llavero
     {
-        $env = getenv('APP_CLAVE') ?: '';
-        if ($env !== '') {
-            return hash('sha256', $env, true);
-        }
-        if ($this->carpetaDocumentos === null) {
-            return null;
-        }
-        $ruta = dirname($this->carpetaDocumentos) . '/clave-enlaces.key';
-        if (!is_file($ruta)) {
-            @mkdir(dirname($ruta), 0700, true);
-            // 'x' crea el archivo solo si no existe: dos peticiones a la vez no generan claves distintas.
-            $f = @fopen($ruta, 'x');
-            if ($f !== false) {
-                fwrite($f, base64_encode(random_bytes(32)));
-                fclose($f);
-                @chmod($ruta, 0600);
-            }
-        }
-        $clave = base64_decode(trim((string) @file_get_contents($ruta)), true);
-        if ($clave === false || strlen($clave) !== 32) {
-            error_log('[contratos] No se pudo crear ni leer storage/clave-enlaces.key: el enlace no se podrá mostrar en el panel.');
-            return null;
-        }
-        return $clave;
+        return $this->llavero ??= Llavero::desdeStorage($this->carpetaDocumentos === null ? null : dirname($this->carpetaDocumentos));
     }
 
+    /** Guarda el enlace de firma cifrado para poder mostrarlo otra vez en el panel. */
     private function guardarEnlaceCifrado(int $versionId, string $token): void
     {
-        $clave = $this->claveEnlaces();
-        if ($clave === null) {
+        $cifrado = $this->llavero()->cifrar($token, self::USO_ENLACES);
+        if ($cifrado === null) {
+            if ($this->carpetaDocumentos !== null) {
+                error_log('[contratos] No se pudo crear ni leer storage/claves: el enlace solo se verá al generarlo.');
+            }
             return;
         }
-        $iv = random_bytes(12);
-        $tag = '';
-        $cifrado = openssl_encrypt($token, 'aes-256-gcm', $clave, OPENSSL_RAW_DATA, $iv, $tag);
         // Borrar e insertar (en lugar de INSERT OR REPLACE) funciona igual en SQLite y MySQL; se llama dentro de la transacción del envío.
         $this->pdo->prepare('DELETE FROM enlaces_firma WHERE version_id = ?')->execute([$versionId]);
         $this->pdo->prepare('INSERT INTO enlaces_firma (version_id, token_cifrado, creado_en) VALUES (?, ?, ?)')
-            ->execute([$versionId, base64_encode($iv . $tag . $cifrado), $this->ahora()]);
+            ->execute([$versionId, $cifrado, $this->ahora()]);
     }
 
     /** Enlace de firma vigente de la última versión, o null si ya no sirve. */
     private function enlaceVigente(array $version): ?string
     {
-        $clave = $this->claveEnlaces();
-        if ($clave === null || $version['estado'] !== 'ENVIADO') {
+        if ($version['estado'] !== 'ENVIADO') {
             return null;
         }
         $fila = $this->fila(
@@ -669,12 +647,8 @@ final class ContratoServicio
         if (!$fila || $fila['usado_en'] !== null || $fila['revocado_en'] !== null || $fila['expira_en'] < $this->ahora()) {
             return null;
         }
-        $bruto = base64_decode((string) $fila['token_cifrado'], true);
-        if ($bruto === false || strlen($bruto) < 28) {
-            return null;
-        }
-        $token = openssl_decrypt(substr($bruto, 28), 'aes-256-gcm', $clave, OPENSSL_RAW_DATA, substr($bruto, 0, 12), substr($bruto, 12, 16));
-        return $token === false ? null : rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
+        $token = $this->llavero()->descifrar((string) $fila['token_cifrado'], self::USO_ENLACES);
+        return $token === null ? null : rtrim($this->appUrl, '/') . '/firmar?t=' . $token;
     }
 
     /**

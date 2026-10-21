@@ -51,7 +51,8 @@ o copiando el primer respaldo de cada mes a una carpeta `mensuales/`.
 - La base, en una instantánea consistente aunque la app esté escribiendo: `storage/contratos.sqlite` (`VACUUM INTO`)
   con SQLite, o `storage/contratos.sql` (`mysqldump --single-transaction`) con MySQL/MariaDB.
 - `storage/documentos/`: todos los PDF enviados y firmados.
-- `storage/clave-enlaces.key`: clave de los enlaces de firma guardados (si existe).
+- `storage/claves/v*.key`: claves de cifrado de todas las versiones (ver `docs/claves.md`), y `storage/clave-enlaces.key`
+  del formato anterior si existe.
 - `.env`: configuración y secretos.
 - `manifest.json`: fecha, filas por tabla y sha256 de cada archivo.
 

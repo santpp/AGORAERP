@@ -31,6 +31,7 @@ $clases = [
     'Agora\\Plataforma\\Tests\\UsuarioServicioTest',
     'Agora\\Plataforma\\Tests\\ClienteGhlTest',
     'Agora\\Plataforma\\Tests\\AplicacionTest',
+    'Agora\\Plataforma\\Tests\\LlaveroTest',
 ];
 
 $pasadas = 0;
@@ -61,6 +62,8 @@ foreach ($clases as $clase) {
             } else {
                 $fallidas[$nombre] = get_class($e) . ': ' . $e->getMessage();
             }
+        } finally {
+            $prueba->terminarPrueba();
         }
     }
 }

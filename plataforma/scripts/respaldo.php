@@ -78,14 +78,19 @@ try {
     fallar('No se pudo copiar la base: ' . $e->getMessage());
 }
 
-// 2. PDF de convenios (enviados y firmados), clave de enlaces y .env.
+// 2. PDF de convenios (enviados y firmados), claves de cifrado y .env.
 $documentos = $raiz . '/storage/documentos';
 foreach (is_dir($documentos) ? scandir($documentos) : [] as $f) {
     if (is_file("{$documentos}/{$f}") && !copy("{$documentos}/{$f}", "{$trabajo}/storage/documentos/{$f}")) {
         fallar("No se pudo copiar {$f}.");
     }
 }
-foreach (['storage/clave-enlaces.key', '.env'] as $rel) {
+// Claves de cifrado: todas las versiones (una copia sin la clave con que se cifró un dato no puede leerlo).
+$claves = glob($raiz . '/storage/claves/v*.key') ?: [];
+if ($claves) {
+    mkdir($trabajo . '/storage/claves', 0700, true);
+}
+foreach (array_merge(['storage/clave-enlaces.key', '.env'], array_map(fn ($c) => 'storage/claves/' . basename($c), $claves)) as $rel) {
     if (is_file("{$raiz}/{$rel}") && !copy("{$raiz}/{$rel}", "{$trabajo}/{$rel}")) {
         fallar("No se pudo copiar {$rel}.");
     }

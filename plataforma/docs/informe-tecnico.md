@@ -46,7 +46,7 @@ Los identificadores de contrato son 24 caracteres hexadecimales (`random_bytes(1
 - Cookie `HttpOnly; Secure; SameSite=Strict`.
 - Contraseñas con `password_hash`, bloqueo por intentos fallidos.
 - Tokens de firma y de descarga aleatorios, guardados solo como hash, de un solo uso.
-- Enlace de firma cifrado en reposo (AES-256-GCM con clave derivada de `APP_CLAVE`).
+- Enlace de firma cifrado en reposo (AES-256-GCM; claves con versión en `storage/claves`, subclave por uso con HKDF).
 - Comparación de secretos con `hash_equals`.
 - Validación de correo, cédula y PNG de firma (`validarPng`).
 - Escapado de argumentos de shell para el script de PDF.
@@ -56,7 +56,7 @@ Los identificadores de contrato son 24 caracteres hexadecimales (`random_bytes(1
 
 1. **Clase dios.** `ContratoServicio.php` tiene 980 líneas y 49 métodos mezclando reglas de negocio, persistencia, correo, PDF y firma. Es el punto más difícil de cambiar y de probar.
 2. **Un tenant y configuración global.** Token GHL, `location_id`, secreto de webhook y `APP_CLAVE` viven en `.env`. Ver sección 7.
-3. **Clave derivada sin KDF.** La clave AES es `sha256(APP_CLAVE)`. Si `APP_CLAVE` no tiene alta entropía, es débil. Conviene HKDF y un plan de rotación.
+3. ~~**Clave derivada sin KDF.**~~ Resuelto en la fase 1 (A4): claves aleatorias con versión, HKDF por uso y `scripts/rotar-claves.php`.
 4. **Webhook con secreto compartido estático.** Sin HMAC del cuerpo, sin marca de tiempo, sin protección contra repetición. Basta con filtrar la cabecera para inyectar eventos.
 5. **Sin protección CSRF explícita.** Se apoya en `SameSite=Strict`. Es razonable hoy, pero no cubre todos los casos (subdominios, navegadores antiguos).
 6. **Esquema sin migraciones.** `esquema.sql` se ejecuta en cada conexión. No hay versionado de cambios de esquema; cualquier `ALTER` manual se pierde o rompe.

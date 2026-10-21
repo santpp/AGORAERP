@@ -142,11 +142,12 @@ final class ServicioContratoTest extends TestCase
         $detalle = $servicio->ver($uid);
         $this->assertTrue($detalle['enlace_guardable']);
         $this->assertSame('https://tests.agoradigital.app/firmar?t=' . $token, $detalle['enlace']);
-        $this->assertTrue(is_file($carpeta . '/clave-enlaces.key'));
+        $this->assertTrue(is_file($carpeta . '/claves/v1.key'));
         // Otra instancia (otra petición) usa la misma clave y sigue viendo el enlace.
         $otra = new ContratoServicio($this->pdo, fn () => $this->hora, null, $carpeta . '/documentos');
         $this->assertSame($detalle['enlace'], $otra->ver($uid)['enlace']);
-        @unlink($carpeta . '/clave-enlaces.key');
+        @unlink($carpeta . '/claves/v1.key');
+        @rmdir($carpeta . '/claves');
         @rmdir($carpeta);
     }
 

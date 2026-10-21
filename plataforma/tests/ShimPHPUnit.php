@@ -18,6 +18,15 @@ namespace PHPUnit\Framework {
             $this->setUp();
         }
 
+        protected function tearDown(): void
+        {
+        }
+
+        public function terminarPrueba(): void
+        {
+            $this->tearDown();
+        }
+
         protected function expectException(string $clase): void
         {
             $this->esperada = $clase;
