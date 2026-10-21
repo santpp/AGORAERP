@@ -150,6 +150,23 @@ final class ServicioContratoTest extends TestCase
         @rmdir($carpeta);
     }
 
+    public function test_fecha_del_convenio_es_la_del_envio_en_hora_de_venezuela(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $contrato = $this->pdo->query("SELECT * FROM contratos WHERE uid = '{$uid}'")->fetch();
+        $terminos = json_decode((string) $this->pdo->query('SELECT terminos FROM versiones')->fetchColumn(), true);
+        $datosPdf = new \ReflectionMethod($this->servicio, 'datosPdf');
+        $construir = new \ReflectionMethod($this->servicio, 'construirTerminos');
+        $r = (new \Asocim\Contratos\Calculo\CalculadoraContrato())->calcular($construir->invoke($this->servicio, $terminos));
+
+        // 02:00 UTC del 15 de octubre son las 22:00 del 14 en Venezuela; el plan termina en 2027.
+        $this->hora = '2026-10-15 02:00:00';
+        $datos = $datosPdf->invoke($this->servicio, $contrato, $terminos, $r, 'Personal');
+        $this->assertSame(['14', 'octubre', '2026'], [$datos['fecha_dia'], $datos['fecha_mes'], $datos['fecha_anio']]);
+        $this->assertSame('Octubre', $datos['cronograma'][11]['mes']);
+        $this->assertSame('2027', $datos['cronograma'][11]['anio']);
+    }
+
     public function test_lista_filtrada_por_responsable(): void
     {
         $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];

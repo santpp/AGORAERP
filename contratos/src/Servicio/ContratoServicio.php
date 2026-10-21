@@ -220,15 +220,15 @@ final class ContratoServicio
                 continue;
             }
             $vistos[$q->mesNumero] = true;
-            $fecha = new \DateTimeImmutable($q->vencimiento);
+            $vence = new \DateTimeImmutable($q->vencimiento);
             $cronograma[] = [
-                'mes' => ucfirst(Formato::mes((int) $fecha->format('n'))),
-                'anio' => $fecha->format('Y'),
+                'mes' => ucfirst(Formato::mes((int) $vence->format('n'))),
+                'anio' => $vence->format('Y'),
                 'modalidad' => Formato::modalidad($cuotasPorMes),
             ];
         }
-        // La fecha del convenio es la del envío: al firmar se conserva la misma.
-        $hoy = $fecha ?? new \DateTimeImmutable('now', new \DateTimeZone('America/Caracas'));
+        // La fecha del convenio (cierre y firmas) es la del envío, en hora de Venezuela; al firmar se conserva la misma.
+        $hoy = $fecha ?? (new \DateTimeImmutable($this->ahora(), new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('America/Caracas'));
         return [
             'nombre' => mb_strtoupper($contrato['cliente_nombre']),
             'cedula' => $contrato['cliente_cedula'],

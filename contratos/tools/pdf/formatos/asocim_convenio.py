@@ -31,6 +31,13 @@ CAJAS_CLIENTE = [
 ]
 
 
+def frase_de_cierre(datos):
+    """«En la ciudad de Maracay, a los 14 días del mes de octubre del año 2026» con la fecha del envío."""
+    dia = int(datos["fecha_dia"])
+    cuando = "al primer día" if dia == 1 else f"a los {dia} días"
+    return f'En la ciudad de Maracay, {cuando} del mes de {datos["fecha_mes"].lower()} del año {datos["fecha_anio"]}'
+
+
 def subir_clausula_3(doc):
     """Sube el título y el párrafo de la cláusula 3 y trae a la página 1 las líneas que estaban en la 2.
 
@@ -107,9 +114,7 @@ def llenar(datos, salida, firma_png):
         "inscr": buscar(p, "0$", zona=zona_inscr),
         "desc": buscar(p, "0%", zona=zona_desc),
         "mod": buscar(p, "1 Cuota Mensual", zona=zona_mod),
-        "dia": buscar(p, "13", zona=zona_fecha),
-        "mes": buscar(p, "October", zona=zona_fecha),
-        "anio": buscar(p, "2026", zona=zona_fecha),
+        "cierre": buscar(p, "En la ciudad de Maracay", zona=zona_fecha),
         "nombre": buscar(p, "YULY EUNICE NAVAS CALLASPO", zona=(40, 615, 240, 640)),
         "cedula": buscar(p, "14943155 0412-5063751", zona=(40, 636, 240, 658)),
         "staff": buscar(p, "Maria Carvallo", zona=(300, 615, 420, 640)),
@@ -117,6 +122,8 @@ def llenar(datos, salida, firma_png):
     lineas = {k: origen_y(p, rc) for k, rc in rects.items()}
     for rc in rects.values():
         cubrir(p, rc)
+    # La frase de cierre se reescribe entera: el día y el mes cambian de ancho y el original tenía un espacio doble.
+    cubrir(p, pymupdf.Rect(rects["cierre"].x0 - 1, rects["cierre"].y0, zona_fecha[2], rects["cierre"].y1))
     aplicar_borrado(p)
 
     def poner(clave, texto, fuente, tamano=9):
@@ -124,9 +131,7 @@ def llenar(datos, salida, firma_png):
     poner("inscr", datos["inscripcion"] + "$", f_inter_r)
     poner("desc", datos["descuento"] + "%", f_inter_r)
     poner("mod", datos["modalidad"], f_inter_b)
-    poner("dia", datos["fecha_dia"], f_inter_r)
-    poner("mes", datos["fecha_mes"].lower(), f_inter_r)
-    poner("anio", datos["fecha_anio"], f_inter_r)
+    poner("cierre", frase_de_cierre(datos), f_inter_r)
     # Inter, no Open Sans: la fuente embebida del original no tiene todas las letras (p. ej. la "d" minúscula)
     nombre_firma = datos["nombre"].upper()
     escribir(p, (48.0, 633.0), nombre_firma, f_inter_r, ajustar_tamano(f_inter_r, nombre_firma, 300 - 48 - 4, 12, 9))
