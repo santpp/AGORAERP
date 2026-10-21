@@ -725,10 +725,12 @@ final class ContratoServicio
         try {
             $contactoId = $this->contactoDelCliente($contrato);
             $enlace = rtrim($this->appUrl, '/') . '/firmar?descarga=' . $descarga;
-            $html = '<p>Hola ' . htmlspecialchars((string) $contrato['cliente_nombre']) . ',</p>'
-                . '<p>Tu convenio de pago con ASOCIM ya está firmado. Puedes descargar tu copia aquí:</p>'
-                . '<p><a href="' . $enlace . '">Descargar convenio firmado</a></p>'
-                . '<p>El enlace estará disponible durante 30 días.</p>';
+            // Misma plantilla con marca que el correo del enlace de firma
+            $html = $this->plantilla->convenioFirmado(
+                (string) $contrato['cliente_nombre'],
+                $enlace,
+                date('m/d/Y', strtotime($this->sumarDias(self::DIAS_DESCARGA))),
+            );
             $this->ghl->enviarCorreo($contactoId, 'Tu convenio firmado · ASOCIM', $html);
         } catch (\Throwable $e) {
             error_log('[contratos] No se envió el correo de firma: ' . $e->getMessage());
