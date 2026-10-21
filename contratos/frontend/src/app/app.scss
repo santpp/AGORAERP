@@ -1,0 +1,130 @@
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  min-height: 72px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 4px solid var(--color-acento);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-marca);
+  text-decoration: none;
+}
+
+.marca__logo {
+  display: block;
+  height: 56px;
+  width: auto;
+}
+
+.marca__area {
+  padding-left: 12px;
+  border-left: 1px solid var(--color-linea);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-marca);
+}
+
+.barra__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.barra__enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: #6b6f86;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--color-marca);
+    color: #fff;
+  }
+
+  &.activo {
+    border-bottom-color: var(--color-acento);
+    color: var(--color-marca);
+    font-weight: 800;
+  }
+}
+
+.barra__usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.barra__nombre {
+  color: var(--color-suave);
+  font-weight: 600;
+
+  @media (max-width: 599px) {
+    display: none;
+  }
+}
+
+.barra__salir {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-linea);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-marca);
+  }
+}
+
+// Cada página entra con el mismo movimiento que la pantalla de entrada.
+.contenido > * {
+  animation: asentar 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.contenido {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+
+  &.completo {
+    max-width: none;
+    padding: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  .marca__area {
+    display: none;
+  }
+
+  .barra__nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .barra__usuario {
+    margin-left: auto;
+  }
+}

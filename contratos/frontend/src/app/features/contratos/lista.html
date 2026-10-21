@@ -1,0 +1,60 @@
+<div class="encabezado">
+  <h1>Contratos</h1>
+  <div class="encabezado__acciones">
+    <span class="suave">{{ contratos().length }} en total</span>
+    @if (puedeActuar()) {
+      <a class="nuevo" routerLink="/contratos/nuevo">Nuevo convenio</a>
+    }
+  </div>
+</div>
+
+@if (!esAdmin()) {
+  <p class="suave">Ves solo los convenios que tienes asignados.</p>
+}
+
+<div class="herramientas">
+  <mat-form-field appearance="outline" class="buscar">
+    <mat-label>Buscar por nombre o correo</mat-label>
+    <input matInput type="search" name="busqueda" [(ngModel)]="busqueda" (ngModelChange)="alBuscar($event)" />
+  </mat-form-field>
+
+  <mat-button-toggle-group class="filtros" [value]="filtro()" (change)="filtro.set($event.value)" aria-label="Filtrar por estado">
+    <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
+    <mat-button-toggle value="BORRADOR">Borradores ({{ conteos().BORRADOR }})</mat-button-toggle>
+    <mat-button-toggle value="ENVIADO">Enviados ({{ conteos().ENVIADO }})</mat-button-toggle>
+    <mat-button-toggle value="FIRMADO">Firmados ({{ conteos().FIRMADO }})</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
+@if (cargando()) {
+  <p class="suave">Cargando contratos…</p>
+} @else if (error()) {
+  <div class="tarjeta">
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" class="reintentar" (click)="cargar()">Intentar de nuevo</button>
+  </div>
+} @else if (contratos().length === 0) {
+  <div class="tarjeta vacio">
+    <h2>Aún no hay contratos</h2>
+    <p class="suave">Crea el primero con «Nuevo convenio» y elige un contacto de AGORA.</p>
+  </div>
+} @else if (visibles().length === 0) {
+  <p class="suave">Ningún contrato coincide con la búsqueda o el filtro.</p>
+} @else {
+  <ul class="lista">
+    @for (c of visibles(); track c.uid) {
+      <li>
+        <a class="fila" [routerLink]="['/contratos', c.uid]">
+          <span class="fila__principal">
+            <span class="fila__nombre">{{ c.cliente }}</span>
+            <span class="fila__correo">{{ c.correo }}</span>
+          </span>
+          <span class="fila__lateral">
+            <span class="estado estado--{{ c.estado.toLowerCase() }}">{{ etiqueta(c.estado) }}</span>
+            <span class="fila__fecha">{{ fecha(c.creado_en) }}</span>
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+}

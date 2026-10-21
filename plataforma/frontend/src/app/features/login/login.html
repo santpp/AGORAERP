@@ -1,0 +1,48 @@
+<section class="acceso">
+  <div class="acceso__halo" aria-hidden="true"></div>
+
+  <div class="tarjeta-acceso">
+    <div class="lado-imagen">
+      <div class="lienzo" aria-hidden="true">
+        @for (clase of escenas; track clase; let i = $index) {
+          <div class="lienzo__capa {{ clase }}" [class.activa]="i === actual()"></div>
+        }
+        <div class="lienzo__grano"></div>
+        <div class="lienzo__vineta"></div>
+      </div>
+
+      <div class="marcas">
+        <img class="marcas__logo" src="/agora-blanco.png" alt="Agora" height="44" />
+        <span class="marcas__separador" aria-hidden="true"></span>
+        <img class="marcas__logo marcas__logo--asocim" src="/asocim-blanco.png" alt="ASOCIM" height="88" />
+      </div>
+    </div>
+
+    <div class="lado-formulario">
+      <div class="formulario-columna">
+        <h1 class="titulo">Bienvenido de nuevo</h1>
+        <p class="subtitulo">Accede al panel de contratos.</p>
+
+        <form (ngSubmit)="entrar()" class="formulario">
+          <label class="campo">
+            <span class="campo__etiqueta">Correo</span>
+            <input type="email" name="correo" autocomplete="username" required [(ngModel)]="correo" />
+          </label>
+
+          <label class="campo">
+            <span class="campo__etiqueta">Clave</span>
+            <input type="password" name="clave" autocomplete="current-password" required [(ngModel)]="clave" />
+          </label>
+
+          @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+          }
+
+          <button type="submit" class="entrar" [disabled]="enviando()">
+            {{ enviando() ? 'Entrando…' : 'Iniciar sesión' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
