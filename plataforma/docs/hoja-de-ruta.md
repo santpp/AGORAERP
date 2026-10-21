@@ -36,8 +36,14 @@ Pueden avanzar en paralelo: A con E1 (diseño de pagos), y D1 (inventario de pla
 - **Salida:** restauración probada; inventario aprobado; decisiones D-001 y D-002 cerradas.
 
 ### Fase 1: Fundamentos (A) (3–4 semanas)
-Estado (21/10/2026): **A0, A1 y A2 hechos** (MySQL/MariaDB, migraciones e integración continua en GitHub Actions:
-`.github/workflows/plataforma.yml`). Falta el traspaso real a MySQL en tests. Pendientes: A3 a A6.
+Estado (21/10/2026): **A0, A1, A2 y A6 hechos** (MySQL/MariaDB, migraciones, integración continua en GitHub Actions:
+`.github/workflows/plataforma.yml`, y cabeceras de seguridad con Inter servida desde el propio panel). Falta el traspaso
+real a MySQL en tests. Pendientes: A3 a A5.
+
+A6 en detalle: CSP del panel en `public/.htaccess` (sin scripts en línea; `style-src 'unsafe-inline'` porque Angular
+Material inyecta estilos), CSP con nonce por petición en `firmar.php`, `default-src 'none'` en las respuestas JSON de la
+API y `frame-ancestors 'self'` en los PDF. Además `nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy` y HSTS.
+Comprobado en Chromium: entrar, lista, detalle con el PDF y firma completa sin ninguna violación de CSP.
 - A0 **MySQL** como base de producción, para poder consultarla de forma remota. Cambios: esquema con
   `AUTO_INCREMENT`, `VARCHAR` en las columnas únicas y `LONGBLOB` para la firma; conexión con usuario y clave
   (`CONTRATOS_BD_USUARIO`, `CONTRATOS_BD_CLAVE`); `INSERT OR REPLACE` y `PRAGMA` sustituidos por SQL válido en

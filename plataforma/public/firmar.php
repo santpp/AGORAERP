@@ -31,6 +31,8 @@ if (isset($_GET['descarga'])) {
     header('Content-Type: application/pdf');
     header('Content-Disposition: inline; filename="convenio-firmado-asocim.pdf"');
     header('Cache-Control: no-store');
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: frame-ancestors 'self'");
     readfile($ruta);
     exit;
 }
@@ -47,12 +49,21 @@ if (isset($_GET['documento'])) {
     header('Content-Type: application/pdf');
     header('Content-Disposition: inline; filename="convenio-asocim.pdf"');
     header('Cache-Control: no-store');
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: frame-ancestors 'self'");
     readfile($ruta);
     exit;
 }
 
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: no-referrer');
+// Solo se ejecutan el estilo y el script de esta página (con el nonce de esta petición). Sin recursos externos.
+$nonce = base64_encode(random_bytes(16));
+header("Content-Security-Policy: default-src 'none'; script-src 'nonce-{$nonce}'; style-src 'nonce-{$nonce}'; "
+    . "img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; "
+    . "form-action 'none'; frame-ancestors 'none'");
 ?>
 <!doctype html>
 <html lang="es">
@@ -61,7 +72,7 @@ header('X-Robots-Tag: noindex');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Firma del convenio · ASOCIM</title>
-<style>
+<style nonce="<?= $nonce ?>">
   :root {
     --navy: #1A1070;
     --orange: #F86000;
@@ -118,6 +129,9 @@ header('X-Robots-Tag: noindex');
   button:disabled { opacity: .5; cursor: default; }
   .aviso { color: var(--error); font-weight: 600; min-height: 1.4em; }
   .oculto { display: none !important; }
+  .pila { display: grid; gap: 16px; }
+  .separado { margin-top: 12px; }
+  .separado-firma { margin-top: 14px; }
   .exito { text-align: center; padding: 24px 8px; }
   .exito h1 { color: var(--navy); }
   .legal { font-size: 13px; color: var(--suave); }
@@ -136,11 +150,11 @@ header('X-Robots-Tag: noindex');
     <p class="suave">Si necesitas un enlace nuevo, escribe a la institución.</p>
   </section>
 
-  <div id="contenido" class="oculto" style="display:grid;gap:16px">
+  <div id="contenido" class="oculto pila">
     <section class="card">
       <h1>Hola, <span id="nombre"></span></h1>
       <p class="suave">Revisa tu convenio y, si estás de acuerdo, fírmalo al final.</p>
-      <dl style="margin-top:12px">
+      <dl class="separado">
         <dt>Precio del curso</dt><dd id="precio"></dd>
         <dt>Cargos</dt><dd id="cargos"></dd>
         <dt>Total a pagar</dt><dd id="total"></dd>
@@ -157,7 +171,7 @@ header('X-Robots-Tag: noindex');
       <h2>Firma</h2>
       <label for="firmante">Nombre completo</label>
       <input type="text" id="firmante" autocomplete="name" maxlength="120">
-      <label for="lienzo" style="margin-top:14px">Dibuja tu firma</label>
+      <label for="lienzo" class="separado-firma">Dibuja tu firma</label>
       <canvas id="lienzo"></canvas>
       <div class="fila">
         <button type="button" class="secundario" id="limpiar">Borrar firma</button>
@@ -165,7 +179,7 @@ header('X-Robots-Tag: noindex');
       </div>
       <p class="aviso" id="aviso"></p>
       <button type="button" class="principal" id="firmar" disabled>Firmar convenio</button>
-      <p class="legal" style="margin-top:12px">Al firmar confirmas que leíste el convenio y que aceptas sus condiciones. Se guarda la fecha, la hora y la dirección desde la que firmas.</p>
+      <p class="legal separado">Al firmar confirmas que leíste el convenio y que aceptas sus condiciones. Se guarda la fecha, la hora y la dirección desde la que firmas.</p>
     </section>
   </div>
 
@@ -175,7 +189,7 @@ header('X-Robots-Tag: noindex');
   </section>
 </main>
 
-<script>
+<script nonce="<?= $nonce ?>">
 (() => {
   const token = new URLSearchParams(location.search).get('t') || '';
   const $ = (id) => document.getElementById(id);

@@ -3,6 +3,7 @@ name: Contratos
 
 on:
   push:
+    branches: [main]
     paths:
       - 'contratos/**'
       - '.github/workflows/contratos.yml'

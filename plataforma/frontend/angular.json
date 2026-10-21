@@ -29,7 +29,13 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "@fontsource/inter/latin-400.css",
+              "@fontsource/inter/latin-600.css",
+              "@fontsource/inter/latin-700.css",
+              "@fontsource/inter/latin-800.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
@@ -45,7 +51,12 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": { "minify": true, "inlineCritical": false },
+                "fonts": false
+              }
             },
             "development": {
               "optimization": false,

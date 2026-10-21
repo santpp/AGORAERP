@@ -3,6 +3,7 @@ name: Plataforma
 
 on:
   push:
+    branches: [main]
     paths:
       - 'plataforma/**'
       - '.github/workflows/plataforma.yml'

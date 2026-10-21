@@ -14,15 +14,20 @@
 );
 http_response_code($codigo);
 header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: no-referrer');
 
 if (isset($cuerpo['__archivo'])) {
     header('Content-Type: application/pdf');
     header('Content-Disposition: inline; filename="' . $cuerpo['__nombre'] . '"');
+    // El panel muestra los PDF en un iframe propio; ninguna otra web puede incrustarlos.
+    header("Content-Security-Policy: frame-ancestors 'self'");
     readfile($cuerpo['__archivo']);
     exit;
 }
 
 header('Content-Type: application/json; charset=utf-8');
+header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
 $cookie = $cuerpo['cookie'] ?? null;
 unset($cuerpo['cookie']);
 if ($cookie !== null) {

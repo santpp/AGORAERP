@@ -6,3 +6,23 @@ RewriteRule ^$ panel.html [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(entrar|contratos(/.*)?)$ panel.html [L]
+
+# Cabeceras de seguridad (todas las respuestas). Las páginas PHP ponen además su propia Content-Security-Policy.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  Header always set Strict-Transport-Security "max-age=31536000"
+
+  # Panel: solo código y fuentes propios. 'unsafe-inline' en estilos porque Angular Material inyecta estilos
+  # en tiempo de ejecución (sin script en línea: script-src 'self'). Los PDF se ven en un iframe propio.
+  <FilesMatch "^panel\.html$">
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    Header always set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # Archivos del panel con hash en el nombre: se pueden guardar en caché sin límite.
+  <FilesMatch "\.(js|css|woff2?)$">
+    Header always set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
