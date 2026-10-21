@@ -7,7 +7,7 @@ Objetivo: probar cada cambio en un sitio idéntico al de producción, con datos 
 2. **SSL → Manage SSL**: emitir el certificado.
 3. En el DNS: registro A de `tests` a la IP del VPS.
 4. Estructura igual a producción, en otra carpeta:
-   - código: `/home/<usuario>/contratos-pruebas/` (`src/`, `tools/`, `plantillas/`, `scripts/`, `storage/`)
+   - código: `/home/<usuario>/plataforma/` (`src/`, `tools/`, `plantillas/`, `scripts/`, `storage/`)
    - público: el `public_html` del sitio de pruebas con `index.php`, `firmar.php`, `webhook.php`, `.htaccess`, logos y `panel/`.
 5. Copiar `plantillas/convenio_original.pdf` y las fuentes (el PDF no está en Git).
 

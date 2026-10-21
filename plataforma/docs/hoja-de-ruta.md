@@ -2,6 +2,10 @@
 
 Base: informe técnico de Contratos ASOCIM (20/10/2026). Este documento organiza el trabajo en fases, con criterios de salida, y en vías que se pueden seguir en paralelo.
 
+**Dónde se construye (21/10/2026):** la plataforma es una aplicación nueva en `plataforma/`, en el mismo
+repositorio, a partir del código de `contratos/`. `contratos/` sigue atendiendo a ASOCIM en producción sin cambios
+de plataforma; ASOCIM pasará a la plataforma como su primera empresa cuando esta esté lista. Entorno: `tests.agoradigital.app`.
+
 ## 0. Principios de ejecución
 
 - **Una fase no empieza hasta que la anterior cumple su criterio de salida.** Los criterios son verificables (pruebas, despliegue, métricas), no "casi listo".
