@@ -3,9 +3,9 @@
 Objetivo: probar cada cambio en un sitio idéntico al de producción, con datos ficticios, antes de subirlo a producción.
 
 ## 1. Crear el sitio (CyberPanel)
-1. **Websites → Create Website** (o dominio hijo) con `pruebas.contratos.agoradigital.app`.
+1. **Websites → Create Website** (o dominio hijo) con `tests.agoradigital.app`.
 2. **SSL → Manage SSL**: emitir el certificado.
-3. En el DNS: registro A de `pruebas.contratos` a la IP del VPS.
+3. En el DNS: registro A de `tests` a la IP del VPS.
 4. Estructura igual a producción, en otra carpeta:
    - código: `/home/<usuario>/contratos-pruebas/` (`src/`, `tools/`, `plantillas/`, `scripts/`, `storage/`)
    - público: el `public_html` del sitio de pruebas con `index.php`, `firmar.php`, `webhook.php`, `.htaccess`, logos y `panel/`.
@@ -14,7 +14,7 @@ Objetivo: probar cada cambio en un sitio idéntico al de producción, con datos 
 ## 2. Configuración (`.env` propio)
 ```
 CONTRATOS_BD=sqlite:/home/<usuario>/contratos-pruebas/storage/contratos.sqlite
-APP_URL=https://pruebas.contratos.agoradigital.app
+APP_URL=https://tests.agoradigital.app
 GHL_WEBHOOK_SECRET=<distinto del de producción>
 GHL_TOKEN=<token de la subcuenta de pruebas>
 GHL_LOCATION_ID=<location de la subcuenta de pruebas>

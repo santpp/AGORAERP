@@ -1,7 +1,6 @@
 # D-001 · Modelo de negocio de la plataforma
 
-**Estado:** pendiente. Debe cerrarse antes de terminar la fase 0.
-**Fecha de apertura:** 21/10/2026.
+**Estado:** decidida (opción C). **Fecha:** 21/10/2026. **Decide:** dirección de Agora.
 
 ## Contexto
 La plataforma hoy sirve a una sola empresa (ASOCIM). La fase 3 la convierte en multi-empresa. La forma
@@ -24,9 +23,10 @@ su formato de contrato y le factura. Las empresas no se registran solas.
 **C**, con el alta siempre por Agora. Es la única coherente con D-002 y permite delegar lo que no requiere código.
 
 ## Decisión
-_Pendiente de confirmar por la dirección de Agora._
+**C. Mixto.** Agora da de alta cada empresa (incluida la calibración de su contrato, D-002); después, cada
+empresa administra con su propio ADMIN sus usuarios, textos y marca.
 
-## Consecuencias (si se elige C)
+## Consecuencias
 - No hay registro público. La consola de agencia (fase 5) es interna.
 - Cada empresa tiene al menos un ADMIN propio que gestiona usuarios y textos, pero no su formato de PDF.
 - La facturación de la plataforma es manual o semiautomática al principio.
