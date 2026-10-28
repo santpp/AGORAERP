@@ -31,7 +31,6 @@ Lista de todo lo que hace falta para activar una empresa (tenant). Cada ítem in
 | Token de API (Private Integration) con permisos de contactos, usuarios, conversaciones y campos personalizados | E (la agencia lo carga) | O | 3 |
 | Campo personalizado de cédula: clave `contact.cedula` (o equivalente) | E | O | 3 |
 | Usuarios de GHL que representan al personal (correo igual al del panel) | E | O | 3 |
-| Workflow y disparador de webhook (ID del workflow que envía los datos al sistema) | E | O | 3 |
 | Canal de correo habilitado en la subcuenta | E | O | 3 |
 | Prueba de conexión superada (búsqueda de contactos y envío de correo de prueba) | A | O | 5 |
 

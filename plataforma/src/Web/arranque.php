@@ -33,7 +33,6 @@ $ghl = new ClienteGhl((string) getenv('GHL_TOKEN'), (string) getenv('GHL_LOCATIO
 $app = new Aplicacion(
     new ContratoServicio($pdo, null, $generador, $documentos, $ghl, getenv('APP_URL') ?: 'https://tests.agoradigital.app'),
     new UsuarioServicio($pdo),
-    (string) getenv('GHL_WEBHOOK_SECRET'),
     $ghl,
 );
 

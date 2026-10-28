@@ -24,7 +24,7 @@ final class AplicacionTest extends TestCase
         $pdo = BasePrueba::conectar();
         $usuarios = new UsuarioServicio($pdo);
         $usuarios->crear('admin@asocim.com', 'Admin', 'clave-segura-1', Roles::ADMIN);
-        $this->app = new Aplicacion(new ContratoServicio($pdo), $usuarios, 'secreto');
+        $this->app = new Aplicacion(new ContratoServicio($pdo), $usuarios);
         [, $r] = $this->app->responder('POST', '/api/login', [], '{"correo":"admin@asocim.com","clave":"clave-segura-1"}');
         $this->cookiesLogin = $r['cookies'];
         preg_match('/^' . Aplicacion::COOKIE . '=([^;]+)/', $r['cookies'][0], $m);

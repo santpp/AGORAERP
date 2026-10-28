@@ -8,7 +8,7 @@ Objetivo: probar cada cambio en un sitio idéntico al de producción, con datos 
 3. En el DNS: registro A de `tests` a la IP del VPS.
 4. Estructura igual a producción, en otra carpeta:
    - código: `/home/<usuario>/plataforma/` (`src/`, `tools/`, `plantillas/`, `scripts/`, `storage/`)
-   - público: el `public_html` del sitio de pruebas con `index.php`, `firmar.php`, `webhook.php`, `.htaccess`, logos y `panel/`.
+   - público: el `public_html` del sitio de pruebas con `index.php`, `firmar.php`, `.htaccess`, logos y `panel/`.
 5. Copiar `plantillas/convenio_original.pdf` y las fuentes (el PDF no está en Git).
 
 ## 2. Configuración (`.env` propio)
@@ -17,7 +17,6 @@ CONTRATOS_BD=mysql:host=localhost;dbname=<base_de_tests>;charset=utf8mb4
 CONTRATOS_BD_USUARIO=<usuario_de_tests>
 CONTRATOS_BD_CLAVE=<clave_de_tests>
 APP_URL=https://tests.agoradigital.app
-GHL_WEBHOOK_SECRET=<distinto del de producción>
 GHL_TOKEN=<token de la subcuenta de pruebas>
 GHL_LOCATION_ID=<location de la subcuenta de pruebas>
 PDF_PYTHON=/opt/agora-pdf/bin/python

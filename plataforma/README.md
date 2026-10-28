@@ -13,7 +13,7 @@ que sigue en producción sin cambios) y evoluciona según `docs/hoja-de-ruta.md`
 | Carpeta | Qué hay |
 |---|---|
 | `src/` | Backend PHP (API, servicios, cálculo, correo, integración GHL, persistencia y migraciones) |
-| `public/` | Lo que va a `public_html`: `index.php` (API), `firmar.php`, `webhook.php`, `.htaccess`, logos y `panel/` (build de Angular) |
+| `public/` | Lo que va a `public_html`: `index.php` (API), `firmar.php`, `.htaccess`, logos y `panel/` (build de Angular) |
 | `frontend/` | Código del panel (Angular 21 + Material) |
 | `tools/pdf/` | Motor de PDF y un formato por contrato de cada empresa (`formatos/`), con calibración y regresión |
 | `scripts/` | Migraciones, traspaso SQLite → MySQL, respaldo y simulacro de restauración |

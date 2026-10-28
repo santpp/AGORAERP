@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Punto de entrada de la API (/api/...). El webhook de GHL sigue en /webhook.php.
+ * Punto de entrada de la API (/api/...).
  * Funciona en el repositorio (contratos/public/) y en el servidor (public_html/, con el código en ../contratos/).
  */
 

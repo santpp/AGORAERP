@@ -50,7 +50,6 @@ Destino: **T** = tabla `tenants` (o su configuración), **F** = formato de PDF d
 | Valor | Dónde | Destino |
 |---|---|---|
 | Token y location ID (una sola subcuenta) | `.env` (`GHL_TOKEN`, `GHL_LOCATION_ID`), `src/Web/arranque.php` | G |
-| Secreto del webhook (uno solo) | `.env` (`GHL_WEBHOOK_SECRET`) | G |
 | Campo de cédula `contact.cedula` | `src/Ghl/ClienteGhl.php` (búsqueda y definición del campo) | G (clave configurable) |
 | Nombre de la plataforma «AGORA» en mensajes al personal | `src/Ghl/ClienteGhl.php`, `src/Web/Aplicacion.php`, `frontend/.../nuevo.html`, `lista.html` | P (marca de la agencia) |
 

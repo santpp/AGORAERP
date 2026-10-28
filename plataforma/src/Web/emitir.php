@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Responde a la petición actual. Lo usan la API (public/index.php) y el webhook.
+ * Responde a la petición actual. Lo usa la API (public/index.php).
  * Requiere haber cargado arranque.php antes.
  * Si la respuesta trae '__archivo', se devuelve el PDF tal cual en lugar de JSON.
  */

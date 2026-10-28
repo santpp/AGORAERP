@@ -18,7 +18,7 @@ de plataforma; ASOCIM pasará a la plataforma como su primera empresa cuando est
 
 | Vía | Qué cubre | Depende de |
 |---|---|---|
-| **A. Fundamentos** | MySQL, migraciones, CI, copias de seguridad, entorno de pruebas, webhook firmado, claves de cifrado con KDF | Nada. Empieza ya. |
+| **A. Fundamentos** | MySQL, migraciones, CI, copias de seguridad, entorno de pruebas, claves de cifrado con KDF | Nada. Empieza ya. |
 | **B. Núcleo** | Dividir `ContratoServicio`, repositorios, casos de uso, cola de trabajos | A1, A2 |
 | **C. Plataforma** | Tenants, membresías, aislamiento, resolución de dominio, credenciales por tenant | B |
 | **D. Documentos** | Plantillas de PDF por tenant, editor de campos, motor alternativo si se decide | C1 (para multi-tenant), o nada si se mantiene ASOCIM |
@@ -38,7 +38,7 @@ Pueden avanzar en paralelo: A con E1 (diseño de pagos), y D1 (inventario de pla
 ### Fase 1: Fundamentos (A) (3–4 semanas)
 Estado (21/10/2026): **A0, A1, A2, A4, A5 y A6 hechos** (MySQL/MariaDB, migraciones, integración continua en GitHub Actions:
 `.github/workflows/plataforma.yml`, y cabeceras de seguridad con Inter servida desde el propio panel). Falta el traspaso
-real a MySQL en tests. Pendiente: A3.
+real a MySQL en tests. A3 descartado (webhook retirado).
 
 A6 en detalle: CSP del panel en `public/.htaccess` (sin scripts en línea; `style-src 'unsafe-inline'` porque Angular
 Material inyecta estilos), CSP con nonce por petición en `firmar.php`, `default-src 'none'` en las respuestas JSON de la
@@ -61,11 +61,11 @@ A4 en detalle: claves con versión en `storage/claves`, subclave por uso con HKD
   de CyberPanel, con un usuario de solo lectura para consultas y otro para la aplicación.
 - A1 Migraciones versionadas (`migraciones/001_inicial.sql`, …) y tabla `schema_migrations`, para SQLite y MySQL.
 - A2 Pruebas en CI con cada cambio: PHP, Angular, PDF de ejemplo.
-- A3 Webhook con HMAC-SHA256 del cuerpo, marca de tiempo y rechazo de repeticiones.
+- A3 ~~Webhook firmado~~. Descartado: los workflows de GHL no pueden firmar y el webhook no se usaba (los contratos se crean desde el panel con la API de GHL). Se retiró `public/webhook.php`.
 - A4 Claves: HKDF para cifrado, identificador de versión de clave en `enlaces_firma`, procedimiento de rotación.
 - A5 Tokens CSRF en las acciones del panel.
 - A6 Cabeceras de seguridad (CSP, `X-Content-Type-Options`, `Referrer-Policy`) y fuentes servidas localmente.
-- **Salida:** producción en MySQL con los datos traspasados y verificados; CI en verde en cada fusión (pruebas en SQLite y MySQL); webhook firmado en producción; rotación de clave ensayada en pruebas.
+- **Salida:** producción en MySQL con los datos traspasados y verificados; CI en verde en cada fusión (pruebas en SQLite y MySQL); rotación de clave ensayada en pruebas.
 
 ### Fase 2: Núcleo (B) (3–4 semanas)
 - B1 Separar `ContratoServicio` en casos de uso: `CrearConvenio`, `EnviarConvenio`, `FirmarConvenio`, `RevocarEnlace`, `EliminarBorrador`, `NotificarPersonal`.

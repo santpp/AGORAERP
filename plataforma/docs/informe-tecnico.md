@@ -35,7 +35,7 @@ Roles: ADMIN, REMITENTE, VISOR, con permisos (`ver`, `editar`, `enviar`, `revoca
 
 ## 4. Superficie de la API
 
-Públicas: `POST /api/login`, `POST /api/logout`, `GET /api/firmar/{token}`, `POST /api/firmar/{token}`, `POST /webhook.php` (cabecera `X-Webhook-Secret`, comparación con `hash_equals`), `GET /firmar` (página).
+Públicas: `POST /api/login`, `POST /api/logout`, `GET /api/firmar/{token}`, `POST /api/firmar/{token}`, `GET /firmar` (página).
 
 Autenticadas (con cookie de sesión): `GET /api/yo`, `GET/POST /api/contratos`, `GET /api/contratos/{uid}`, `POST .../editar|enviar|revocar|cliente`, `POST /api/contratos/calculo`, `GET .../pdf/previa|enviado|firmado`, `POST /api/ghl/contactos/buscar`, `GET /api/registro`, gestión de usuarios (`/api/usuarios/*`).
 
@@ -57,7 +57,7 @@ Los identificadores de contrato son 24 caracteres hexadecimales (`random_bytes(1
 1. **Clase dios.** `ContratoServicio.php` tiene 980 líneas y 49 métodos mezclando reglas de negocio, persistencia, correo, PDF y firma. Es el punto más difícil de cambiar y de probar.
 2. **Un tenant y configuración global.** Token GHL, `location_id`, secreto de webhook y `APP_CLAVE` viven en `.env`. Ver sección 7.
 3. ~~**Clave derivada sin KDF.**~~ Resuelto en la fase 1 (A4): claves aleatorias con versión, HKDF por uso y `scripts/rotar-claves.php`.
-4. **Webhook con secreto compartido estático.** Sin HMAC del cuerpo, sin marca de tiempo, sin protección contra repetición. Basta con filtrar la cabecera para inyectar eventos.
+4. ~~**Webhook con secreto compartido estático.**~~ Retirado (fase 1): los contratos entran solo por el panel y la API de GHL.
 5. **Sin protección CSRF explícita.** Se apoya en `SameSite=Strict`. Es razonable hoy, pero no cubre todos los casos (subdominios, navegadores antiguos).
 6. **Esquema sin migraciones.** `esquema.sql` se ejecuta en cada conexión. No hay versionado de cambios de esquema; cualquier `ALTER` manual se pierde o rompe.
 7. **Llamadas síncronas a GHL y al script de PDF dentro de la petición.** Sin colas, sin reintentos, sin tiempo límite explícito en `exec`. Un fallo de GHL deja al usuario esperando o con error.
