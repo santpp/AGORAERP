@@ -1,0 +1,96 @@
+<nav class="volver">
+  <a routerLink="/contratos">← Contratos</a>
+</nav>
+
+<div class="encabezado">
+  <h1>Personas</h1>
+  <span class="suave">{{ personas().length }} en total</span>
+</div>
+
+@if (aviso()) {
+  <p class="aviso" role="status">{{ aviso() }}</p>
+}
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+<section class="tarjeta bloque">
+  <h2>Agregar persona</h2>
+  <form class="formulario" #crearForm="ngForm" (ngSubmit)="crear(crearForm)">
+    <div class="campos">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput name="nombre" required [(ngModel)]="nueva.nombre" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" name="correo" required [(ngModel)]="nueva.correo" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Clave temporal (mínimo 10 caracteres)</mat-label>
+        <input matInput type="text" name="clave" required minlength="10" autocomplete="new-password" [(ngModel)]="nueva.clave" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Rol</mat-label>
+        <mat-select name="rol" [(ngModel)]="nueva.rol">
+          @for (r of roles; track r.valor) {
+            <mat-option [value]="r.valor">{{ r.etiqueta }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div>
+      <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">Agregar persona</button>
+    </div>
+  </form>
+</section>
+
+@if (cargando()) {
+  <p class="suave">Cargando personas…</p>
+} @else {
+  <ul class="lista">
+    @for (p of personas(); track p.id) {
+      <li class="persona" [class.persona--inactiva]="!p.activo">
+        <div class="persona__datos">
+          <span class="persona__nombre">{{ p.nombre }}</span>
+          <span class="suave">{{ p.correo }}</span>
+          @if (!p.activo) {
+            <span class="etiqueta-inactiva">Desactivada</span>
+          }
+        </div>
+
+        <div class="persona__acciones">
+          <div class="fila-control">
+            <mat-form-field appearance="outline" class="rol">
+              <mat-label>Rol</mat-label>
+              <mat-select name="rol-{{ p.id }}" [(ngModel)]="rolEditado[p.id]">
+                @for (r of roles; track r.valor) {
+                  <mat-option [value]="r.valor">{{ r.etiqueta }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button type="button" class="boton-secundario" [disabled]="ocupado() || rolEditado[p.id] === p.rol" (click)="guardarRol(p)">Guardar rol</button>
+          </div>
+
+          @if (editandoClave() === p.id) {
+            <form class="fila-control" (ngSubmit)="guardarClave(p)">
+              <mat-form-field appearance="outline" class="clave">
+                <mat-label>Nueva clave</mat-label>
+                <input matInput type="text" name="clave-{{ p.id }}" required minlength="10" autocomplete="new-password" [(ngModel)]="clave" />
+              </mat-form-field>
+              <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado() || clave.length < 10">Cambiar</button>
+              <button type="button" class="boton-secundario" (click)="editandoClave.set(null)">Cancelar</button>
+            </form>
+          } @else {
+            <div class="fila-botones">
+              <button type="button" class="boton-secundario" (click)="editandoClave.set(p.id); clave = ''">Cambiar clave</button>
+              <button type="button" class="boton-secundario" [class.boton-peligro]="p.activo" [disabled]="ocupado()" (click)="cambiarActivo(p)">
+                {{ p.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

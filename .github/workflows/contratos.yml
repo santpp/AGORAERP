@@ -1,0 +1,47 @@
+# Comprobaciones de contratos/ (ASOCIM en producción): pruebas en SQLite y PDF.
+name: Contratos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'contratos/**'
+      - '.github/workflows/contratos.yml'
+  pull_request:
+    paths:
+      - 'contratos/**'
+      - '.github/workflows/contratos.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contratos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    name: PHP y PDF
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: contratos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, openssl, curl, mbstring
+          coverage: none
+      - name: Sintaxis de todos los archivos PHP
+        run: find src public scripts tools tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: Pruebas en SQLite
+        run: php tests/run.php
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pymupdf==1.28.2 pillow==12.3.0
+      # El PDF original de ASOCIM no está en Git: aquí solo se comprueba que el formato carga sin errores.
+      # La regresión completa se ejecuta en el servidor: python3 tools/pdf/regresion.py
+      - name: El formato de ASOCIM carga
+        run: python3 -c "import sys; sys.path.insert(0, 'tools/pdf'); from llenar_convenio import cargar_formato; cargar_formato('asocim_convenio')"
