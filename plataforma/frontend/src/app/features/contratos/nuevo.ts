@@ -36,7 +36,7 @@ export class NuevoContrato {
   protected correo = '';
   protected nombre = '';
   protected readonly aviso = signal('');
-  protected curso = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
+  protected curso = { cuota: '', inscripcion: '', meses: 12, anio: this.anios[0], mes: 1, cuotasPorMes: 1 };
   protected readonly guardando = signal(false);
   protected readonly error = signal('');
 
@@ -98,7 +98,7 @@ export class NuevoContrato {
           meses: Number(this.curso.meses),
           mes_inicio: mesInicio(Number(this.curso.anio), Number(this.curso.mes)),
           cuotas_por_mes: Number(this.curso.cuotasPorMes),
-          cargos: [],
+          cargos: [{ concepto: 'Inscripción', monto: this.curso.inscripcion.trim() || '0' }],
         },
         // Quien crea el convenio recibe el aviso cuando el cliente firma.
         responsable: { nombre: responsable?.nombre ?? '', correo: responsable?.correo ?? '' },
