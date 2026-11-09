@@ -12,11 +12,17 @@ RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CARPETA_PLANTILLAS = os.path.join(RAIZ, "plantillas")
 FUENTE_INTER_R = os.path.join(CARPETA_PLANTILLAS, "fuentes", "Inter-Regular.otf")
 FUENTE_INTER_B = os.path.join(CARPETA_PLANTILLAS, "fuentes", "Inter-Bold.otf")
+FUENTE_VARIABLES = os.path.join(CARPETA_PLANTILLAS, "fuentes", "OpenSans-Regular.ttf")
 
 
 def fuentes_inter():
     """(regular, negrita) de Inter, la tipografía de reemplazo para texto nuevo."""
     return pymupdf.Font(fontfile=FUENTE_INTER_R), pymupdf.Font(fontfile=FUENTE_INTER_B)
+
+
+def fuente_variables():
+    """Open Sans completa: la tipografía del convenio. Con ella se escriben los datos variables (nombre, cédula, montos…)."""
+    return pymupdf.Font(fontfile=FUENTE_VARIABLES)
 
 
 def base_de(rect, tamano):

@@ -12,7 +12,7 @@ import pymupdf
 from PIL import Image
 
 from motor import (CARPETA_PLANTILLAS, ajustar_tamano, aplicar_borrado, base_de, buscar, cubrir, es_negrita,
-                   escribir, fuentes_inter, justificar, origen_y, poner_firmas)
+                   escribir, fuente_variables, fuentes_inter, justificar, origen_y, poner_firmas)
 
 NOMBRE = "ASOCIM · Convenio de pago"
 ORIGINAL = os.path.join(CARPETA_PLANTILLAS, "convenio_original.pdf")
@@ -72,9 +72,8 @@ def subir_clausula_3(doc):
 def llenar(datos, salida, firma_png):
     doc = pymupdf.open(ORIGINAL)
     f_inter_r, f_inter_b = fuentes_inter()
-    # Open Sans Regular del propio PDF (tiene todas las letras y números que se necesitan)
-    xref_os = next(f[0] for f in doc[5].get_fonts(full=True) if f[3].endswith("OpenSans-Regular"))
-    f_os = pymupdf.Font(fontbuffer=doc.extract_font(xref_os)[3])
+    # Datos variables: Open Sans completa (la misma tipografía del convenio)
+    f_var = fuente_variables()
 
     n = int(datos["meses"])
     if n > FILAS_TABLA:
@@ -91,17 +90,17 @@ def llenar(datos, salida, firma_png):
     cubrir(p, r20)
     aplicar_borrado(p)
     r = pymupdf.Rect(275.9, 162.3, 347.5, 173.2)
-    escribir(p, (r.x0, base_de(r, 9)), f'{datos["meses_texto"]} ({n}) meses', f_inter_b, 9)
+    escribir(p, (r.x0, base_de(r, 9)), f'{datos["meses_texto"]} ({n}) meses', f_var, 9)
     nombre = datos["nombre"].upper()
-    tamano_nombre = ajustar_tamano(f_inter_b, nombre, 209.8 - 61.0 - 2, 9, 7)
-    escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre, f_inter_b, tamano_nombre)
-    escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_inter_r, 9)
+    tamano_nombre = ajustar_tamano(f_var, nombre, 209.8 - 61.0 - 2, 9, 7)
+    escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre, f_var, tamano_nombre)
+    escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_var, 9)
     x_ced = pymupdf.Rect(380.8, 108.3, 423.6, 119.2)
-    escribir(p, (x_ced.x0, base_de(x_ced, 9)), datos["cedula"], f_inter_b, 9)
+    escribir(p, (x_ced.x0, base_de(x_ced, 9)), datos["cedula"], f_var, 9)
     x_pre = pymupdf.Rect(209.7, 270.3, 236.3, 281.2)
-    escribir(p, (x_pre.x0, base_de(x_pre, 9)), datos["precio"], f_inter_b, 9)
+    escribir(p, (x_pre.x0, base_de(x_pre, 9)), datos["precio"], f_var, 9)
     x_cuo = pymupdf.Rect(516.7, 270.3, 534.4, 281.2)
-    escribir(p, (x_cuo.x0, base_de(x_cuo, 9)), datos["cuota"], f_inter_b, 9)
+    escribir(p, (x_cuo.x0, base_de(x_cuo, 9)), datos["cuota"], f_var, 9)
     subir_clausula_3(doc)
 
     # ----- página 6
@@ -128,22 +127,21 @@ def llenar(datos, salida, firma_png):
 
     def poner(clave, texto, fuente, tamano=9):
         escribir(p, (rects[clave].x0, lineas[clave]), texto, fuente, tamano)
-    poner("inscr", datos["inscripcion"] + "$", f_inter_r)
-    poner("desc", datos["descuento"] + "%", f_inter_r)
-    poner("mod", datos["modalidad"], f_inter_b)
-    poner("cierre", frase_de_cierre(datos), f_inter_r)
-    # Inter, no Open Sans: la fuente embebida del original no tiene todas las letras (p. ej. la "d" minúscula)
+    poner("inscr", datos["inscripcion"] + "$", f_var)
+    poner("desc", datos["descuento"] + "%", f_var)
+    poner("mod", datos["modalidad"], f_var)
+    poner("cierre", frase_de_cierre(datos), f_var)
     nombre_firma = datos["nombre"].upper()
-    escribir(p, (48.0, 633.0), nombre_firma, f_inter_r, ajustar_tamano(f_inter_r, nombre_firma, 300 - 48 - 4, 12, 9))
-    escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_inter_r, 12)
-    escribir(p, (310.1, 633.0), datos["staff"], f_inter_r, 12)
+    escribir(p, (48.0, 633.0), nombre_firma, f_var, ajustar_tamano(f_var, nombre_firma, 300 - 48 - 4, 12, 9))
+    escribir(p, (48.0, 651.0), f'{datos["cedula"]} {datos["telefono"]}', f_var, 12)
+    escribir(p, (310.1, 633.0), datos["staff"], f_var, 12)
 
     # ----- página 7 (anexo): se traslada a la página de la tabla y la página 7 se elimina
     p = doc[6]
     cubrir(p, buscar(p, "1 Cuota Mensual"))
     aplicar_borrado(p)
     r = buscar(p, "Elegida:")
-    escribir(p, (r.x1 + 3, base_de(r, 9)), datos["modalidad"], f_inter_r, 9)
+    escribir(p, (r.x1 + 3, base_de(r, 9)), datos["modalidad"], f_var, 9)
 
     # ----- página 8 (tabla)
     p = doc[7]
@@ -152,10 +150,10 @@ def llenar(datos, salida, firma_png):
     aplicar_borrado(p)
     for i, fila in enumerate(datos["cronograma"], start=1):
         base = FILA_1_BASE + (i - 1) * ALTO_FILA
-        escribir(p, (0, base), str(i), f_os, 12, centro=COL_N)
-        escribir(p, (0, base), fila["mes"], f_os, 12, centro=COL_MES)
-        escribir(p, (0, base), fila["anio"], f_os, 12, centro=COL_ANIO)
-        escribir(p, (0, base), fila["modalidad"], f_inter_b, 12, centro=COL_MOD)
+        escribir(p, (0, base), str(i), f_var, 12, centro=COL_N)
+        escribir(p, (0, base), fila["mes"], f_var, 12, centro=COL_MES)
+        escribir(p, (0, base), fila["anio"], f_var, 12, centro=COL_ANIO)
+        escribir(p, (0, base), fila["modalidad"], f_var, 12, centro=COL_MOD)
 
     # ----- página 8: encabezado con logo (reducido al 80 %), anexo y tabla; la página 7 se elimina
     escala = 0.8
@@ -184,7 +182,7 @@ def llenar(datos, salida, firma_png):
     escribir(pa, (60, 128), "Este anexo complementa el Convenio de Pago y sirve como registro digital de la modalidad de pago", f_inter_r, 9)
     escribir(pa, (60, 140), "elegida por EL ESTUDIANTE/REPRESENTANTE y la consecuente imputación de los pagos recibidos, en", f_inter_r, 9)
     escribir(pa, (60, 152), "consonancia con la Cláusula 2 (Forma y Término de Pago).", f_inter_r, 9)
-    escribir(pa, (60, 170), "Modalidad de Pago Elegida: " + datos["modalidad"] + ".", f_inter_r, 9)
+    escribir(pa, (60, 170), "Modalidad de Pago Elegida: " + datos["modalidad"] + ".", f_var, 9)
 
     # ----- firmas del cliente: una sola firma copiada en las tres cajas
     poner_firmas(doc, CAJAS_CLIENTE, firma_png)
