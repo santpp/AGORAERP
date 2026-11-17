@@ -167,6 +167,17 @@ final class ServicioContratoTest extends TestCase
         $this->assertSame('2027', $datos['cronograma'][11]['anio']);
     }
 
+    public function test_observaciones_llegan_al_pdf_solo_si_hay_texto(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->servicio->guardarObservaciones($uid, 'Pagará en dos partes.');
+        $contrato = $this->pdo->query("SELECT * FROM contratos WHERE uid = '{$uid}'")->fetch();
+        $terminos = json_decode((string) $this->pdo->query('SELECT terminos FROM versiones')->fetchColumn(), true);
+        $r = (new \Asocim\Contratos\Calculo\CalculadoraContrato())->calcular((new \ReflectionMethod($this->servicio, 'construirTerminos'))->invoke($this->servicio, $terminos));
+        $datosPdf = new \ReflectionMethod($this->servicio, 'datosPdf');
+        $this->assertSame('Pagará en dos partes.', $datosPdf->invoke($this->servicio, $contrato, $terminos, $r, 'Personal')['observaciones']);
+    }
+
     public function test_lista_filtrada_por_responsable(): void
     {
         $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];

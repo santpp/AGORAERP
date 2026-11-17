@@ -248,6 +248,7 @@ final class ContratoServicio
             'nombre' => mb_strtoupper($contrato['cliente_nombre']),
             'cedula' => $contrato['cliente_cedula'],
             'telefono' => $contrato['cliente_telefono'] ?? '',
+            'observaciones' => (string) ($contrato['observaciones'] ?? ''),
             'meses' => (string) $meses,
             'meses_texto' => Formato::palabras($meses),
             'precio' => Formato::dinero($r->precioCurso),

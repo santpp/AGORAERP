@@ -69,6 +69,19 @@ def subir_clausula_3(doc):
     p.draw_rect(pymupdf.Rect(473.6, 696, 568.9, 720), color=(0.9176, 0.9255, 0.9412), width=0.75)
 
 
+def pagina_observaciones(doc, texto, f_titulo, f_cuerpo):
+    """Página final con las observaciones internas. Solo existe si hay texto: sin observaciones el PDF no cambia."""
+    p = doc.new_page(-1, width=612, height=792)
+    escribir(p, (72, 90), "OBSERVACIONES", f_titulo, 11)
+    for tamano in (10, 9, 8):
+        alias = f"OBS{tamano}"
+        p.insert_font(fontname=alias, fontbuffer=f_cuerpo.buffer)
+        # Devuelve un número negativo si el texto no cabe: se prueba con letra más pequeña.
+        if p.insert_textbox(pymupdf.Rect(72, 110, 540, 720), texto, fontname=alias, fontsize=tamano, color=(0, 0, 0), lineheight=1.3) >= 0:
+            return
+    raise ValueError("Las observaciones son demasiado largas para una página.")
+
+
 def llenar(datos, salida, firma_png):
     doc = pymupdf.open(ORIGINAL)
     f_inter_r, f_inter_b = fuentes_inter()
@@ -190,5 +203,7 @@ def llenar(datos, salida, firma_png):
     # la página 2 quedó vacía: sus líneas y la caja de firma ya están en la página 1
     doc.delete_page(1)
     justificar(doc)
+    if datos.get("observaciones"):
+        pagina_observaciones(doc, datos["observaciones"], f_inter_b, f_var)
     doc.save(salida, garbage=3, deflate=True)
     doc.close()
