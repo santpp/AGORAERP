@@ -42,6 +42,21 @@ final class ContratoServicio
 
     // ------------------------------------------------------------------ GHL
 
+    /** Observaciones internas del convenio: solo se escriben mientras es borrador (antes de enviarlo). */
+    public function guardarObservaciones(string $uid, string $texto): void
+    {
+        $contrato = $this->contrato($uid);
+        $ultima = $this->ultimaVersion((int) $contrato['id']);
+        if ($ultima['estado'] !== 'BORRADOR') {
+            throw new ErrorContrato('Las observaciones se escriben antes de enviar el convenio.', 409);
+        }
+        $texto = trim($texto);
+        if (mb_strlen($texto) > 2000) {
+            throw new ErrorContrato('Las observaciones no pueden pasar de 2.000 caracteres.');
+        }
+        $this->pdo->prepare('UPDATE contratos SET observaciones = ? WHERE id = ?')->execute([$texto === '' ? null : $texto, $contrato['id']]);
+    }
+
     /**
      * Crea un borrador a partir del webhook de GHL. Si la misma clave llega otra vez, devuelve el existente.
      * @param array<string,mixed> $p
@@ -436,6 +451,7 @@ final class ContratoServicio
                 'telefono' => $contrato['cliente_telefono'] ?? '',
             ],
             'estado' => $ultima['estado'],
+            'observaciones' => (string) ($contrato['observaciones'] ?? ''),
             'version' => (int) $ultima['numero'],
             'calculo' => $this->calcular($ultima),
             'descuento' => (string) ($terminos['descuento'] ?? '0'),

@@ -100,6 +100,11 @@ final class Aplicacion
                 $this->servicio->actualizarCliente($m[1], $this->json($cuerpo));
                 return [200, ['ok' => true]];
             }
+            if ($metodo === 'POST' && preg_match('#^/api/contratos/([a-f0-9]{24})/observaciones$#', $ruta, $m)) {
+                $this->sesionDe($cabeceras, 'editar');
+                $this->servicio->guardarObservaciones($m[1], (string) ($this->json($cuerpo)['texto'] ?? ''));
+                return [200, ['ok' => true]];
+            }
             if (str_starts_with($ruta, '/api/contratos')) {
                 return $this->contratosApi($metodo, $ruta, $cabeceras, $cuerpo);
             }

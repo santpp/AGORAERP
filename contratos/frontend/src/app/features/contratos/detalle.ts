@@ -50,6 +50,8 @@ export class DetalleContrato implements OnInit {
   protected cambios: CambiosCalculo = { cuota: '', meses: 12, anio: this.anios[0], mes: 1, cuotas_por_mes: 1, cargos: [], descuento: '0' };
   protected inscripcion = '';
   protected readonly editandoCliente = signal(false);
+  protected readonly editandoObservaciones = signal(false);
+  protected textoObservaciones = '';
   protected datosCliente: DatosCliente = { nombre: '', cedula: '', telefono: '', correo: '' };
 
   protected readonly pdfTipo = signal<'enviado' | 'firmado'>('enviado');
@@ -128,6 +130,17 @@ export class DetalleContrato implements OnInit {
     }
     this.editarError.set('');
     this.editandoCliente.set(true);
+  }
+
+  protected abrirEdicionObservaciones(): void {
+    this.textoObservaciones = this.contrato()?.observaciones ?? '';
+    this.editarError.set('');
+    this.editandoObservaciones.set(true);
+  }
+
+  protected guardarObservaciones(): void {
+    this.editarError.set('');
+    this.accion(() => this.api.guardarObservaciones(this.uid, this.textoObservaciones), () => this.editandoObservaciones.set(false));
   }
 
   protected guardarCliente(): void {

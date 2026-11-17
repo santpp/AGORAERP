@@ -301,4 +301,30 @@ final class ServicioContratoTest extends TestCase
         $this->assertSame(2, $fila['version']);
         $this->assertSame('BORRADOR', $fila['estado']);
     }
+
+    public function test_observaciones_se_guardan_en_el_borrador_y_se_ven_en_el_detalle(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->assertSame('', $this->servicio->ver($uid)['observaciones']);
+        $this->servicio->guardarObservaciones($uid, '  Pagará la inscripción en dos partes.  ');
+        $this->assertSame('Pagará la inscripción en dos partes.', $this->servicio->ver($uid)['observaciones']);
+        $this->servicio->guardarObservaciones($uid, '   ');
+        $this->assertSame('', $this->servicio->ver($uid)['observaciones']);
+    }
+
+    public function test_observaciones_no_se_cambian_una_vez_enviado(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->servicio->guardarObservaciones($uid, 'Antes de enviar');
+        $this->servicio->enviar($uid);
+        $this->expectException(ErrorContrato::class);
+        $this->servicio->guardarObservaciones($uid, 'Después de enviar');
+    }
+
+    public function test_observaciones_tienen_limite_de_longitud(): void
+    {
+        $uid = $this->servicio->crearDesdeWebhook($this->webhook())['uid'];
+        $this->expectException(ErrorContrato::class);
+        $this->servicio->guardarObservaciones($uid, str_repeat('a', 2001));
+    }
 }

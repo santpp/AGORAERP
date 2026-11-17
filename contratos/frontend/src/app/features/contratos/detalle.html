@@ -199,6 +199,38 @@
   </section>
 
   <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
+      <h2>Observaciones</h2>
+      @if (puedeActuar() && c.estado === 'BORRADOR' && !editandoObservaciones()) {
+        <button type="button" class="boton-secundario" (click)="abrirEdicionObservaciones()">
+          {{ c.observaciones ? 'Editar' : 'Escribir' }}
+        </button>
+      }
+    </div>
+
+    @if (editandoObservaciones()) {
+      <form class="edicion" (ngSubmit)="guardarObservaciones()">
+        <mat-form-field appearance="outline">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput name="observaciones" rows="5" maxlength="2000" [(ngModel)]="textoObservaciones"></textarea>
+        </mat-form-field>
+        <p class="suave ayuda">Son internas: no aparecen en el convenio que firma el cliente.</p>
+        @if (editarError()) {
+          <p class="error" role="alert">{{ editarError() }}</p>
+        }
+        <div class="fila-botones">
+          <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">Guardar observaciones</button>
+          <button type="button" class="boton-secundario" (click)="editandoObservaciones.set(false)">Cancelar</button>
+        </div>
+      </form>
+    } @else if (c.observaciones) {
+      <p class="texto-observaciones">{{ c.observaciones }}</p>
+    } @else {
+      <p class="suave">Sin observaciones.</p>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
     <h2>Enlace de firma</h2>
 
     @switch (c.estado) {

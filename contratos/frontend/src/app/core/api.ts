@@ -47,6 +47,7 @@ export interface ContratoDetalle {
   estado: Estado;
   version: number;
   cliente: { nombre: string; correo: string; cedula: string; telefono: string };
+  observaciones: string;
   descuento: string;
   enlace: string | null;
   /** false si el servidor no tiene APP_CLAVE: el enlace solo se ve al generarlo. */
@@ -189,6 +190,10 @@ export class ApiService {
 
   restablecerClave(id: number, clave: string): Observable<unknown> {
     return this.http.post('/api/usuarios/clave', { id, clave }).pipe(catchError(mensajeDeError));
+  }
+
+  guardarObservaciones(uid: string, texto: string): Observable<unknown> {
+    return this.http.post(`/api/contratos/${uid}/observaciones`, { texto }).pipe(catchError(mensajeDeError));
   }
 
   actualizarCliente(uid: string, datos: DatosCliente): Observable<unknown> {
