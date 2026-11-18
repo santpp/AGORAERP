@@ -94,9 +94,9 @@ def poner_sellos_asocim(doc, f_var):
     """Sello y firma del Jefe de Ventas (sobre su nombre) y sello de Administración con la firma del Director de
     Finanzas (columna Firma/Sello de la tabla). Posiciones calibradas sobre convenio_original.pdf."""
     # Página 6: la columna «POR ASOCIM C.A», encima del nombre del personal.
-    # Dentro de la celda, a la derecha de «Firma y Sello Dir. Ventas».
-    poner_imagen(doc[5], pymupdf.Rect(462, 616, 508, 660), "sello-jefe-ventas.png")
-    poner_imagen(doc[5], pymupdf.Rect(508, 620, 550, 660), "firma-jefe-ventas.png")
+    # Dentro de la celda, bajo el nombre del personal y su leyenda.
+    poner_imagen(doc[5], pymupdf.Rect(312, 659, 358, 705), "sello-jefe-ventas.png")
+    poner_imagen(doc[5], pymupdf.Rect(360, 663, 400, 705), "firma-jefe-ventas.png")
     # Tabla (página del cronograma): columna Firma/Sello Admón, centrada en vertical y en horizontal.
     pa = doc[6]
     poner_imagen(pa, pymupdf.Rect(486, 392, 549, 455), "sello-administracion.png")
