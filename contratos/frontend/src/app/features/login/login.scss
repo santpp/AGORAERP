@@ -4,6 +4,7 @@
 $acento: #f86000;
 $marca: #1a1070;
 $negro: #07061a;
+// Pantalla de entrada en modo claro: el panel de logos conserva su imagen; el formulario va en claro.
 
 .acceso {
   position: relative;
@@ -13,7 +14,7 @@ $negro: #07061a;
   min-height: 100dvh;
   padding: 32px 20px;
   overflow: hidden;
-  background: $negro;
+  background: var(--bg);
 }
 
 // Halo borroso de color detrás de la tarjeta, como en la referencia.
@@ -26,6 +27,7 @@ $negro: #07061a;
     radial-gradient(35% 40% at 60% 10%, rgba(26, 16, 112, 0.7), transparent 70%);
   filter: blur(70px);
   animation: respirar 14s ease-in-out infinite alternate;
+  display: none;
 }
 
 @keyframes respirar {
@@ -45,10 +47,10 @@ $negro: #07061a;
   max-width: 1040px;
   min-height: 620px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line);
   border-radius: 22px;
-  background: $negro;
-  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6);
+  background: var(--paper);
+  box-shadow: var(--sombra-media);
   animation: aparecer 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
@@ -167,10 +169,7 @@ $negro: #07061a;
   display: grid;
   place-items: center;
   padding: 40px 32px;
-  background:
-    linear-gradient(90deg, transparent 0%, rgba(248, 96, 0, 0.08) 34%, rgba(88, 60, 230, 0.14) 62%, transparent 100%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 58px),
-    $negro;
+  background: var(--paper);
 }
 
 .formulario-columna {
@@ -195,13 +194,13 @@ $negro: #07061a;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--ink);
 }
 
 .subtitulo {
   margin: 8px 0 28px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .formulario {
@@ -218,7 +217,7 @@ $negro: #07061a;
 .campo__etiqueta {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--muted);
 }
 
 .campo input {
@@ -227,10 +226,10 @@ $negro: #07061a;
   min-width: 0;
   height: 44px;
   padding: 0 14px;
-  border: 1px solid #2b2942;
+  border: 1px solid var(--line-strong);
   border-radius: 8px;
-  background: #0d0c1f;
-  color: #fff;
+  background: var(--paper);
+  color: var(--ink);
   font: inherit;
   font-size: 15px; // evita el zoom automático en iOS
   outline: none;
@@ -247,10 +246,10 @@ $negro: #07061a;
 .error {
   margin: 0;
   font-size: 13px;
-  color: #ffb8a6;
+  color: var(--brand);
 }
 
-// Botón con degradado de la marca: naranja a azul, texto blanco.
+// Botón con los colores de ASOCIM (naranja a azul), texto blanco.
 .entrar {
   box-sizing: border-box;
   width: 100%;
@@ -258,7 +257,7 @@ $negro: #07061a;
   margin-top: 6px;
   border: 0;
   border-radius: 8px;
-  background: var(--brand);
+  background: linear-gradient(90deg, #f86000 0%, #b43a4a 55%, #1a1070 100%);
   color: #fff;
   font: inherit;
   font-size: 15px;

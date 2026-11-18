@@ -56,55 +56,6 @@ html {
   --mat-sys-background: var(--bg);
 }
 
-// Modo oscuro: nunca negro puro.
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --ink: #e6e8f0;
-    --muted: #9aa0b4;
-    --subtle: #9aa0b4;
-    --brand: #d13c63;
-    --brand-soft: #2b1b25;
-    --navy: #c9cdea;
-    --gold-soft: #3a3020;
-    --gold-ink: #f0c66a;
-    --success: #6fcf97;
-    --success-soft: #1d2e25;
-    --info: #8fb4ff;
-    --info-soft: #1d2540;
-    --paper: #1b1f2c;
-    --bg: #12151f;
-    --surface: #232838;
-    --line: #2f3445;
-    --line-strong: #3d4459;
-    --sombra-pequena: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --sombra-media: 0 8px 24px rgba(0, 0, 0, 0.45);
-    --sombra-grande: 0 16px 40px rgba(0, 0, 0, 0.5);
-    --mat-sys-on-primary: #12151f;
-    --mat-sys-surface: var(--paper);
-    --mat-sys-on-surface: var(--ink);
-  }
-}
-
-:root[data-theme='dark'] {
-  --ink: #e6e8f0;
-  --muted: #9aa0b4;
-  --subtle: #9aa0b4;
-  --brand: #d13c63;
-  --brand-soft: #2b1b25;
-  --navy: #c9cdea;
-  --gold-soft: #3a3020;
-  --gold-ink: #f0c66a;
-  --success: #6fcf97;
-  --success-soft: #1d2e25;
-  --info: #8fb4ff;
-  --info-soft: #1d2540;
-  --paper: #1b1f2c;
-  --bg: #12151f;
-  --surface: #232838;
-  --line: #2f3445;
-  --line-strong: #3d4459;
-}
-
 html,
 body {
   margin: 0;
