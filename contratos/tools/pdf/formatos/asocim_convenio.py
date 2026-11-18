@@ -94,15 +94,16 @@ def poner_sellos_asocim(doc, f_var):
     """Sello y firma del Jefe de Ventas (sobre su nombre) y sello de Administración con la firma del Director de
     Finanzas (columna Firma/Sello de la tabla). Posiciones calibradas sobre convenio_original.pdf."""
     # Página 6: la columna «POR ASOCIM C.A», encima del nombre del personal.
-    poner_imagen(doc[5], pymupdf.Rect(386, 547, 434, 592), "sello-jefe-ventas.png")
-    poner_imagen(doc[5], pymupdf.Rect(432, 551, 470, 592), "firma-jefe-ventas.png")
-    # Tabla (página del cronograma): columna Firma/Sello Admón, bajo las filas con datos.
+    # Dentro de la celda, a la derecha de «Firma y Sello Dir. Ventas».
+    poner_imagen(doc[5], pymupdf.Rect(462, 616, 508, 660), "sello-jefe-ventas.png")
+    poner_imagen(doc[5], pymupdf.Rect(508, 620, 550, 660), "firma-jefe-ventas.png")
+    # Tabla (página del cronograma): columna Firma/Sello Admón, centrada en vertical y en horizontal.
     pa = doc[6]
-    poner_imagen(pa, pymupdf.Rect(486, 532, 548, 594), "sello-administracion.png")
-    poner_imagen(pa, pymupdf.Rect(481, 596, 553, 656), "firma-director-finanzas.png")
+    poner_imagen(pa, pymupdf.Rect(486, 392, 549, 455), "sello-administracion.png")
+    poner_imagen(pa, pymupdf.Rect(481, 458, 554, 517), "firma-director-finanzas.png")
     texto = "MSc. Carlos E. Morgado Ramírez\nDirector de Finanzas y Administración ASOCIM"
     pa.insert_font(fontname="OSV", fontbuffer=f_var.buffer)
-    pa.insert_textbox(pymupdf.Rect(470, 660, 566, 706), texto, fontname="OSV", fontsize=8, align=1, color=(0, 0, 0))
+    pa.insert_textbox(pymupdf.Rect(470, 520, 566, 566), texto, fontname="OSV", fontsize=8, align=1, color=(0, 0, 0))
 
 
 def llenar(datos, salida, firma_png):
