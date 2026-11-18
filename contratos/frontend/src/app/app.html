@@ -20,6 +20,17 @@
   </header>
 }
 
+ @if (embebido && !enEntrar() && sesion.usuario(); as usuario) {
+  <nav class="navegacion-incrustada" aria-label="Principal">
+    <a routerLink="/contratos" routerLinkActive="activo" class="barra__enlace">Contratos</a>
+    @if (usuario.rol === 'ADMIN') {
+      <a routerLink="/usuarios" routerLinkActive="activo" class="barra__enlace">Personas</a>
+      <a routerLink="/registro" routerLinkActive="activo" class="barra__enlace">Registro</a>
+    }
+    <button type="button" class="barra__enlace" (click)="salir()">Salir</button>
+  </nav>
+}
+
 <main class="contenido" [class.completo]="enEntrar()" [class.incrustado]="embebido">
   <router-outlet />
 </main>

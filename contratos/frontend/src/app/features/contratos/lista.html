@@ -18,7 +18,7 @@
     <input matInput type="search" name="busqueda" [(ngModel)]="busqueda" (ngModelChange)="alBuscar($event)" />
   </mat-form-field>
 
-  <mat-button-toggle-group class="filtros" [value]="filtro()" (change)="filtro.set($event.value)" aria-label="Filtrar por estado">
+  <mat-button-toggle-group class="filtros" [value]="filtro()" (change)="cambiarFiltro($event.value)" aria-label="Filtrar por estado">
     <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
     <mat-button-toggle value="BORRADOR">Borradores ({{ conteos().BORRADOR }})</mat-button-toggle>
     <mat-button-toggle value="ENVIADO">Enviados ({{ conteos().ENVIADO }})</mat-button-toggle>
@@ -42,7 +42,7 @@
   <p class="suave">Ningún contrato coincide con la búsqueda o el filtro.</p>
 } @else {
   <ul class="lista">
-    @for (c of visibles(); track c.uid) {
+    @for (c of mostrados(); track c.uid) {
       <li>
         <a class="fila" [routerLink]="['/contratos', c.uid]">
           <span class="fila__principal">
@@ -57,4 +57,11 @@
       </li>
     }
   </ul>
+  @if (visibles().length > mostrados().length) {
+    <div class="mas">
+      <button type="button" class="boton-secundario" (click)="cargarMas()">
+        Cargar más ({{ visibles().length - mostrados().length }} restantes)
+      </button>
+    </div>
+  }
 }

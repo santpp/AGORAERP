@@ -28,6 +28,9 @@ export class ListaContratos implements OnInit {
   protected readonly contratos = signal<ContratoResumen[]>([]);
   protected readonly filtro = signal<Filtro>('TODOS');
   protected busqueda = '';
+  /** Se muestran de a poco: «Cargar más» añade la siguiente tanda. */
+  protected readonly tanda = 20;
+  protected readonly mostrando = signal(this.tanda);
 
   protected readonly visibles = computed(() => {
     const texto = this.busquedaActual().toLowerCase();
@@ -35,6 +38,8 @@ export class ListaContratos implements OnInit {
       .filter((c) => this.filtro() === 'TODOS' || c.estado === this.filtro())
       .filter((c) => texto === '' || c.cliente.toLowerCase().includes(texto) || c.correo.toLowerCase().includes(texto));
   });
+
+  protected readonly mostrados = computed(() => this.visibles().slice(0, this.mostrando()));
 
   private readonly busquedaActual = signal('');
 
@@ -68,5 +73,15 @@ export class ListaContratos implements OnInit {
 
   protected alBuscar(valor: string): void {
     this.busquedaActual.set(valor);
+    this.mostrando.set(this.tanda);
+  }
+
+  protected cambiarFiltro(valor: Filtro): void {
+    this.filtro.set(valor);
+    this.mostrando.set(this.tanda);
+  }
+
+  protected cargarMas(): void {
+    this.mostrando.update((n) => n + this.tanda);
   }
 }

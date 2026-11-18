@@ -107,3 +107,20 @@
     justify-content: space-between;
   }
 }
+
+.mas {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+
+  .boton-secundario {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 600px) {
+  .mas .boton-secundario {
+    width: auto;
+  }
+}
