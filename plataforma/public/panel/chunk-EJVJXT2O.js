@@ -1,0 +1,1 @@
+var n=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],o=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];function i(e,r){return`${o[r-1]} 1, ${e}`}export{n as a,i as b};

@@ -1,0 +1,181 @@
+// Cabecera: fondo paper, borde 1 px y el logo a la izquierda.
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 64px;
+  padding: 8px 16px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.marca__logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.marca__area {
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.barra__nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.barra__enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+
+  &:hover {
+    color: var(--brand);
+  }
+
+  &.activo {
+    background: var(--brand-soft);
+    color: var(--brand);
+  }
+}
+
+.barra__usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.barra__nombre {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.barra__salir {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+}
+
+// Cada página entra con el mismo movimiento que la pantalla de entrada.
+.contenido > * {
+  animation: asentar 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.contenido {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+
+  &.completo {
+    max-width: none;
+    padding: 0;
+  }
+
+  // Dentro de Ágora: sin cabecera propia; respeta la zona segura del teléfono.
+  &.incrustado {
+    padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1200px) {
+  .contenido {
+    max-width: 960px;
+  }
+}
+
+// En el teléfono, la navegación pasa a una barra inferior, como en Ágora.
+@media (max-width: 599px) {
+  .marca__area {
+    display: none;
+  }
+
+  .barra {
+    padding-bottom: 8px;
+  }
+
+  .barra__nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    order: 3;
+    justify-content: space-around;
+    margin: 0;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+  }
+
+  .barra__enlace {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .barra__usuario {
+    margin-left: auto;
+  }
+
+  .contenido:not(.completo) {
+    padding-bottom: 96px;
+  }
+}
+
+// Dentro de Ágora se oculta la cabecera propia, pero se conserva la navegación (y Salir) abajo.
+.navegacion-incrustada {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+
+  .barra__enlace {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+}

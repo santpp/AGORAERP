@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Acuerdo privado de prestación de servicios educativos</title>
+<style>
+  /* Medidas de página carta (8,5 x 11 pulgadas) a 96 px por pulgada */
+  @page { size: 8.5in 11in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; color: #111; font-size: 10.6pt; line-height: 1.75; }
+  .pagina { width: 8.5in; height: 11in; position: relative; overflow: hidden; padding: 0.55in 0.62in 1.15in; page-break-after: always; background: #fff; }
+  .pagina:last-child { page-break-after: auto; }
+  .marca-agua { position: absolute; left: 50%; top: 42%; width: 4.6in; transform: translate(-50%, -50%); opacity: 0.09; pointer-events: none; }
+  .encabezado { display: flex; align-items: center; gap: 0.25in; height: 1.05in; border-bottom: 3px solid #1A1070; margin-bottom: 0.3in; }
+  .encabezado img { width: 1.55in; }
+  .encabezado h1 { font-size: 12.4pt; font-weight: 700; line-height: 1.35; color: #111; }
+  .pie { position: absolute; left: 0; right: 0; bottom: 0; height: 0.78in; }
+  .pie .texto { text-align: center; font-size: 6.6pt; font-weight: 700; color: #1A1070; padding-top: 6px; letter-spacing: .2px; }
+  .pie .barra { position: absolute; left: 0; right: 0; bottom: 0; height: 0.44in; display: flex; background: #E8552B; color: #fff; font-size: 7pt; align-items: center; }
+  .pie .barra .azul { position: absolute; right: 0; top: 0; bottom: 0; width: 2.1in; background: #1A1070; }
+  .pie .barra span { position: relative; padding-left: 0.5in; }
+  .num { position: absolute; right: 0.25in; bottom: 0.1in; font-size: 6.5pt; color: #fff; z-index: 2; }
+  p { text-align: justify; margin-bottom: 0.08in; }
+  .c { font-weight: 700; margin: 0.22in 0 0.05in; }
+  .lista p { margin-left: 0.2in; }
+  .n { font-weight: 700; }
+  table.datos { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 0.1in 0; }
+  table.datos th, table.datos td { border: 1px solid #222; padding: 6px 7px; text-align: center; vertical-align: middle; }
+  table.datos th { font-weight: 700; background: #f2f2f2; }
+  table.cronograma { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 0.15in; }
+  table.cronograma th, table.cronograma td { border: 1px solid #222; padding: 7px 8px; text-align: center; }
+  table.cronograma th { background: #f2f2f2; font-weight: 700; }
+  .firma { position: relative; display: block; border: 1px solid #bbb; border-radius: 3px; background: #fff; margin: 0.12in 0; }
+  .firma .rotulo { position: absolute; right: 6px; bottom: 4px; font-size: 8pt; color: #999; }
+  .firma img { position: absolute; }
+  .firma-estudiante { width: 100%; height: 0.6in; }
+  .firma-clausula9 { width: 2.1in; height: 0.5in; margin-left: auto; }
+  .firma-pagina2 { width: 2.1in; height: 0.5in; margin-left: auto; }
+  .fecha-firma { font-size: 8pt; color: #333; margin-top: 4px; }
+  .lugar { margin-top: 0.2in; }
+  .fila-firmas td { vertical-align: top; text-align: left; padding: 8px 10px; }
+  .fila-firmas th { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"><h1>ACUERDO PRIVADO DE PRESTACIÓN DE SERVICIOS<br>EDUCATIVOS (CONVENIO DE PAGO)</h1></div>
+  <p>Yo, <b>{{estudiante_nombre}}</b>, titular de la cédula de identidad No. <b>{{estudiante_cedula}}</b>, en lo sucesivo denominado EL ESTUDIANTE/REPRESENTANTE, declaro formalizar el contrato de servicio educativo privado con <b>ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES ASOCIM, C.A.</b>, RIF: J-50207138-5, en lo sucesivo denominada LA INSTITUCIÓN. El programa tendrá una duración de <b>{{meses_texto}} ({{meses}}) meses</b>, y su precio total debe ser cancelado íntegramente de acuerdo a la forma y términos de pago establecidos por la institución. Por medio de este documento, en pleno uso de mis facultades, suscribo y ME COMPROMETO, a regirme por los siguientes términos y condiciones de pago:</p>
+  <p class="c">CLÁUSULA 1: OBJETO Y PRECIO DEL SERVICIO</p>
+  <p>EL ESTUDIANTE/REPRESENTANTE adquiere un compromiso mercantil con LA INSTITUCIÓN por la prestación de un servicio educativo. El precio total de $ {{precio_curso}} será cancelado mediante las cuotas mensuales establecidas de ${{cuota_mensual}} dólares americanos o su equivalente en Bolívares (Bs.) a la tasa oficial del Banco Central de Venezuela (BCV). Este monto no incluye el arancel de inscripción de {{inscripcion}}$, las actividades acreditables extemporáneas, constancias ni los gastos administrativos de grado, los cuales serán facturados por separado.</p>
+  <p class="c">CLÁUSULA 2: FORMA Y TÉRMINO DE PAGO</p>
+  <p>El Precio Total del Curso podrá ser cancelado por EL ESTUDIANTE/REPRESENTANTE de la siguiente manera:</p>
+  <div class="lista">
+    <p><b>A. Pago de Contado:</b> Mediante el pago total del curso al inicio del mismo.</p>
+    <p><b>B. Pago Fraccionado Mensual:</b> En cuotas mensuales, a opción de EL ESTUDIANTE/REPRESENTANTE, con las siguientes modalidades:</p>
+    <p><b>1. Una (1) Cuota</b>: Con vencimiento los días treinta (30) de cada mes.</p>
+    <p><b>2. Dos (2) Cuotas</b>: Con vencimiento los días quince (15) y treinta (30) de cada mes.</p>
+    <p><b>3. Cuatro (4) Cuotas:</b> Con vencimiento los días viernes de cada mes, de conformidad con el calendario vigente de LA INSTITUCIÓN.</p>
+  </div>
+  <p class="c">CLÁUSULA 3: PLAZO DE GRACIA Y RECARGO POR MORA</p>
+  <p>Una vez cumplida la fecha de vencimiento de la respectiva cuota o mensualidad, EL ESTUDIANTE/REPRESENTANTE dispondrá de un Plazo de Gracia de cinco (5) días continuos para realizar el pago correspondiente sin que se generen intereses de mora. En caso de que EL ESTUDIANTE/REPRESENTANTE incumpla con el pago de la cuota dentro del lapso
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p>establecido (incluido el Plazo de Gracia), se generará automáticamente un recargo por mora equivalente a {{mora_palabras}} ($ {{mora}}). Dicho monto será pagadero en Bolívares (Bs.) a la tasa de cambio oficial publicada por el Banco Central de Venezuela (BCV) para la fecha efectiva del pago.</p>
+  <div class="firma firma-pagina2" data-firma="cliente-p2"><span class="rotulo">Firma</span></div>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p class="c">CLÁUSULA 4: MÉTODOS Y PROCEDIMIENTO DE PAGO</p>
+  <p>EL ESTUDIANTE/REPRESENTANTE podrá realizar el pago del curso utilizando cualquiera de los siguientes métodos:</p>
+  <p><b>A. Pago Presencial en la Sede Administrativa</b></p>
+  <p>El pago puede efectuarse directamente en la taquilla administrativa de la sede de LA INSTITUCIÓN mediante los siguientes instrumentos:</p>
+  <p><b>1. Punto de Venta:</b> Pago con tarjeta de débito o crédito nacional.</p>
+  <p><b>2. Efectivo:</b> Consignación de efectivo en Bolívares (Bs.) o Divisas (dólares americanos).</p>
+  <p><b>B. Pagos Electrónicos Nacionales (Bolívares)</b></p>
+  <p>Los pagos mediante transferencia bancaria y Pago Móvil se realizarán exclusivamente a la tasa de cambio oficial del Banco Central de Venezuela (BCV) vigente para la fecha de la operación, y deben ser efectuados a los siguientes datos:</p>
+  <table class="datos">
+    <tr><th>Método</th><th>Banco</th><th>Tipo de Cuenta</th><th>Número de Cuenta</th><th>RIF del Beneficiario</th></tr>
+    <tr><td>Transferencia Bancaria</td><td>Banco Nacional de Crédito (BNC)</td><td>Cuenta Corriente</td><td>0191-0080-46-2180200141</td><td>J-50207138-5</td></tr>
+    <tr><td>Pago Móvil</td><td>Banco Nacional de Crédito (BNC)</td><td>NA</td><td>0424-3598339</td><td>J-50207138-5</td></tr>
+    <tr><td colspan="2">Beneficiario</td><td colspan="3">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES ASOCIM C.A.</td></tr>
+  </table>
+  <p><b>C. Pagos en Divisas (Internacionales):</b></p>
+  <div class="lista">
+    <p>• <b>Plataforma:</b> Zelle</p>
+    <p>• <b>Nombre del Titular:</b> Catherine Sánchez</p>
+    <p>• <b>Correo Electrónico:</b> cathysanchez78@hotmail.com</p>
+    <p>• <b>Paypal:</b> casare78@gmail.com</p>
+  </div>
+  <p><b>D. Reporte y Actualización del Pago</b></p>
+  <p>EL ESTUDIANTE/REPRESENTANTE tiene la obligación de reportar de manera inmediata cualquier pago realizado por vía electrónica (transferencia, Pago Móvil o Zelle) enviando el comprobante correspondiente al número telefónico 0424-3598339. El reporte de pagos debe efectuarse dentro del horario laboral de LA INSTITUCIÓN, comprendido de lunes a sábado entre las 8:00 a.m. y las 4:30 p.m. (Hora de Venezuela).</p>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p><b>Parágrafo Único:</b> En caso de que el pago en Bolívares no sea reportado y verificado dentro del horario laboral del mismo día de la operación, LA INSTITUCIÓN procederá a actualizar el monto aplicando la tasa BCV vigente del día y la hora efectiva de su reporte y verificación, asumiendo EL ESTUDIANTE/REPRESENTANTE cualquier diferencia que pudiera resultar de dicha actualización.</p>
+  <p class="c">CLÁUSULA 5: SUSPENSIÓN TEMPORAL (CONGELACIÓN) DE ESTUDIOS</p>
+  <p><b>5.1. Naturaleza del Plan de Pago:</b> El monto acordado en el presente contrato corresponde al valor total e integral del programa de inglés. Para facilidad de EL ESTUDIANTE/REPRESENTANTE, dicho monto ha sido dividido en cuotas mensuales de financiamiento. En consecuencia, el compromiso de pago es continuo e ininterrumpido hasta saldar la totalidad del costo del programa, independientemente del ritmo de asistencia o avance académico.</p>
+  <p><b>5.2. Calendario Académico Continuo:</b> Las actividades académicas se imparten los doce (12) meses del año. El mes de agosto y los períodos vacacionales escolares no constituyen meses libres ni eximen del pago correspondiente; por ende, las cuotas mensuales deben cancelarse puntualmente conforme al cronograma establecido.</p>
+  <p><b>5.3. Solicitud de Congelación Académica:</b> Si EL ESTUDIANTE/REPRESENTANTE requiere suspender temporalmente sus clases por cualquier circunstancia personal o vacacional, deberá notificarlo formalmente por escrito a la Dirección de Administración. La congelación únicamente pausa el avance académico, no la obligación de pago. EL ESTUDIANTE/REPRESENTANTE deberá mantenerse al día con sus cuotas mensuales fijadas en el plan de financiamiento inicial.</p>
+  <p><b>5.4. Reincorporación y Extensión de Estudios:</b> Al congelar el curso, la institución garantiza a EL ESTUDIANTE el derecho de reincorporarse a sus clases en el momento en que sus condiciones se lo permitan, sujeto a la disponibilidad de grupos y niveles, bajo las siguientes condiciones:</p>
+  <p><b>Estar al día con los pagos:</b> Para efectivizar la reincorporación a clases, EL ESTUDIANTE/REPRESENTANTE deberá estar al día con las cuotas del plan de financiamiento.</p>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p><b>Garantía de precio total sin cargos extra:</b> Si debido a la suspensión el tiempo total de estudio se extiende más allá del plazo proyectado originalmente, una vez que EL ESTUDIANTE/REPRESENTANTE haya completado el pago del costo total del programa, no tendrá que realizar ningún pago adicional ni abonar cuotas extras, manteniendo su derecho a cursar los módulos pendientes hasta culminar su formación.</p>
+  <p><b>5.5. Reprobación de Nivel o Módulo:</b> El plan de financiamiento original cubre cursar cada nivel o módulo del programa una sola vez. En caso de que EL ESTUDIANTE no alcance la nota mínima de aprobación requerida y deba cursar nuevamente un nivel o módulo (reprobación), dicho cursado extraordinario no está incluido en el precio total inicial. En este supuesto, EL ESTUDIANTE/REPRESENTANTE deberá realizar un pago adicional equivalente al valor de la mensualidad o costo del módulo vigente al momento de su repetición para poder cursarlo de nuevo.</p>
+  <p><b>5.6. Rescisión del Contrato:</b> En caso de que EL ESTUDIANTE/REPRESENTANTE decida no continuar con el programa y prefiera no mantener la congelación, podrá solicitar la rescisión formal y definitiva del contrato mediante notificación escrita a la Dirección de Administración. La rescisión detendrá la generación de cuotas mensuales futuras a partir de la fecha de su aprobación formal; no obstante, el estudiante perderá el derecho a retomar o cursar los módulos pendientes y la institución no realizará reembolso de las cuotas o importes abonados con anterioridad.</p>
+  <p class="c">CLÁUSULA 6: INCUMPLIMIENTO Y SUSPENSIÓN ACADÉMICA</p>
+  <p>El incumplimiento de la obligación de pago, una vez vencido el Plazo de Gracia y generados los recargos por mora, facultará a LA INSTITUCIÓN para emitir una Notificación de Cobro y Requerimiento de Pago (aviso de cobro) a EL ESTUDIANTE/REPRESENTANTE. La falta de pago efectivo tras la referida notificación tendrá como consecuencia la suspensión inmediata de EL ESTUDIANTE del programa académico. Mientras persista la insolvencia administrativa, EL ESTUDIANTE quedará inhabilitado para:</p>
+  <div class="lista">
+    <p><b>1. Acceder a las aulas o plataformas virtuales.</b></p>
+    <p><b>2. Continuar el proceso de formación.</b></p>
+    <p><b>3. Presentar exámenes/proyectos de fin de lapso.</b></p>
+    <p><b>4. Optar a la graduación o a la certificación del programa.</b></p>
+    <p><b>5. Asistir a eventos, talleres o actividades especiales de LA INSTITUCIÓN</b></p>
+  </div>
+  <p>Los derechos y el acceso al programa se restablecerán inmediatamente una vez que EL ESTUDIANTE/REPRESENTANTE haya cancelado la totalidad de los montos adeudados y obtenido la Solvencia Administrativa correspondiente de LA INSTITUCIÓN.</p>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p class="c">CLÁUSULA 7: VARIACIÓN DE LAS OBLIGACIONES POR DESEMPEÑO ACADÉMICO</p>
+  <p>En el supuesto de que EL ESTUDIANTE deba repetir alguna asignatura, nivel, o se produzca un atraso en su prosecución académica, las cuotas correspondientes a dichos meses o períodos de extensión serán recalculadas conforme al precio vigente y anexadas al presente Convenio mediante la suscripción de la Adenda correspondiente.</p>
+  <p class="c">CLÁUSULA 8: MODIFICACIÓN DE DESCUENTOS Y/O BENEFICIOS</p>
+  <p>Al momento de generarse la segunda recarga por morosidad debido al incumplimiento reiterativo del compromiso de pago, a EL ESTUDIANTE/REPRESENTANTE le serán suspendidos los descuentos y/o beneficios otorgados en cualquiera de sus modalidades.</p>
+  <p class="c">CLÁUSULA 9: MODIFICACIÓN DEL PRECIO Y MECANISMO DE ADENDA</p>
+  <p>Cualquier incremento o modificación en el monto de las cuotas o mensualidades del programa académico será notificado a EL ESTUDIANTE/REPRESENTANTE y se incorporará al presente acuerdo mediante la suscripción de una Adenda que formará parte integral de este Convenio.</p>
+  <div class="firma firma-clausula9" data-firma="cliente-clausula9"><span class="rotulo">Firma</span></div>
+  <p class="c">CLÁUSULA 10: ACEPTACIÓN Y COMPROMISO</p>
+  <p>EL ESTUDIANTE/REPRESENTANTE declara expresamente que ha leído, entendido y acepta en todas y cada una de sus partes el contenido del presente Convenio de Pago, y se compromete formalmente con el cumplimiento de todas las obligaciones aquí estipuladas.</p>
+  <p>Valor de la Inscripcion: {{inscripcion}}$<br>Descuento 1.ª Cuota: {{descuento_primera}}%<br>Modalidad de Pago Elegida: <b>{{modalidad}}</b></p>
+  <p class="c">CIERRE Y FIRMAS</p>
+  <p>En la ciudad de Maracay, a los {{fecha_dia}} días del mes de {{fecha_mes}} del año {{fecha_anio}}</p>
+  <table class="datos">
+    <tr><th style="width:50%">ESTUDIANTE/REPRESENTANTE</th><th>POR ASOCIM C.A</th></tr>
+    <tr class="fila-firmas">
+      <td style="height:1.3in">{{estudiante_nombre}}<br>{{estudiante_cedula}} {{estudiante_telefono}}
+        <div class="firma firma-estudiante" data-firma="cliente-estudiante"><span class="rotulo">Firma</span></div></td>
+      <td style="height:1.3in">{{staff_nombre}}<br>Firma y Sello Dir. Ventas</td>
+    </tr>
+  </table>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<!-- ==== PÁGINA ==== -->
+<section class="pagina ">
+  <img class="marca-agua" src="logo.png" alt="">
+  <div class="encabezado"><img src="logo.png" alt="ASOCIM"></div>
+  <p style="text-align:center;font-weight:700;margin-top:0.35in">ANEXO ÚNICO: CONTROL MANUAL DE PAGOS</p>
+  <p style="margin-top:0.25in">Este anexo complementa el Convenio de Pago y sirve como registro digital de la modalidad de pago elegida por EL ESTUDIANTE/REPRESENTANTE y la consecuente imputación de los pagos recibidos, en consonancia con la <b>Cláusula 2 (Forma y Término de Pago)</b>.</p>
+  <p style="margin-top:0.15in"><b>Modalidad de Pago Elegida:</b> {{modalidad}}.</p>
+  <div class="pie"><div class="texto">ACADEMIC &amp; SOCIOCULTURAL INSTITUTE OF MODERN LANGUAGES RIF: J-50207138-5<br>Av. Las Delicias, Qta. Nro. 02 urb. La Soledad, Maracay, Estado Aragua</div>
+    <div class="barra"><span>Contacto: +58 4243580404 · www.asocimidiomas.com · @asocim_</span><div class="azul"></div></div></div>
+</section>
+
+<section class="pagina tabla-final">
+  <table class="cronograma">
+    <tr><th style="width:12%">N.º Mes</th><th style="width:30%">Mes</th><th style="width:18%">Año</th><th style="width:25%">Modalidad del Pago del Mes (Cuotas)</th><th>Firma/Sello Admón.</th></tr>
+    {{#cronograma}}
+    <tr><td>{{n}}</td><td>{{mes}}</td><td>{{anio}}</td><td><b>{{modalidad_mes}}</b></td><td></td></tr>
+    {{/cronograma}}
+  </table>
+</section>
+
+</body>
+</html>

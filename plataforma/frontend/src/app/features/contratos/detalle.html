@@ -1,0 +1,261 @@
+<nav class="volver">
+  <a routerLink="/contratos">← Contratos</a>
+</nav>
+
+@if (cargando()) {
+  <p class="suave">Cargando contrato…</p>
+} @else if (error()) {
+  <div class="tarjeta">
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" class="boton-secundario" (click)="cargar()">Intentar de nuevo</button>
+  </div>
+} @else if (contrato(); as c) {
+  <section class="cabecera tarjeta">
+    <div>
+      <h1>{{ c.cliente.nombre }}</h1>
+      <p class="suave">{{ c.cliente.correo }} · Versión {{ c.version }}</p>
+    </div>
+    <span class="estado estado--{{ c.estado.toLowerCase() }}">{{ etiqueta(c.estado) }}</span>
+  </section>
+
+  <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
+      <h2>Cliente</h2>
+      @if (puedeActuar() && c.estado === 'BORRADOR' && !editandoCliente()) {
+        <button type="button" class="boton-secundario" (click)="abrirEdicionCliente()">Corregir datos</button>
+      }
+    </div>
+
+    @if (editandoCliente()) {
+      <form class="edicion" (ngSubmit)="guardarCliente()">
+        <div class="edicion__campos">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre completo</mat-label>
+            <input matInput name="nombre" required [(ngModel)]="datosCliente.nombre" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Cédula</mat-label>
+            <input matInput name="cedula" required [(ngModel)]="datosCliente.cedula" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput name="telefono" inputmode="tel" [(ngModel)]="datosCliente.telefono" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Correo</mat-label>
+            <input matInput type="email" name="correo" required [(ngModel)]="datosCliente.correo" />
+          </mat-form-field>
+        </div>
+        @if (editarError()) {
+          <p class="error" role="alert">{{ editarError() }}</p>
+        }
+        <div class="fila-botones">
+          <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">Guardar datos</button>
+          <button type="button" class="boton-secundario" (click)="editandoCliente.set(false)">Cancelar</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="resumen">
+        <div><dt>Nombre</dt><dd>{{ c.cliente.nombre }}</dd></div>
+        <div><dt>Cédula</dt><dd>{{ c.cliente.cedula }}</dd></div>
+        <div><dt>Teléfono</dt><dd>{{ c.cliente.telefono || '—' }}</dd></div>
+        <div><dt>Correo</dt><dd>{{ c.cliente.correo }}</dd></div>
+      </dl>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
+      <h2>Cálculo</h2>
+      @if (puedeActuar() && c.estado !== 'FIRMADO' && !editando()) {
+        <button type="button" class="boton-secundario" (click)="abrirEdicion()">Editar cálculo</button>
+      }
+    </div>
+
+    @if (editando()) {
+      <form class="edicion" (ngSubmit)="guardarEdicion()">
+        @if (c.estado !== 'BORRADOR') {
+          <p class="suave">Este convenio ya fue enviado. Guardar crea la versión {{ c.version + 1 }} y el enlace actual deja de servir.</p>
+        }
+        <div class="edicion__campos">
+          <mat-form-field appearance="outline">
+            <mat-label>Cuota mensual</mat-label>
+            <input matInput name="cuota" required inputmode="decimal" [(ngModel)]="cambios.cuota" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Meses</mat-label>
+            <input matInput type="number" name="meses" min="1" max="20" required [(ngModel)]="cambios.meses" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Año de inicio</mat-label>
+            <mat-select name="anio" [(ngModel)]="cambios.anio">
+              @for (a of anios; track a) {
+                <mat-option [value]="a">{{ a }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Mes de inicio</mat-label>
+            <mat-select name="mes" [(ngModel)]="cambios.mes">
+              @for (m of meses; track m; let i = $index) {
+                <mat-option [value]="i + 1">{{ m }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Cuotas por mes</mat-label>
+            <mat-select name="cuotas_por_mes" [(ngModel)]="cambios.cuotas_por_mes">
+              <mat-option [value]="1">1 cuota</mat-option>
+              <mat-option [value]="2">2 cuotas</mat-option>
+              <mat-option [value]="4">4 cuotas</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Valor de la inscripción</mat-label>
+            <input matInput name="inscripcion" inputmode="decimal" [(ngModel)]="inscripcion" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Descuento 1.ª cuota (%)</mat-label>
+            <input matInput name="descuento" inputmode="decimal" [(ngModel)]="cambios.descuento" />
+          </mat-form-field>
+        </div>
+        @if (editarError()) {
+          <p class="error" role="alert">{{ editarError() }}</p>
+        }
+        <div class="fila-botones">
+          <button mat-flat-button type="submit" class="boton-principal" [disabled]="ocupado()">
+            {{ ocupado() ? 'Guardando…' : 'Guardar cálculo' }}
+          </button>
+          <button type="button" class="boton-secundario" (click)="editando.set(false)">Cancelar</button>
+        </div>
+      </form>
+    } @else {
+      <dl class="resumen">
+        <div>
+          <dt>Precio del curso</dt>
+          <dd>{{ dinero(c.calculo.precio_curso) }}</dd>
+        </div>
+        @for (cargo of c.calculo.cargos; track cargo.concepto) {
+          <div>
+            <dt>{{ cargo.concepto }}</dt>
+            <dd>{{ dinero(cargo.monto) }}</dd>
+          </div>
+        }
+        <div class="resumen__total">
+          <dt>Total a pagar</dt>
+          <dd>{{ dinero(c.calculo.total_a_pagar) }}</dd>
+        </div>
+      </dl>
+
+      <h3>Cuotas</h3>
+      <div class="tabla-cuotas">
+        <table class="cuotas">
+          <thead>
+            <tr>
+              <th scope="col">Cuota</th>
+              <th scope="col">Vence</th>
+              <th scope="col" class="numero">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (q of c.calculo.cuotas; track q.numero) {
+              <tr>
+                <td>{{ q.numero }}</td>
+                <td>{{ fecha(q.vencimiento) }}</td>
+                <td class="numero">{{ dinero(q.monto) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
+    <div class="bloque__cabecera">
+      <h2>Convenio</h2>
+      @if (c.pdfs.enviado && c.pdfs.firmado) {
+        <div class="pestanas" role="group" aria-label="Versión del convenio">
+          <button type="button" [class.activa]="pdfTipo() === 'enviado'" (click)="pdfTipo.set('enviado')">Enviado</button>
+          <button type="button" [class.activa]="pdfTipo() === 'firmado'" (click)="pdfTipo.set('firmado')">Firmado</button>
+        </div>
+      }
+    </div>
+
+    @if (c.estado === 'BORRADOR') {
+      @if (previaUrl(); as url) {
+        <iframe class="visor" [src]="url" title="Vista previa del convenio"></iframe>
+        <p class="suave">Vista previa con los datos actuales. Se guarda como PDF oficial al enviarlo.</p>
+      } @else {
+        <p class="suave">Así quedará el convenio con los datos de este borrador.</p>
+        <button type="button" class="boton-secundario" (click)="verPrevia.set(true)">Generar vista previa</button>
+      }
+    } @else if (pdfUrl(); as url) {
+      <a class="boton-secundario abrir-pdf" [href]="pdfHref()" target="_blank" rel="noopener">Abrir PDF en otra pestaña</a>
+      <iframe class="visor" [src]="url" title="Convenio en PDF"></iframe>
+    } @else {
+      <p class="suave">Todavía no hay un PDF para este convenio.</p>
+    }
+  </section>
+
+  <section class="tarjeta bloque">
+    <h2>Enlace de firma</h2>
+
+    @switch (c.estado) {
+      @case ('BORRADOR') {
+        <p class="suave">Revisa el cálculo y el convenio antes de enviar. Al enviar, el cliente recibe el enlace por correo.</p>
+        @if (puedeActuar()) {
+          <button mat-flat-button type="button" class="boton-principal" [disabled]="ocupado() || editando()" (click)="enviar()">
+            {{ ocupado() ? 'Enviando…' : 'Enviar al cliente' }}
+          </button>
+          <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="eliminar()">
+            {{ confirmarEliminar() ? 'Confirmar eliminación' : 'Eliminar borrador' }}
+          </button>
+          @if (confirmarEliminar()) {
+            <p class="suave">Se borrará el borrador y su historial. No se puede deshacer.</p>
+          }
+        }
+      }
+      @case ('ENVIADO') {
+        <p class="suave">El enlace está activo y el cliente todavía no ha firmado.</p>
+        @if (puedeActuar()) {
+          <button type="button" class="boton-secundario boton-peligro" [disabled]="ocupado()" (click)="revocar()">
+            {{ confirmarRevocar() ? 'Confirmar revocación' : 'Revocar enlace' }}
+          </button>
+          @if (confirmarRevocar()) {
+            <p class="suave">El cliente no podrá firmar con el enlace actual. Para volver a enviarlo, edita el cálculo y crea una versión nueva.</p>
+          }
+        }
+        @if (!c.enlace && !enlaceGenerado()) {
+          <p class="suave">No hay un enlace guardado para mostrar. Genera uno nuevo para compartirlo por otra vía; el anterior dejará de servir.</p>
+          @if (!c.enlace_guardable) {
+            <p class="suave">El servidor no puede guardar el enlace (no puede escribir en la carpeta storage/): se verá solo al generarlo.</p>
+          }
+          @if (puedeActuar()) {
+            <button type="button" class="boton-secundario" [disabled]="ocupado()" (click)="generarEnlace()">Generar enlace nuevo</button>
+          }
+        }
+      }
+      @case ('FIRMADO') {
+        <p class="suave">El convenio está firmado. El cliente y el personal responsable reciben la copia por correo.</p>
+      }
+      @case ('REVOCADA') {
+        <p class="suave">Este enlace fue revocado. Edita el cálculo para crear una versión nueva y enviarla otra vez.</p>
+      }
+    }
+
+    @if (accionError()) {
+      <p class="error" role="alert">{{ accionError() }}</p>
+    }
+
+    @if (c.estado === 'ENVIADO' ? (c.enlace ?? enlaceGenerado()) : null; as enlace) {
+      <div class="enlace">
+        <p class="enlace__aviso">Enlace para el cliente. Puedes copiarlo cuando quieras mientras siga vigente.</p>
+        <p class="enlace__url">{{ enlace }}</p>
+        <button type="button" class="boton-secundario" (click)="copiarEnlace(enlace)">
+          {{ copiado() ? 'Enlace copiado' : 'Copiar enlace' }}
+        </button>
+      </div>
+    }
+  </section>
+}

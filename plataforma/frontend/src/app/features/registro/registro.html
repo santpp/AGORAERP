@@ -1,0 +1,49 @@
+<nav class="volver">
+  <a routerLink="/contratos">← Contratos</a>
+</nav>
+
+<div class="encabezado">
+  <h1>Registro</h1>
+  <span class="suave">{{ eventos().length }} movimientos recientes</span>
+</div>
+
+<mat-form-field appearance="outline" class="buscar">
+  <mat-label>Buscar por cliente, acción o dato</mat-label>
+  <input matInput type="search" name="busqueda" [(ngModel)]="busqueda" (ngModelChange)="busquedaActual.set($event)" />
+</mat-form-field>
+
+@if (cargando()) {
+  <p class="suave">Cargando registro…</p>
+} @else if (error()) {
+  <div class="tarjeta">
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" class="boton-secundario" (click)="cargar()">Intentar de nuevo</button>
+  </div>
+} @else if (visibles().length === 0) {
+  <p class="suave">No hay movimientos que coincidan.</p>
+} @else {
+  <ul class="lista">
+    @for (e of visibles(); track $index) {
+      <li class="evento">
+        <div class="evento__cabecera">
+          <span class="evento__tipo">{{ etiqueta(e.tipo) }}</span>
+          <span class="evento__fecha">{{ fecha(e.creado_en) }}</span>
+        </div>
+        <div class="suave">
+          @if (e.cliente && e.uid) {
+            <a [routerLink]="['/contratos', e.uid]">{{ e.cliente }}</a>
+          } @else {
+            Sin contrato
+          }
+        </div>
+        @if (e.detalle && (e.detalle['correo'] || e.detalle['numero'] || e.detalle['personal'] || e.detalle['ip'])) {
+          <div class="evento__detalle">
+            @if (e.detalle['numero']) { <span>Versión {{ e.detalle['numero'] }}</span> }
+            @if (e.detalle['personal']) { <span>Por {{ e.detalle['personal'] }}</span> }
+            @if (e.detalle['ip']) { <span>IP {{ e.detalle['ip'] }}</span> }
+          </div>
+        }
+      </li>
+    }
+  </ul>
+}

@@ -1,0 +1,25 @@
+@if (!enEntrar()) {
+  <header class="barra">
+    <a class="marca" routerLink="/contratos" aria-label="ASOCIM Contratos, inicio">
+      <img class="marca__logo" src="/logo.png" alt="ASOCIM" width="79" height="56" />
+      <span class="marca__area">Contratos</span>
+    </a>
+    @if (sesion.usuario(); as usuario) {
+      <nav class="barra__nav" aria-label="Principal">
+        <a routerLink="/contratos" routerLinkActive="activo" class="barra__enlace">Contratos</a>
+        @if (usuario.rol === 'ADMIN') {
+          <a routerLink="/usuarios" routerLinkActive="activo" class="barra__enlace">Personas</a>
+          <a routerLink="/registro" routerLinkActive="activo" class="barra__enlace">Registro</a>
+        }
+      </nav>
+      <div class="barra__usuario">
+        <span class="barra__nombre">{{ usuario.nombre }}</span>
+        <button type="button" class="barra__salir" (click)="salir()">Salir</button>
+      </div>
+    }
+  </header>
+}
+
+<main class="contenido" [class.completo]="enEntrar()">
+  <router-outlet />
+</main>
