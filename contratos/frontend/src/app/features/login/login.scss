@@ -70,6 +70,7 @@ $negro: #07061a;
 .lado-imagen {
   position: relative;
   padding: 14px;
+  background: var(--brand);
 }
 
 .lienzo {
@@ -98,26 +99,26 @@ $negro: #07061a;
 
 .escena--crepusculo {
   background:
-    radial-gradient(120% 80% at 88% 104%, $acento 0%, rgba(248, 96, 0, 0.35) 26%, transparent 56%),
-    linear-gradient(180deg, #0d0a3a 0%, $marca 56%, #3b1f6e 100%);
+    radial-gradient(120% 80% at 88% 104%, rgba(255, 255, 255, 0.14) 0%, transparent 56%),
+    linear-gradient(180deg, #8a0c30 0%, var(--brand) 56%, #c4204b 100%);
 }
 
 .escena--noche {
   background:
-    radial-gradient(90% 70% at 12% 8%, rgba(88, 100, 230, 0.32), transparent 62%),
-    linear-gradient(180deg, #07052a 0%, #14107a 62%, #0d0a40 100%);
+    radial-gradient(90% 70% at 12% 8%, rgba(255, 255, 255, 0.12), transparent 62%),
+    linear-gradient(180deg, #7d0b2b 0%, var(--brand) 62%, #8a0c30 100%);
 }
 
 .escena--bruma {
   background:
-    radial-gradient(110% 60% at 50% 0%, rgba(255, 201, 160, 0.5), transparent 66%),
-    linear-gradient(180deg, #2a2b8f 0%, $marca 46%, #0f0a45 100%);
+    radial-gradient(110% 60% at 50% 0%, rgba(255, 255, 255, 0.18), transparent 66%),
+    linear-gradient(180deg, #b3163f 0%, var(--brand) 46%, #8a0c30 100%);
 }
 
 .escena--brasa {
   background:
-    radial-gradient(75% 52% at 26% 112%, rgba(248, 96, 0, 0.7), transparent 70%),
-    linear-gradient(170deg, #120d50 0%, $marca 60%, #09062b 100%);
+    radial-gradient(75% 52% at 26% 112%, rgba(255, 255, 255, 0.12), transparent 70%),
+    linear-gradient(170deg, #9a0e35 0%, var(--brand) 60%, #7a0a26 100%);
 }
 
 .lienzo__grano {
@@ -131,7 +132,7 @@ $negro: #07061a;
 .lienzo__vineta {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(5, 3, 25, 0.65) 100%);
+  background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(60, 0, 15, 0.35) 100%);
 }
 
 // Logos sobre la imagen, sin fondo: en blanco para que se vean sobre el azul oscuro.
@@ -159,7 +160,7 @@ $negro: #07061a;
 .marcas__separador {
   width: 1px;
   height: 64px;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--brand);
 }
 
 // ----- lado derecho: fondo con rayas de luz y formulario
@@ -249,7 +250,7 @@ $negro: #07061a;
   color: var(--brand);
 }
 
-// Botón con los colores de ASOCIM (naranja a azul), texto blanco.
+// Botón de Ágora: rojo de marca, texto blanco.
 .entrar {
   box-sizing: border-box;
   width: 100%;
@@ -257,7 +258,7 @@ $negro: #07061a;
   margin-top: 6px;
   border: 0;
   border-radius: 8px;
-  background: linear-gradient(90deg, #f86000 0%, #b43a4a 55%, #1a1070 100%);
+  background: var(--brand);
   color: #fff;
   font: inherit;
   font-size: 15px;
