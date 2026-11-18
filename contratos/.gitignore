@@ -5,3 +5,4 @@ composer.lock
 .phpunit.result.cache
 plantillas/convenio_original.pdf
 respaldos/
+__pycache__/

@@ -82,6 +82,29 @@ def pagina_observaciones(doc, texto, f_titulo, f_cuerpo):
     raise ValueError("Las observaciones son demasiado largas para una página.")
 
 
+FIRMAS = os.path.join(CARPETA_PLANTILLAS, "firmas")
+
+
+def poner_imagen(pagina, rect, nombre):
+    """Sello o firma de ASOCIM (PNG transparente de plantillas/firmas) dentro del rectángulo, sin deformarse."""
+    pagina.insert_image(rect, filename=os.path.join(FIRMAS, nombre), keep_proportion=True, overlay=True)
+
+
+def poner_sellos_asocim(doc, f_var):
+    """Sello y firma del Jefe de Ventas (sobre su nombre) y sello de Administración con la firma del Director de
+    Finanzas (columna Firma/Sello de la tabla). Posiciones calibradas sobre convenio_original.pdf."""
+    # Página 6: la columna «POR ASOCIM C.A», encima del nombre del personal.
+    poner_imagen(doc[5], pymupdf.Rect(386, 547, 434, 592), "sello-jefe-ventas.png")
+    poner_imagen(doc[5], pymupdf.Rect(432, 551, 470, 592), "firma-jefe-ventas.png")
+    # Tabla (página del cronograma): columna Firma/Sello Admón, bajo las filas con datos.
+    pa = doc[6]
+    poner_imagen(pa, pymupdf.Rect(486, 532, 548, 594), "sello-administracion.png")
+    poner_imagen(pa, pymupdf.Rect(481, 596, 553, 656), "firma-director-finanzas.png")
+    texto = "MSc. Carlos E. Morgado Ramírez\nDirector de Finanzas y Administración ASOCIM"
+    pa.insert_font(fontname="OSV", fontbuffer=f_var.buffer)
+    pa.insert_textbox(pymupdf.Rect(470, 660, 566, 706), texto, fontname="OSV", fontsize=8, align=1, color=(0, 0, 0))
+
+
 def llenar(datos, salida, firma_png):
     doc = pymupdf.open(ORIGINAL)
     f_inter_r, f_inter_b = fuentes_inter()
@@ -199,6 +222,7 @@ def llenar(datos, salida, firma_png):
 
     # ----- firmas del cliente: una sola firma copiada en las tres cajas
     poner_firmas(doc, CAJAS_CLIENTE, firma_png)
+    poner_sellos_asocim(doc, f_var)
 
     # la página 2 quedó vacía: sus líneas y la caja de firma ya están en la página 1
     doc.delete_page(1)
