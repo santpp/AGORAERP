@@ -15,6 +15,14 @@ FUENTE_INTER_B = os.path.join(CARPETA_PLANTILLAS, "fuentes", "Inter-Bold.otf")
 FUENTE_VARIABLES = os.path.join(CARPETA_PLANTILLAS, "fuentes", "OpenSans-Regular.ttf")
 
 
+def fuente_variables_negrita():
+    """Open Sans Bold para las cantidades y el número de meses. Si no está en plantillas/fuentes, se usa Inter negrita."""
+    ruta = os.path.join(CARPETA_PLANTILLAS, "fuentes", "OpenSans-Bold.ttf")
+    if os.path.isfile(ruta):
+        return pymupdf.Font(fontfile=ruta)
+    return fuentes_inter()[1]
+
+
 def fuentes_inter():
     """(regular, negrita) de Inter, la tipografía de reemplazo para texto nuevo."""
     return pymupdf.Font(fontfile=FUENTE_INTER_R), pymupdf.Font(fontfile=FUENTE_INTER_B)
@@ -70,12 +78,13 @@ def aplicar_borrado(pagina):
 _ALIAS = {}
 
 
-def escribir(pagina, punto, texto, fuente, tamano, centro=None):
-    """Escribe texto en negro. Con centro, el texto se centra en esa coordenada x."""
+def escribir(pagina, punto, texto, fuente, tamano, centro=None, negrita=False):
+    """Escribe texto en negro. Con centro, el texto se centra en esa coordenada x.
+    El nombre del alias lleva «Bold» si es negrita: así justificar() lo reconoce como negrita al rehacer la línea."""
     if centro is not None:
         ancho = fuente.text_length(texto, fontsize=tamano)
         punto = (centro - ancho / 2, punto[1])
-    alias = f"ZX{len(_ALIAS)}"
+    alias = f"ZX{'Bold' if negrita else ''}{len(_ALIAS)}"
     _ALIAS[alias] = True
     pagina.insert_font(fontname=alias, fontbuffer=fuente.buffer)
     pagina.insert_text(punto, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0))

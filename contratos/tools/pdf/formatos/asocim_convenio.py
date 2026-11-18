@@ -12,7 +12,7 @@ import pymupdf
 from PIL import Image
 
 from motor import (CARPETA_PLANTILLAS, ajustar_tamano, aplicar_borrado, base_de, buscar, cubrir, es_negrita,
-                   escribir, fuente_variables, fuentes_inter, justificar, origen_y, poner_firmas)
+                   escribir, fuente_variables, fuente_variables_negrita, fuentes_inter, justificar, origen_y, poner_firmas)
 
 NOMBRE = "ASOCIM · Convenio de pago"
 ORIGINAL = os.path.join(CARPETA_PLANTILLAS, "convenio_original.pdf")
@@ -106,11 +106,41 @@ def poner_sellos_asocim(doc, f_var):
     pa.insert_textbox(pymupdf.Rect(470, 520, 566, 566), texto, fontname="OSV", fontsize=8, align=1, color=(0, 0, 0))
 
 
+def resaltar_mora(doc, f_neg):
+    """Pone en negrita el importe de la mora («$ 10,00») de la cláusula 3, que viene escrito en el original."""
+    p = doc[0]
+    for r in p.search_for("10,00"):
+        pesos = p.search_for("$", clip=pymupdf.Rect(r.x0 - 12, r.y0 - 2, r.x0, r.y1 + 2))
+        if not pesos:
+            continue
+        origen = origen_y(p, r)
+        cubrir(p, pesos[0])
+        cubrir(p, r)
+        aplicar_borrado(p)
+        escribir(p, (pesos[0].x0, origen), "$", f_neg, 9, negrita=True)
+        escribir(p, (r.x0, origen), "10,00", f_neg, 9, negrita=True)
+        return
+
+
+def poner_observaciones_junto(pagina, texto, f_titulo, f_cuerpo):
+    """Observaciones a la derecha del bloque de inscripción, descuento y modalidad (página 6).
+    Prueba tamaños de letra de mayor a menor; si ninguno cabe, devuelve False y se usa la página final."""
+    zona = pymupdf.Rect(262, 468, 566, 528)
+    for tamano in (8, 7.5, 7):
+        alias = f"OBS{tamano}".replace(".", "")
+        pagina.insert_font(fontname=alias, fontbuffer=f_cuerpo.buffer)
+        if pagina.insert_textbox(zona, texto, fontname=alias, fontsize=tamano, color=(0, 0, 0), lineheight=1.25) >= 0:
+            escribir(pagina, (262, 465), "OBSERVACIONES", f_titulo, 8)
+            return True
+    return False
+
+
 def llenar(datos, salida, firma_png):
     doc = pymupdf.open(ORIGINAL)
     f_inter_r, f_inter_b = fuentes_inter()
     # Datos variables: Open Sans completa (la misma tipografía del convenio)
     f_var = fuente_variables()
+    f_neg = fuente_variables_negrita()
 
     n = int(datos["meses"])
     if n > FILAS_TABLA:
@@ -125,19 +155,26 @@ def llenar(datos, salida, firma_png):
     cubrir(p, buscar(p, "105", zona=(500, 265, 560, 285)))
     r20 = buscar(p, "20$")
     cubrir(p, r20)
+    pesos_precio = buscar(p, "$", zona=(198, 262, 210, 290))
+    pesos_cuota = buscar(p, "$", zona=(508, 262, 515, 290))
+    cubrir(p, pesos_precio)
+    cubrir(p, pesos_cuota)
     aplicar_borrado(p)
     r = pymupdf.Rect(275.9, 162.3, 347.5, 173.2)
-    escribir(p, (r.x0, base_de(r, 9)), f'{datos["meses_texto"]} ({n}) meses', f_var, 9)
+    texto_meses = f'{datos["meses_texto"]} ({n}) meses'
+    escribir(p, (r.x0, base_de(r, 9)), texto_meses, f_neg, ajustar_tamano(f_neg, texto_meses, r.width, 9, 7), negrita=True)
     nombre = datos["nombre"].upper()
     tamano_nombre = ajustar_tamano(f_var, nombre, 209.8 - 61.0 - 2, 9, 7)
     escribir(p, (61.0, base_de(pymupdf.Rect(61.0, 108.3, 209.8, 119.2), tamano_nombre)), nombre, f_var, tamano_nombre)
-    escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_var, 9)
+    escribir(p, (r20.x0, base_de(r20, 9)), datos["inscripcion"] + "$", f_neg, 9, negrita=True)
     x_ced = pymupdf.Rect(380.8, 108.3, 423.6, 119.2)
     escribir(p, (x_ced.x0, base_de(x_ced, 9)), datos["cedula"], f_var, 9)
     x_pre = pymupdf.Rect(209.7, 270.3, 236.3, 281.2)
-    escribir(p, (x_pre.x0, base_de(x_pre, 9)), datos["precio"], f_var, 9)
+    escribir(p, (pesos_precio.x0, base_de(pesos_precio, 9)), "$", f_neg, 9, negrita=True)
+    escribir(p, (x_pre.x0, base_de(x_pre, 9)), datos["precio"], f_neg, 9, negrita=True)
     x_cuo = pymupdf.Rect(516.7, 270.3, 534.4, 281.2)
-    escribir(p, (x_cuo.x0, base_de(x_cuo, 9)), datos["cuota"], f_var, 9)
+    escribir(p, (pesos_cuota.x0, base_de(pesos_cuota, 9)), "$", f_neg, 9, negrita=True)
+    escribir(p, (x_cuo.x0, base_de(x_cuo, 9)), datos["cuota"], f_neg, 9, negrita=True)
     subir_clausula_3(doc)
 
     # ----- página 6
@@ -162,11 +199,11 @@ def llenar(datos, salida, firma_png):
     cubrir(p, pymupdf.Rect(rects["cierre"].x0 - 1, rects["cierre"].y0, zona_fecha[2], rects["cierre"].y1))
     aplicar_borrado(p)
 
-    def poner(clave, texto, fuente, tamano=9):
-        escribir(p, (rects[clave].x0, lineas[clave]), texto, fuente, tamano)
-    poner("inscr", datos["inscripcion"] + "$", f_var)
+    def poner(clave, texto, fuente, tamano=9, negrita=False):
+        escribir(p, (rects[clave].x0, lineas[clave]), texto, fuente, tamano, negrita=negrita)
+    poner("inscr", datos["inscripcion"] + "$", f_neg, negrita=True)
     poner("desc", datos["descuento"] + "%", f_var)
-    poner("mod", datos["modalidad"], f_var)
+    poner("mod", datos["modalidad"], f_neg, negrita=True)
     poner("cierre", frase_de_cierre(datos), f_var)
     nombre_firma = datos["nombre"].upper()
     escribir(p, (48.0, 633.0), nombre_firma, f_var, ajustar_tamano(f_var, nombre_firma, 300 - 48 - 4, 12, 9))
@@ -188,9 +225,9 @@ def llenar(datos, salida, firma_png):
     for i, fila in enumerate(datos["cronograma"], start=1):
         base = FILA_1_BASE + (i - 1) * ALTO_FILA
         escribir(p, (0, base), str(i), f_var, 12, centro=COL_N)
-        escribir(p, (0, base), fila["mes"], f_var, 12, centro=COL_MES)
+        escribir(p, (0, base), fila["mes"], f_var, ajustar_tamano(f_var, fila["mes"], 92, 12, 8), centro=COL_MES)
         escribir(p, (0, base), fila["anio"], f_var, 12, centro=COL_ANIO)
-        escribir(p, (0, base), fila["modalidad"], f_var, 12, centro=COL_MOD)
+        escribir(p, (0, base), fila["modalidad"], f_neg, ajustar_tamano(f_neg, fila["modalidad"], 150, 12, 8), centro=COL_MOD)
 
     # ----- página 8: encabezado con logo (reducido al 80 %), anexo y tabla; la página 7 se elimina
     escala = 0.8
@@ -224,11 +261,13 @@ def llenar(datos, salida, firma_png):
     # ----- firmas del cliente: una sola firma copiada en las tres cajas
     poner_firmas(doc, CAJAS_CLIENTE, firma_png)
     poner_sellos_asocim(doc, f_var)
+    observaciones_junto = bool(datos.get("observaciones")) and poner_observaciones_junto(doc[5], datos["observaciones"], f_neg, f_var)
 
     # la página 2 quedó vacía: sus líneas y la caja de firma ya están en la página 1
     doc.delete_page(1)
     justificar(doc)
-    if datos.get("observaciones"):
+    if datos.get("observaciones") and not observaciones_junto:
         pagina_observaciones(doc, datos["observaciones"], f_inter_b, f_var)
+    resaltar_mora(doc, f_neg)
     doc.save(salida, garbage=3, deflate=True)
     doc.close()
