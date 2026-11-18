@@ -239,7 +239,7 @@ $negro: #07061a;
     box-shadow 0.2s;
 
   &:focus {
-    border-color: $acento;
+    border-color: var(--brand);
     box-shadow: 0 0 0 3px rgba(248, 96, 0, 0.22);
   }
 }
@@ -258,7 +258,7 @@ $negro: #07061a;
   margin-top: 6px;
   border: 0;
   border-radius: 8px;
-  background: linear-gradient(90deg, #f86000 0%, #b43a4a 55%, $marca 100%);
+  background: var(--brand);
   color: #fff;
   font: inherit;
   font-size: 15px;

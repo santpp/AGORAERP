@@ -22,6 +22,9 @@ export class App {
     { initialValue: this.router.url.startsWith('/entrar') },
   );
 
+  /** Ágora abre el panel dentro de su pantalla con ?embed=1: sin cabecera propia. Se lee una vez al cargar. */
+  protected readonly embebido = new URLSearchParams(window.location.search).get('embed') === '1';
+
   protected salir(): void {
     this.sesion.salir();
   }

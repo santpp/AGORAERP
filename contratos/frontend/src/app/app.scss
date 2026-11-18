@@ -1,40 +1,40 @@
+// Cabecera: fondo paper, borde 1 px y el logo a la izquierda.
 .barra {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 24px;
-  min-height: 72px;
-  padding: 12px 24px;
-  background: #fff;
-  border-bottom: 4px solid var(--color-acento);
+  gap: 8px 16px;
+  min-height: 64px;
+  padding: 8px 16px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
 }
 
 .marca {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--color-marca);
+  color: var(--ink);
   text-decoration: none;
 }
 
 .marca__logo {
   display: block;
-  height: 56px;
+  height: 40px;
   width: auto;
 }
 
 .marca__area {
   padding-left: 12px;
-  border-left: 1px solid var(--color-linea);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-marca);
+  border-left: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .barra__nav {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
   margin-left: auto;
 }
@@ -44,23 +44,19 @@
   align-items: center;
   min-height: 44px;
   padding: 0 14px;
-  border-bottom: 3px solid transparent;
-  border-radius: 8px 8px 0 0;
-  background: transparent;
-  color: #6b6f86;
+  border-radius: 8px;
+  color: var(--muted);
   font-weight: 600;
   text-decoration: none;
   transition: background-color 0.15s, color 0.15s;
 
   &:hover {
-    background: var(--color-marca);
-    color: #fff;
+    color: var(--brand);
   }
 
   &.activo {
-    border-bottom-color: var(--color-acento);
-    color: var(--color-marca);
-    font-weight: 800;
+    background: var(--brand-soft);
+    color: var(--brand);
   }
 }
 
@@ -72,59 +68,89 @@
 }
 
 .barra__nombre {
-  color: var(--color-suave);
+  color: var(--muted);
   font-weight: 600;
-
-  @media (max-width: 599px) {
-    display: none;
-  }
 }
 
 .barra__salir {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--color-linea);
+  border: 1px solid var(--line-strong);
   border-radius: 8px;
-  background: #fff;
-  color: var(--color-marca);
+  background: var(--paper);
+  color: var(--ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    border-color: var(--color-marca);
+    border-color: var(--brand);
+    color: var(--brand);
   }
 }
 
 // Cada página entra con el mismo movimiento que la pantalla de entrada.
 .contenido > * {
-  animation: asentar 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: asentar 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 .contenido {
   max-width: 880px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 16px 16px 48px;
 
   &.completo {
     max-width: none;
     padding: 0;
   }
+
+  // Dentro de Ágora: sin cabecera propia; respeta la zona segura del teléfono.
+  &.incrustado {
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  }
 }
 
+@media (min-width: 1200px) {
+  .contenido {
+    max-width: 960px;
+  }
+}
+
+// En el teléfono, la navegación pasa a una barra inferior, como en Ágora.
 @media (max-width: 599px) {
   .marca__area {
     display: none;
   }
 
+  .barra {
+    padding-bottom: 8px;
+  }
+
   .barra__nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
     order: 3;
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
+    justify-content: space-around;
+    margin: 0;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+  }
+
+  .barra__enlace {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
   }
 
   .barra__usuario {
     margin-left: auto;
+  }
+
+  .contenido:not(.completo):not(.incrustado) {
+    padding-bottom: 96px;
   }
 }

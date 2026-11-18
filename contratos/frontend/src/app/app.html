@@ -1,4 +1,4 @@
-@if (!enEntrar()) {
+@if (!enEntrar() && !embebido) {
   <header class="barra">
     <a class="marca" routerLink="/contratos" aria-label="ASOCIM Contratos, inicio">
       <img class="marca__logo" src="/logo.png" alt="ASOCIM" width="79" height="56" />
@@ -20,6 +20,6 @@
   </header>
 }
 
-<main class="contenido" [class.completo]="enEntrar()">
+<main class="contenido" [class.completo]="enEntrar()" [class.incrustado]="embebido">
   <router-outlet />
 </main>
