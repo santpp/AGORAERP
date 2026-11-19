@@ -1,0 +1,33 @@
+/* Agora Digital App · estilos de los informes descargables
+   Hoja A4 horizontal: 297 mm − 16 mm de márgenes = 281 mm útiles ≈ 1062 px.
+   Membrete y pie en cada hoja: @page (impresión) y jsPDF (descarga directa). */
+html,body{background:#E9EAEF!important;margin:0}body{padding:24px 0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #rep{width:1062px;box-sizing:border-box;margin:0 auto;padding:22px 26px 26px;background:#fff;box-shadow:0 6px 30px rgba(16,24,40,.12)}
+    #rep #content{display:flex;flex-direction:column;gap:14px}
+    .rep-h{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:14px;margin-bottom:6px;border-bottom:3px solid #AD103C}
+    .rep-h .lg{display:flex;align-items:center;gap:12px}.rep-h svg{height:42px;width:100px}
+    .rep-h .lg b{display:block;font-size:12.5px;color:#AD103C;font-weight:700;letter-spacing:.06em}
+    .rep-h h1{font-size:22px;margin:2px 0 0;color:#282E49}.rep-m{text-align:right;font-size:12px;color:#5E6480}.rep-m b{display:block;font-size:15px;color:#AD103C}
+    .rep-band{height:5px;border-radius:5px;background:linear-gradient(90deg,#AD103C,#282E49 60%,#FABD4B);margin:0 0 16px}
+    .mod-h,.qnav{display:none!important}
+    .panel{box-shadow:none!important;padding:16px 18px!important;border-radius:14px!important}
+    .micro-grid{gap:10px!important;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr))!important}.micro{padding:14px!important}
+    .mod-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}.hero-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+    .rgrid{grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr)!important}.rgrid .rop{display:flex!important}.rgrid>.rcard{margin-top:0!important}
+    .gx{grid-template-columns:290px minmax(0,1fr)!important}
+    .bt,.bt-cli,.mx{min-width:0!important}.bt-cli td:first-child{min-width:0!important}
+    .mx{table-layout:fixed;width:100%}.mx td:first-child,.mx th:first-child{width:200px}
+    .panel:not(:has(table)),.gx,.hero,.cycle,.micro-grid,.duo>.panel{break-inside:avoid;page-break-inside:avoid}
+    .hero{padding:22px 26px!important;grid-template-columns:1fr 1fr!important}
+    .duo{grid-template-columns:1fr 1fr!important}
+    .bt-wrap,.mx-wrap,.table-scroll{overflow:visible!important}
+    .bt{width:100%!important;table-layout:auto!important;font-size:12px}.bt td,.bt th{padding:7px 9px!important;word-break:normal;overflow-wrap:anywhere}
+    .mx{font-size:10.5px}.mx td,.mx th{padding:4px 5px!important}
+    svg{max-width:100%;height:auto}
+    .rep-f{margin-top:18px;padding:10px 14px;border-radius:10px;background:#282E49;color:#C3C7D9;font-size:11px;display:flex;justify-content:space-between;gap:16px;align-items:center}.rep-f b{color:#FABD4B;font-size:12px}
+    @page{size:A4 landscape;margin:15mm 8mm 14mm 8mm;
+      @top-left{content:"Agora Digital App · Finanzas y Operaciones";font:700 9pt sans-serif;color:#AD103C}
+      @bottom-left{content:"Agora Digital App · agoradigital.app · Cada conversación, una oportunidad.";font:8pt sans-serif;color:#5E6480}
+      @bottom-right{content:"Página " counter(page) " de " counter(pages);font:8pt sans-serif;color:#5E6480}}
+    @media print{html,body{background:#fff!important;padding:0}#rep{width:auto;box-shadow:none;padding:0}thead{display:table-header-group}tfoot{display:table-row-group}
+      tr,.micro,.rcard,.pn-h,svg,.gx-c,.aging{break-inside:avoid}.panel{break-inside:auto}}

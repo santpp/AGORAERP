@@ -1,0 +1,95 @@
+{
+  "name": "Agora Digital App · Finanzas y Operaciones",
+  "short_name": "Agora",
+  "description": "Ingresos, facturación, cobros en Binance, PayPal, Zelle, efectivo y bolívares, gastos, caja, agenda de citas, inversionistas y utilidades, con Athena como asistente.",
+  "lang": "es-VE",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/#/resumen",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F5F5F7",
+  "theme_color": "#F5F5F7",
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agendar una cita",
+      "short_name": "Nueva cita",
+      "url": "/#/agenda?accion=nueva-cita",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Registrar un pago",
+      "short_name": "Registrar pago",
+      "url": "/#/facturacion?accion=registrar-pago",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Preguntarle a Athena",
+      "short_name": "Athena",
+      "url": "/#/resumen?accion=athena",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ver la Caja",
+      "short_name": "Caja",
+      "url": "/#/caja",
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

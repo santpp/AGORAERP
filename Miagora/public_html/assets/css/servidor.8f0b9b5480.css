@@ -1,0 +1,99 @@
+/* Agora Digital App · v11 · modo servidor: acceso con código, verificación (OTP), facturación fiscal y avisos.
+   Usa los tokens de ecosistema.css (estilo Apple): vidrio, radios, píldoras y movimiento con resorte. */
+
+/* ---------- hoja de verificación (por encima de todo) ---------- */
+.srv-sheet{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.34);-webkit-backdrop-filter:blur(8px) saturate(130%);backdrop-filter:blur(8px) saturate(130%);opacity:0;transition:opacity .18s ease}
+.srv-sheet.is-open{opacity:1}
+.srv-sheet-card{position:relative;width:100%;max-width:440px;max-height:92vh;overflow:auto;background:var(--surface);border-radius:26px;box-shadow:var(--shadow-pop);padding:28px 26px 22px;transform:translateY(12px) scale(.98);transition:transform .32s var(--ease-spring,cubic-bezier(.2,.9,.3,1.2))}
+.srv-sheet.is-open .srv-sheet-card{transform:none}
+.srv-sheet-card.is-wide{max-width:680px}
+.srv-x{position:absolute;top:12px;right:12px}
+.srv-otp h2{margin:6px 0 6px;font-size:21px;letter-spacing:-.02em}
+.srv-otp .muted{margin:0 0 10px}
+.srv-ic{display:inline-flex;width:44px;height:44px;border-radius:14px;align-items:center;justify-content:center;background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand)}
+.srv-scope{display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:999px;background:var(--fill);color:var(--ink);font-size:13px;font-weight:600}
+.srv-f{display:flex;flex-direction:column;gap:12px}
+.srv-f textarea{resize:vertical;min-height:58px}
+.srv-ch{border:0;padding:0;margin:0;display:grid;gap:8px}
+.srv-ch legend{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.srv-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--fill);cursor:pointer;border:1.5px solid transparent;transition:border-color .15s ease,background-color .15s ease}
+.srv-chip:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,var(--surface))}
+.srv-chip input{accent-color:var(--brand)}
+.srv-chip span{display:flex;flex-direction:column;font-weight:600;font-size:14px;color:var(--ink)}
+.srv-chip small{font-weight:500;color:var(--muted)}
+.srv-code input{font:600 26px/1.2 var(--font-rounded,ui-rounded,system-ui);letter-spacing:.32em;text-align:center;padding:12px 10px;font-variant-numeric:tabular-nums}
+.srv-row{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.srv-row .lnk[disabled]{opacity:.5;cursor:default}
+
+/* ---------- acceso (usa el diseño del inicio de sesión v10) ---------- */
+.srv-seg{display:flex;gap:6px;padding:4px;border-radius:14px;background:var(--fill);margin-bottom:12px}
+.srv-seg label{flex:1;cursor:pointer}
+.srv-seg input{position:absolute;opacity:0;pointer-events:none}
+.srv-seg span{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 10px;border-radius:11px;font-weight:600;font-size:14px;color:var(--muted);transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
+.srv-seg input:checked+span{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.srv-seg input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
+.srv-loading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:24px}
+.srv-spin{width:30px;height:30px;border-radius:50%;border:3px solid var(--line-2);border-top-color:var(--brand);animation:srvspin .8s linear infinite}
+@keyframes srvspin{to{transform:rotate(360deg)}}
+
+/* ---------- aviso discreto arriba ---------- */
+.srv-banner{position:fixed;left:50%;top:calc(var(--top-h,56px) + 10px + var(--safe-t,0px));z-index:80;display:flex;align-items:center;gap:10px;max-width:min(640px,calc(100vw - 24px));padding:9px 10px 9px 16px;border-radius:999px;background:var(--glass-strong);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:var(--shadow-lift);color:var(--ink);font-size:13.5px;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .32s var(--ease-spring,ease)}
+.srv-banner.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.srv-banner .icon-btn{width:28px;height:28px}
+
+/* ---------- modales del servidor ---------- */
+.srv-sec{padding:14px 0;border-top:1px solid var(--line)}
+.srv-sec:first-of-type{border-top:0}
+.srv-sec h3,.srv-h3{margin:0 0 10px;font-size:15px;letter-spacing:-.01em}
+.srv-h3{margin-top:18px}
+.srv-inline{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:8px 0}
+.srv-inline .fld-grow{flex:1;min-width:200px}
+.srv-list{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column}
+.srv-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.srv-list li:last-child{border-bottom:0}
+.srv-list li>span:first-child{display:flex;flex-direction:column;min-width:0}
+.srv-ct{flex-direction:row!important;align-items:center;gap:8px;flex-wrap:wrap}
+.srv-ok{padding:10px 14px;border-radius:14px;background:var(--ok-bg);color:var(--ok);font-weight:600;margin:0 0 12px}
+.sw-row{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:14px}
+.sw-row input{accent-color:var(--brand);width:18px;height:18px}
+.srv-months li>span:first-child small{display:block}
+
+/* ---------- barra de meses y encabezado: mes cerrado ---------- */
+.seg-lock{display:inline-flex;margin-left:4px;color:var(--muted);vertical-align:-1px}
+.seg-b.is-on .seg-lock{color:inherit}
+.closed-t{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;background:var(--info-bg);color:var(--info);font-weight:650}
+
+/* ---------- facturación fiscal ---------- */
+.fis-alert{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 12px;padding:12px 16px;border-radius:18px;background:var(--warn-bg);color:var(--ink);font-size:14px}
+.fis-alert .btn{margin-left:auto}
+.fis-t td small{font-size:12px}
+.fis-t .acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.fis-lines input,.fis-lines select{width:100%;min-width:0;padding:7px 8px;border-radius:10px;border:1px solid var(--line-2);background:var(--fill);color:var(--ink);font:inherit;font-size:13.5px}
+.fis-lines td{vertical-align:middle;padding:6px 6px}
+.fis-lines td:nth-child(2){min-width:180px}
+.fis-lines td:nth-child(3),.fis-lines td:nth-child(4),.fis-lines td:nth-child(5){width:96px}
+.fis-sum{display:flex;flex-direction:column;gap:4px;margin:12px 0 4px;margin-left:auto;max-width:380px;font-variant-numeric:tabular-nums}
+.fis-sum>div{display:flex;justify-content:space-between;gap:16px;font-size:14px}
+.fis-sum>div.is-total{border-top:1.5px solid var(--ink);padding-top:6px;font-size:16px}
+.fis-sum .muted{font-size:13px}
+.fis-acts{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.fis-frame{display:block;width:100%;height:min(72vh,980px);border:1px solid var(--line);border-radius:16px;background:#E5E5EA}
+.txt-bad{color:var(--bad)}
+
+/* ---------- tasas en vivo y cotización congelada ---------- */
+.srv-rate{display:flex;flex-direction:column;align-items:flex-end;text-align:right;font-variant-numeric:tabular-nums}
+.srv-rate b{font-size:16px;letter-spacing:-.01em}
+.srv-quote{margin:4px 0 6px;padding:14px 16px;border-radius:18px;background:var(--fill);animation:srv-in .28s cubic-bezier(.2,.8,.2,1)}
+.srv-quote-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.srv-quote-main>span{width:100%;font-size:13px;color:var(--muted);font-weight:600}
+.srv-quote-main b{font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.srv-quote-amt{margin:6px 0 2px;font-size:15px;font-variant-numeric:tabular-nums}
+.rate-lock{display:inline-flex;align-items:center;gap:4px;color:var(--ok);font-weight:600}
+@keyframes srv-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (max-width:640px){
+  .fis-frame{height:62vh}
+  .fis-lines td:nth-child(1){min-width:110px}
+  .srv-sheet{align-items:flex-end;padding:0}
+  .srv-sheet-card{border-radius:26px 26px 0 0;max-width:none;padding-bottom:calc(22px + var(--safe-b,0px))}
+}
+@media (prefers-reduced-motion:reduce){.srv-sheet,.srv-sheet-card,.srv-banner{transition:none}.srv-spin,.srv-quote{animation:none}}

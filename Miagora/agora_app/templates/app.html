@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es" data-theme="light" data-accent="vino">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Agora Digital App · Finanzas y Operaciones: ingresos, facturación, cobros en Binance, PayPal, Zelle y bolívares, gastos, caja, agenda de citas, inversionistas, utilidades y auditoría, con Athena como asistente.">
+<meta name="theme-color" content="#F5F5F7">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Agora">
+<meta name="application-name" content="Agora Digital">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Agora Digital App · Finanzas y Operaciones</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23AD103C%22/%3E%3Crect%20x%3D%2217%22%20y%3D%2210%22%20width%3D%2230%22%20height%3D%2244%22%20rx%3D%2215%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224.5%22/%3E%3Cpath%20d%3D%22M32%2017v30M23%2032h18M25.5%2025.5l13%2013M38.5%2025.5l-13%2013%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<script nonce="{{NONCE}}" src="/assets/js/tema.0244a34c5d.js"></script>
+<link rel="stylesheet" href="/assets/css/app.23e6e1ebf9.css">
+<link rel="stylesheet" href="/assets/css/ecosistema.a603ab5a17.css">
+<link rel="stylesheet" href="/assets/css/servidor.8f0b9b5480.css">
+<link rel="preload" as="style" href="/assets/css/informes.c4f6a32541.css">
+</head>
+<body>
+<div id="login" class="login" hidden></div>
+<div class="app" id="app" hidden>
+  <aside class="sidebar" id="sidebar" aria-label="Navegación principal"></aside>
+  <div class="sb-scrim" data-side="close" aria-hidden="true"></div>
+  <div class="main">
+    <header class="topbar" id="topbar">
+      <div class="tb-l">
+        <button type="button" class="tb-ic" id="sideBtn" data-side="toggle" aria-label="Mostrar u ocultar la barra lateral" title="Barra lateral"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M9.5 4.5v15"/><path d="M5.5 8h1.8M5.5 11h1.8"/></svg></button>
+        <span class="tb-hist"><button type="button" class="tb-ic" id="backBtn" data-hist="-1" aria-label="Atrás" title="Atrás"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" class="tb-ic" id="fwdBtn" data-hist="1" aria-label="Adelante" title="Adelante"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>
+        <a class="tb-brand" href="#/resumen" aria-label="Agora Digital App · Inicio"><svg class="tb-logo" viewBox="443 415 2381 1004" role="img" aria-label="Ágora"><use href="#agora-logo"/></svg><small>Digital App</small></a>
+        <span class="tb-sep" aria-hidden="true">/</span>
+        <div class="crumb" id="crumb"></div>
+      </div>
+      <div class="tb-c"><div class="seg" id="seg" role="group" aria-label="Mes: anterior, en curso y próximo"></div><button class="icon-btn mo-btn" id="monthMoreBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="monthMenu" aria-label="Más meses" title="Ver otros meses"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4.5v4.5h4.5"/><path d="M12 7.5V12l3 2"/></svg></button></div>
+      <div class="tb-r">
+        <button type="button" class="tb-search" id="searchBtn" data-act="palette" aria-label="Buscar o ir a"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><span>Buscar</span><kbd class="kb-k">⌘K</kbd></button>
+        <button type="button" class="ath-btn" id="athenaBtn" data-act="athena" aria-label="Abrir a Athena, tu asistente" title="Athena (⌘J)"><img src="assets/img/athena-cabeza.webp" alt="" width="26" height="26"><span class="ab-t">Athena</span></button>
+        <a class="home-btn" id="homeBtn" href="#/resumen" title="Inicio"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="hb-t">Inicio</span></a>
+        <a class="home-btn" id="setBtn" href="#/ajustes" title="Ajustes: apariencia, tasas, comisiones, agenda, clave y respaldo"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span class="hb-t">Ajustes</span></a>
+        <a class="home-btn" id="audBtn" href="#/auditoria" title="Auditoría: qué usuario hizo qué acción, en qué módulo, con fecha y hora"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span class="hb-t">Auditoría</span></a>
+        <button class="lock" id="lockBtn" type="button"></button>
+        <button class="icon-btn" id="themeBtn" type="button"></button>
+        <button type="button" class="acc-btn" id="accBtn" data-act="account" aria-haspopup="true" aria-label="Tu cuenta: apariencia, atajos, gestos y cerrar sesión" title="Tu cuenta">?</button>
+      </div>
+    </header>
+    <main id="content" tabindex="-1"></main>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Secciones principales"></nav>
+</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="agora-logo"></g></defs></svg>
+<nav class="mdm" id="modMenu" aria-label="Módulos" hidden></nav>
+<div class="mdm mpk" id="monthMenu" role="dialog" aria-label="Otros meses" hidden></div>
+<div class="mdm acc-menu" id="accMenu" role="menu" aria-label="Tu cuenta" hidden></div>
+<div id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-t"><button class="icon-btn modal-x" type="button" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="modal-body"></div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="agora-arranque">{{ARRANQUE}}</script>
+<script type="application/json" id="agora-scripts">["/assets/js/app.d780902c71.js","/assets/js/ecosistema.82cd9adc33.js","/assets/js/athena.233acb1bb1.js"]</script>
+<script nonce="{{NONCE}}" src="/assets/js/servidor.e257986ffd.js"></script>
+</body>
+</html>

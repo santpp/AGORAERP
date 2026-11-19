@@ -1,0 +1,6 @@
+# agora_app/ debe estar FUERA de public_html. Si por error quedó dentro, esto bloquea todo acceso web.
+Require all denied
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
