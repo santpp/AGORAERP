@@ -8,32 +8,6 @@ use Agora\Core\Env;
 /** Textos de los correos (español venezolano, tuteo). Todo dato variable se escapa. */
 final class Templates
 {
-    private const PURPOSE = [
-        'LOGIN' => 'entrar a Agora Digital App',
-        'RECUPERACION' => 'crear una clave nueva',
-        'VERIFICACION' => 'autorizar una acción protegida',
-        'CONTACTO' => 'verificar este canal',
-    ];
-
-    /** @return array{0:string,1:string,2:string} asunto, texto, html */
-    public static function otp(string $code, string $purpose, int $minutes, string $ip, string $detail = ''): array
-    {
-        $what = self::PURPOSE[$purpose] ?? 'verificar tu identidad';
-        $pretty = substr($code, 0, 3) . ' ' . substr($code, 3);
-        $subject = 'Tu código de verificación de Agora Digital App';
-        $text = "Tu código para {$what} es: {$pretty}\n\n"
-            . ($detail !== '' ? "Acción: {$detail}\n" : '')
-            . "Vence en {$minutes} minutos y solo sirve una vez.\nSolicitado desde la IP {$ip}.\n\n"
-            . "Si no fuiste tú, no compartas este código con nadie y avisa a tu administrador: alguien podría estar intentando entrar a tu cuenta.\n"
-            . "Agora Digital nunca te pedirá este código por teléfono ni por chat.";
-        $html = self::layout('Código de verificación', '<p>Tu código para <b>' . self::e($what) . '</b> es:</p>'
-            . '<p style="font:700 34px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:6px;margin:18px 0;color:#1D1D1F">' . self::e($pretty) . '</p>'
-            . ($detail !== '' ? '<p><b>Acción:</b> ' . self::e($detail) . '</p>' : '')
-            . '<p>Vence en ' . $minutes . ' minutos y solo sirve una vez. Solicitado desde la IP ' . self::e($ip) . '.</p>'
-            . '<p style="color:#6E6E73">Si no fuiste tú, no compartas este código y avisa a tu administrador. Agora Digital nunca te pedirá este código por teléfono ni por chat.</p>');
-        return [$subject, $text, $html];
-    }
-
     /** @param list<array<string,mixed>> $events */
     public static function securityAlert(string $title, array $events, string $summary): array
     {

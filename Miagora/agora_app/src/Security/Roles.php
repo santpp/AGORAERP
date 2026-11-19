@@ -30,9 +30,6 @@ final class Roles
         'tasas.cotizar' => ['SUPERADMIN', 'DIRECCION', 'ADMIN', 'VENTAS'],
     ];
 
-    /** Roles que deben entrar con verificación en dos pasos siempre */
-    public const MFA_REQUIRED = ['SUPERADMIN', 'DIRECCION'];
-
     public static function can(?string $role, string $perm): bool
     {
         return $role !== null && in_array($role, self::PERMS[$perm] ?? [], true);

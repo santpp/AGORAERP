@@ -13,17 +13,14 @@ use Agora\Http\Request;
 use Agora\Http\Response;
 use Agora\Http\Router;
 use Agora\Notify\Outbox;
-use Agora\Notify\WhatsApp;
 use Agora\Security\Alerts;
 use Agora\Security\Csrf;
 use Agora\Security\Headers;
 use Agora\Security\Integrity;
 use Agora\Security\IpGuard;
-use Agora\Security\Otp;
 use Agora\Security\RateLimiter;
 use Agora\Security\Roles;
 use Agora\Security\SessionManager;
-use Agora\Security\StepUp;
 use Agora\Security\Tripwire;
 use Agora\Security\Waf;
 use Agora\Services\Audit;
@@ -47,8 +44,6 @@ final class App
     public SessionManager $sessions;
     public Outbox $outbox;
     public Audit $audit;
-    public Otp $otp;
-    public StepUp $stepUp;
     public Alerts $alerts;
     public Periods $periods;
     public Payments $payments;
@@ -70,12 +65,10 @@ final class App
         $this->sessions = new SessionManager($this->db);
         $this->outbox = new Outbox($this->db);
         $this->audit = new Audit($this->db);
-        $this->otp = new Otp($this->db, $this->outbox, $this->rate);
-        $this->stepUp = new StepUp($this->db, $this->otp);
         $this->alerts = new Alerts($this->db, $this->outbox, $this->rate);
         $this->periods = new Periods($this->db);
-        $this->payments = new Payments($this->db, $this->periods, $this->stepUp, $this->audit);
-        $this->docs = new Docs($this->db, $this->periods, $this->payments, $this->audit, $this->stepUp);
+        $this->payments = new Payments($this->db, $this->periods, $this->audit);
+        $this->docs = new Docs($this->db, $this->periods, $this->payments, $this->audit);
         $this->tripwire = new Tripwire($this->db, $this->alerts, $this->ipGuard);
         $this->integrity = new Integrity($this->db, $this->alerts);
     }
@@ -103,7 +96,6 @@ final class App
 
     public function runDeferred(): void
     {
-        Otp::runDeferred();
         $jobs = $this->after;
         $this->after = [];
         foreach ($jobs as $fn) {
@@ -362,7 +354,6 @@ final class App
             'version' => self::VERSION,
             'version_texto' => self::VERSION_LABEL,
             'sesion' => $s ? $this->sessionPayload($s) : null,
-            'recuperacion' => ['correo' => Outbox::mailConfigured(), 'whatsapp' => WhatsApp::configured()],
             'entorno' => Env::str('APP_ENV', 'production'),
         ];
         $json = json_encode($boot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -418,22 +409,17 @@ final class App
                 $org = ['uid' => $o['uid'], 'nombre' => $o['name'], 'plan' => $o['plan'], 'zona' => $o['timezone'], 'max_usuarios' => (int) $o['max_users']];
             }
         }
-        $u = $this->db->one('SELECT mfa_enabled, mfa_channel FROM users WHERE id = ?', [$uid]) ?? [];
         $role = $s['role'] ?? null;
         return [
             'usuario' => [
                 'uid' => $s['user_uid'], 'nombre' => $s['name'], 'correo' => $s['email'], 'rol' => $role, 'rol_nombre' => $role ? (Roles::LABELS[$role] ?? $role) : 'Plataforma',
-                'permisos' => Roles::permsOf($role), 'mfa' => (bool) ($u['mfa_enabled'] ?? false) || ($role && in_array($role, Roles::MFA_REQUIRED, true)),
-                'mfa_obligatoria' => ($role && in_array($role, Roles::MFA_REQUIRED, true)) || !empty($s['is_platform_admin']), 'canal_mfa' => $u['mfa_channel'] ?? null,
+                'permisos' => Roles::permsOf($role),
                 'plataforma' => !empty($s['is_platform_admin']),
             ],
             'empresa' => $org,
             'empresas' => array_map(fn ($r) => ['uid' => $r['uid'], 'nombre' => $r['name'], 'plan' => $r['plan'], 'rol' => $r['role'], 'rol_nombre' => Roles::LABELS[$r['role']] ?? $r['role']], $orgs),
             'csrf' => (string) $s['csrf_token'],
             'edicion_hasta' => SessionManager::isElevated($s) ? self::iso((string) $s['elevated_until']) : null,
-            'canales' => $this->otp->channelsFor($uid),
-            'whatsapp' => WhatsApp::configured(),
-            'verificacion_minutos' => StepUp::minutes(),
             'cerrados' => $s['org_id'] !== null ? $this->periods->closed((int) $s['org_id']) : [],
             'version' => self::VERSION,
             'hora_servidor' => self::iso(Clock::ts()),

@@ -7,7 +7,7 @@ use Agora\Core\Clock;
 use Agora\Core\Db;
 use Agora\Http\HttpError;
 
-/** Cierre de mes: un mes CERRADO solo admite cambios con verificación OTP vigente. */
+/** Cierre de mes: un mes CERRADO queda marcado; sus cambios se registran en la auditoría. */
 final class Periods
 {
     private array $cache = [];

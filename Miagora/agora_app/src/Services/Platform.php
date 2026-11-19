@@ -95,15 +95,14 @@ final class Platform
         Password::assertPolicy($password, $email, $name);
         $existing = $this->app->db->value('SELECT id FROM users WHERE email = ?', [$email]);
         if ($existing) {
-            $this->app->db->update('users', ['is_platform_admin' => 1, 'mfa_enabled' => 1, 'updated_at' => Clock::ts()], ['id' => (int) $existing]);
+            $this->app->db->update('users', ['is_platform_admin' => 1, 'updated_at' => Clock::ts()], ['id' => (int) $existing]);
             return (int) $existing;
         }
         $id = $this->app->db->insert('users', [
             'uid' => Ids::ulid(), 'email' => $email, 'name' => Validator::clean($name, 120) ?: 'Administración', 'password_hash' => Password::hash($password), 'password_changed_at' => Clock::ts(),
-            'status' => 'ACTIVO', 'is_platform_admin' => 1, 'mfa_enabled' => 1, 'mfa_channel' => 'EMAIL', 'failed_logins' => 0, 'locked_until' => null, 'last_login_at' => null, 'last_login_ip' => null,
+            'status' => 'ACTIVO', 'is_platform_admin' => 1, 'failed_logins' => 0, 'locked_until' => null, 'last_login_at' => null, 'last_login_ip' => null,
             'created_at' => Clock::ts(), 'updated_at' => Clock::ts(),
         ]);
-        $this->app->db->insert('user_contacts', ['user_id' => $id, 'channel' => 'EMAIL', 'contact_value' => $email, 'verified_at' => Clock::ts(), 'is_primary' => 1, 'created_at' => Clock::ts()]);
         return $id;
     }
 }

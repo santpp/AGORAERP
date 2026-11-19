@@ -41,11 +41,6 @@ final class FiscalApi
         $orgId = $c->orgId();
         $f = $c->app->fiscal();
         $before = $f->profile($orgId);
-        $g = null;
-        // con documentos ya emitidos, los datos fiscales solo cambian con código
-        if ($before && (int) $c->app->db->value("SELECT COUNT(*) FROM fiscal_documents WHERE org_id = ? AND status <> 'BORRADOR' AND legacy = 0", [$orgId]) > 0) {
-            $g = $c->app->stepUp->require($c->req, $c->s(), 'PERFIL_FISCAL', 'fiscal:perfil');
-        }
         $out = $f->saveProfile($orgId, $c->json(), $c->userId());
         $changed = [];
         if ($before) {
@@ -56,7 +51,7 @@ final class FiscalApi
                 }
             }
         }
-        $c->audit('facturacion', $before ? 'cambió los datos fiscales de la empresa' . ($changed ? ' (' . implode(', ', $changed) . ')' : '') : 'configuró los datos fiscales de la empresa', 'perfil_fiscal', null, null, $g ? (string) $g['id'] : null);
+        $c->audit('facturacion', $before ? 'cambió los datos fiscales de la empresa' . ($changed ? ' (' . implode(', ', $changed) . ')' : '') : 'configuró los datos fiscales de la empresa', 'perfil_fiscal', null, null, null);
         if ($before && $changed) {
             $c->app->alerts->org($orgId, 'Cambiaron los datos fiscales', 'Se cambiaron los datos fiscales de la empresa', '<p>' . Templates::e((string) $c->s()['name']) . ' cambió: ' . Templates::e(implode(', ', $changed)) . '. Los documentos ya emitidos no cambian; aplica a los nuevos.</p>');
         }
@@ -65,18 +60,16 @@ final class FiscalApi
 
     private static function addRange(Ctx $c): array
     {
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'RANGO_CONTROL', 'fiscal:rangos');
         $d = $c->json();
         $res = $c->app->fiscal()->addRange($c->orgId(), $d, $c->userId());
-        $c->audit('facturacion', sprintf('registró números de control de la imprenta: %s-%s al %s-%s', $d['prefijo'] ?? '00', str_pad((string) ($d['desde'] ?? ''), 8, '0', STR_PAD_LEFT), $d['prefijo'] ?? '00', str_pad((string) ($d['hasta'] ?? ''), 8, '0', STR_PAD_LEFT)), 'rango_control', (string) $res['id'], null, (string) $g['id']);
+        $c->audit('facturacion', sprintf('registró números de control de la imprenta: %s-%s al %s-%s', $d['prefijo'] ?? '00', str_pad((string) ($d['desde'] ?? ''), 8, '0', STR_PAD_LEFT), $d['prefijo'] ?? '00', str_pad((string) ($d['hasta'] ?? ''), 8, '0', STR_PAD_LEFT)), 'rango_control', (string) $res['id'], null, null);
         return $res;
     }
 
     private static function annulRange(Ctx $c): array
     {
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'RANGO_CONTROL', 'fiscal:rangos');
         $c->app->fiscal()->annulRange($c->orgId(), (int) $c->param('id'));
-        $c->audit('facturacion', 'anuló un rango de números de control sin usar', 'rango_control', $c->param('id'), null, (string) $g['id']);
+        $c->audit('facturacion', 'anuló un rango de números de control sin usar', 'rango_control', $c->param('id'), null, null);
         return ['rangos' => $c->app->fiscal()->ranges($c->orgId())];
     }
 
@@ -108,9 +101,9 @@ final class FiscalApi
     private static function annul(Ctx $c): array
     {
         $uid = $c->param('uid');
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'FACTURA_ANULAR', 'documento:' . $uid, true);
-        $doc = $c->app->fiscal()->annul($c->orgId(), $uid, (string) $g['reason'], $c->actor(), (string) $g['id']);
-        $c->app->alerts->org($c->orgId(), 'Documento fiscal anulado', 'Se anuló un documento fiscal', '<p>' . Templates::e((string) $c->s()['name']) . ' anuló ' . Templates::e(mb_strtolower((string) $doc['titulo'])) . ' N.° <b>' . Templates::e((string) $doc['numero_texto']) . '</b> (' . Templates::e((string) $doc['cliente']['nombre']) . ').</p><p>Motivo: ' . Templates::e((string) $g['reason']) . '</p>');
+        $motivo = self::motivo($c);
+        $doc = $c->app->fiscal()->annul($c->orgId(), $uid, $motivo, $c->actor(), null);
+        $c->app->alerts->org($c->orgId(), 'Documento fiscal anulado', 'Se anuló un documento fiscal', '<p>' . Templates::e((string) $c->s()['name']) . ' anuló ' . Templates::e(mb_strtolower((string) $doc['titulo'])) . ' N.° <b>' . Templates::e((string) $doc['numero_texto']) . '</b> (' . Templates::e((string) $doc['cliente']['nombre']) . ').</p><p>Motivo: ' . Templates::e($motivo) . '</p>');
         return $doc;
     }
 
@@ -122,8 +115,16 @@ final class FiscalApi
         if (!in_array($type, ['NC', 'ND'], true)) {
             throw HttpError::badRequest('Indica si es nota de crédito (NC) o de débito (ND).');
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'NOTA_EMITIR', 'documento:' . $uid, true);
-        return $c->app->fiscal()->note($c->orgId(), $uid, $type, $d, (string) $g['reason'], $c->actor(), (string) $g['id']);
+        return $c->app->fiscal()->note($c->orgId(), $uid, $type, $d, self::motivo($c), $c->actor(), null);
+    }
+
+    private static function motivo(Ctx $c): string
+    {
+        $motivo = trim((string) ($c->json()['motivo'] ?? ''));
+        if ($motivo === '') {
+            throw HttpError::badRequest('Indica el motivo.');
+        }
+        return mb_substr($motivo, 0, 400);
     }
 
     private static function representation(Ctx $c): Response

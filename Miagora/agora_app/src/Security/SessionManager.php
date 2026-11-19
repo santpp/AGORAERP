@@ -26,13 +26,8 @@ final class SessionManager
         return Env::bool('COOKIE_SECURE', true) ? '__Host-agora' : 'agora_sesion';
     }
 
-    public static function trustedCookieName(): string
-    {
-        return Env::bool('COOKIE_SECURE', true) ? '__Host-agora_equipo' : 'agora_equipo';
-    }
-
     /** @return array{token:string,id:string,csrf:string} */
-    public function create(Request $req, Response $res, int $userId, ?int $orgId, bool $mfaPassed, bool $remember): array
+    public function create(Request $req, Response $res, int $userId, ?int $orgId, bool $remember): array
     {
         $token = Ids::token(32);
         $id = Ids::sha256($token);
@@ -41,7 +36,7 @@ final class SessionManager
         $maxSec = $remember ? Env::int('SESSION_REMEMBER_DAYS', 7) * 86400 : Env::int('SESSION_MAX_HOURS', 12) * 3600;
         $now = Clock::ts();
         $this->db->insert('sessions', [
-            'id' => $id, 'user_id' => $userId, 'org_id' => $orgId, 'csrf_token' => $csrf, 'mfa_passed' => $mfaPassed ? 1 : 0,
+            'id' => $id, 'user_id' => $userId, 'org_id' => $orgId, 'csrf_token' => $csrf,
             'elevated_until' => null, 'ip' => $req->ip, 'user_agent' => $req->userAgent(), 'created_at' => $now, 'last_seen_at' => $now,
             'idle_expires_at' => Clock::ts($idleMin * 60), 'expires_at' => Clock::ts($maxSec), 'revoked_at' => null, 'revoke_reason' => null,
         ]);
@@ -58,7 +53,7 @@ final class SessionManager
         }
         $id = Ids::sha256($token);
         $s = $this->db->one(
-            'SELECT s.*, u.email, u.name, u.status AS user_status, u.is_platform_admin, u.mfa_enabled, u.uid AS user_uid, u.password_changed_at,
+            'SELECT s.*, u.email, u.name, u.status AS user_status, u.is_platform_admin, u.uid AS user_uid, u.password_changed_at,
                     m.role, m.status AS membership_status, o.uid AS org_uid, o.name AS org_name, o.status AS org_status
                FROM sessions s
                JOIN users u ON u.id = s.user_id
@@ -119,29 +114,5 @@ final class SessionManager
     public static function cookieOpts(int $expires): array
     {
         return ['expires' => $expires, 'path' => '/', 'secure' => Env::bool('COOKIE_SECURE', true), 'httponly' => true, 'samesite' => 'Strict'];
-    }
-
-    // ---------- equipos de confianza (no volver a pedir OTP al entrar durante 30 días) ----------
-    public function trustDevice(Request $req, Response $res, int $userId): void
-    {
-        $token = Ids::token(32);
-        $days = Env::int('TRUSTED_DEVICE_DAYS', 30);
-        $this->db->insert('trusted_devices', ['id' => Ids::sha256($token), 'user_id' => $userId, 'ip' => $req->ip, 'user_agent' => $req->userAgent(), 'created_at' => Clock::ts(), 'expires_at' => Clock::ts($days * 86400), 'revoked_at' => null]);
-        $res->cookie(self::trustedCookieName(), $token, self::cookieOpts(Clock::unix() + $days * 86400));
-    }
-
-    public function isTrustedDevice(Request $req, int $userId): bool
-    {
-        $t = $req->cookie(self::trustedCookieName());
-        if (!$t || strlen($t) > 64) {
-            return false;
-        }
-        $row = $this->db->one('SELECT user_id, expires_at, revoked_at FROM trusted_devices WHERE id = ?', [Ids::sha256($t)]);
-        return $row && (int) $row['user_id'] === $userId && $row['revoked_at'] === null && strcmp((string) $row['expires_at'], Clock::ts()) > 0;
-    }
-
-    public function revokeDevices(int $userId): void
-    {
-        $this->db->exec('UPDATE trusted_devices SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL', [Clock::ts(), $userId]);
     }
 }

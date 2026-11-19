@@ -11,7 +11,7 @@ use Agora\Notify\Templates;
 use Agora\Security\Validator;
 
 /**
- * Cierre de mes. Un mes cerrado no se puede cambiar sin un código (OTP) y queda una "foto" de cómo estaba.
+ * Cierre de mes. Queda una "foto" de cómo estaba el mes al cerrarlo.
  * Reabrir es solo del Superadministrador, con código, motivo y aviso por correo a los administradores.
  */
 final class PeriodsApi
@@ -73,13 +73,12 @@ final class PeriodsApi
         if ($pendingCtrl > 0) {
             throw new HttpError(409, 'CONTROL_PENDIENTE', "Hay {$pendingCtrl} documento(s) de ese mes sin número de control de la imprenta digital. Regístralos antes de cerrar.");
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'PERIODO_CERRAR', 'periodo:' . $p);
-        $c->app->db->transaction(function () use ($c, $orgId, $p, $g) {
+        $c->app->db->transaction(function () use ($c, $orgId, $p) {
             $c->app->periods->close($orgId, $p, $c->userId(), self::snapshot($c, $orgId, $p));
             $c->app->db->exec('UPDATE organizations SET data_version = data_version + 1, updated_at = ? WHERE id = ?', [Clock::ts(), $orgId]);
-            $c->audit('periodos', 'cerró el mes ' . $p . ' (desde ahora, cambiarlo exige código)', 'periodo', $p, null, (string) $g['id']);
+            $c->audit('periodos', 'cerró el mes ' . $p, 'periodo', $p, null, null);
         });
-        $c->app->alerts->org($orgId, 'Mes cerrado: ' . $p, 'Se cerró el mes ' . $p, '<p>' . Templates::e((string) $c->s()['name']) . ' cerró el mes <b>' . Templates::e($p) . '</b>. Desde ahora, cualquier cambio en sus datos exige un código de verificación y queda en la auditoría.</p>');
+        $c->app->alerts->org($orgId, 'Mes cerrado: ' . $p, 'Se cerró el mes ' . $p, '<p>' . Templates::e((string) $c->s()['name']) . ' cerró el mes <b>' . Templates::e($p) . '</b>. Cualquier cambio en sus datos queda en la auditoría.</p>');
         return ['ok' => true, 'periodo' => $p, 'borradores' => $drafts, 'cerrados' => $c->app->periods->closed($orgId)];
     }
 
@@ -90,12 +89,14 @@ final class PeriodsApi
         if (!$c->app->periods->isClosed($orgId, $p)) {
             throw new HttpError(409, 'NO_CERRADO', 'Ese mes no está cerrado.');
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'PERIODO_REABRIR', 'periodo:' . $p, true);
-        $reason = (string) $g['reason'];
-        $c->app->db->transaction(function () use ($c, $orgId, $p, $g, $reason) {
+        $reason = trim((string) ($c->json()['motivo'] ?? ''));
+        if ($reason === '') {
+            throw HttpError::badRequest('Indica el motivo para reabrir el mes.');
+        }
+        $c->app->db->transaction(function () use ($c, $orgId, $p, $reason) {
             $c->app->periods->reopen($orgId, $p, $c->userId(), $reason);
             $c->app->db->exec('UPDATE organizations SET data_version = data_version + 1, updated_at = ? WHERE id = ?', [Clock::ts(), $orgId]);
-            $c->audit('periodos', 'reabrió el mes ' . $p . ' · motivo: ' . $reason, 'periodo', $p, null, (string) $g['id']);
+            $c->audit('periodos', 'reabrió el mes ' . $p . ' · motivo: ' . $reason, 'periodo', $p, null, null);
         });
         $c->app->alerts->event('MES_REABIERTO', 'MEDIA', $c->req->ip, $c->req->method, $c->req->path, $c->req->userAgent(), ['periodo' => $p, 'motivo' => $reason], $orgId, $c->userId(), false);
         $c->app->alerts->org($orgId, 'Atención: se reabrió el mes ' . $p, 'Se reabrió un mes cerrado', '<p>' . Templates::e((string) $c->s()['name']) . ' reabrió el mes <b>' . Templates::e($p) . '</b>.</p><p>Motivo: ' . Templates::e($reason) . '</p><p>Si no lo autorizaste, revisa la auditoría y ciérralo de nuevo.</p>');

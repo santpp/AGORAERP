@@ -28,19 +28,17 @@ final class Admin
 
     private static function export(Ctx $c): Response
     {
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'EXPORTAR', 'empresa:' . self::orgUid($c));
         $data = (new Transfer($c->app))->export($c->orgId());
-        $c->audit('ajustes', 'exportó todos los datos de la empresa', 'exportacion', null, null, (string) $g['id']);
+        $c->audit('ajustes', 'exportó todos los datos de la empresa', 'exportacion', null, null, null);
         $c->app->alerts->org($c->orgId(), 'Se exportaron los datos de tu empresa', 'Exportación completa de datos', '<p>' . Templates::e((string) $c->s()['name']) . ' descargó una copia completa de los datos de la empresa (IP ' . Templates::e($c->req->ip) . ').</p><p>Si no lo autorizaste, revisa la auditoría y los accesos.</p>');
         return Response::json($data)->header('Content-Disposition', 'attachment; filename="agora-exportacion-' . date('Y-m-d') . '.json"');
     }
 
     private static function import(Ctx $c): array
     {
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'IMPORTAR', 'empresa:' . self::orgUid($c));
         $d = $c->json();
         $backup = is_array($d['respaldo'] ?? null) ? $d['respaldo'] : $d;
-        return (new Transfer($c->app))->import($c->orgId(), $backup, $c->actor(), (string) $g['id']);
+        return (new Transfer($c->app))->import($c->orgId(), $backup, $c->actor(), null);
     }
 
     private static function backups(Ctx $c): array

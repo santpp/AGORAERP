@@ -2,7 +2,7 @@
 /**
  * Cambia la clave de un usuario desde SSH (sin correo ni enlace). Pide la clave en pantalla sin mostrarla.
  *     php agora_app/tools/clave.php --correo=info@agoradigital.app
- * Desbloquea la cuenta y reinicia los intentos fallidos. El inicio de sesión con MFA por correo sigue necesitando el correo.
+ * Desbloquea la cuenta y reinicia los intentos fallidos.
  */
 declare(strict_types=1);
 require __DIR__ . '/_cli.php';

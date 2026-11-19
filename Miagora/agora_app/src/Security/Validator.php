@@ -44,38 +44,6 @@ final class Validator
         return ($s !== '' && strlen($s) <= 190 && filter_var($s, FILTER_VALIDATE_EMAIL)) ? $s : null;
     }
 
-    /**
-     * Teléfono para WhatsApp en formato internacional (E.164). Acepta formatos venezolanos:
-     * 0414-123.45.67, 414 1234567, +58 414 1234567 → +584141234567
-     */
-    public static function phone(mixed $v): ?string
-    {
-        $s = self::clean($v, 40);
-        $plus = str_starts_with($s, '+');
-        $d = preg_replace('/\D/', '', $s) ?? '';
-        if ($d === '') {
-            return null;
-        }
-        if (!$plus) {
-            if (str_starts_with($d, '58') && strlen($d) === 12) {
-                $plus = true;
-            } elseif (str_starts_with($d, '0') && strlen($d) === 11) {
-                $d = '58' . substr($d, 1);
-                $plus = true;
-            } elseif (strlen($d) === 10 && preg_match('/^[24]/', $d)) {
-                $d = '58' . $d;
-                $plus = true;
-            }
-        }
-        if (!$plus || strlen($d) < 8 || strlen($d) > 15) {
-            return null;
-        }
-        if (str_starts_with($d, '58') && !preg_match('/^58(4(12|14|16|22|24|26)|2\d{2})\d{7}$/', $d)) {
-            return null;
-        }
-        return '+' . $d;
-    }
-
     /** RIF o cédula: J-12345678-9, V-12345678, E-…, P-…, G-…, C-… (se normaliza con guiones) */
     public static function rif(mixed $v): ?string
     {

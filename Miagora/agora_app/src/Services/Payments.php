@@ -6,24 +6,21 @@ namespace Agora\Services;
 use Agora\Core\Clock;
 use Agora\Core\Db;
 use Agora\Http\HttpError;
-use Agora\Http\Request;
 use Agora\Security\Roles;
-use Agora\Security\StepUp;
 use Agora\Security\Validator;
 
 /**
  * Cobros. La app manda su lista de pagos (pagos_v1); el servidor compara contra lo registrado:
  *  · nuevos → se validan (factura existente, fecha, montos, tasa, referencia única) y se registran;
- *  · quitados → se REVIERTEN, solo con verificación OTP (COBRO_REVERTIR) y permiso;
+ *  · quitados → se REVIERTEN, con permiso;
  *  · modificados → se rechazan (un cobro registrado no se edita).
- * Si el mes del cobro está cerrado, hace falta además la verificación DATOS_CERRADOS.
  */
 final class Payments
 {
     private const METHODS = ['BINANCE' => 'USDT', 'PAYPAL' => 'USD', 'ZELLE' => 'USD', 'CASH' => 'USD', 'VES' => 'VES', 'RET_IVA' => 'VES'];
     private const CORE = ['invId', 'date', 'method', 'amount', 'fee', 'rate', 'ref'];
 
-    public function __construct(private Db $db, private Periods $periods, private StepUp $stepUp, private Audit $audit)
+    public function __construct(private Db $db, private Periods $periods, private Audit $audit)
     {
     }
 
@@ -39,11 +36,8 @@ final class Payments
         return $out;
     }
 
-    /**
-     * @param list<array{accion:string,alcance:list<string>,motivo:bool}> $locks se agregan los bloqueos que exigen OTP
-     * @return list<array<string,mixed>> cambios a aplicar (se ejecutan después si no hay bloqueos)
-     */
-    public function plan(Request $req, array $s, mixed $incoming, array &$locks): array
+    /** @return list<array<string,mixed>> cambios a aplicar */
+    public function plan(array $s, mixed $incoming): array
     {
         if (!is_array($incoming) || !array_is_list($incoming)) {
             throw HttpError::badRequest('La lista de cobros no tiene el formato esperado.');
@@ -98,24 +92,12 @@ final class Payments
             if (!Roles::can($s['role'] ?? null, 'pagos.revertir')) {
                 throw HttpError::forbidden('Solo Dirección o un Superadministrador pueden revertir cobros.');
             }
-            $scope = 'cobro:' . implode(',', $removed);
-            $g = $this->stepUp->find($req, $s, 'COBRO_REVERTIR', $scope);
-            if (!$g) {
-                $locks[] = ['accion' => 'COBRO_REVERTIR', 'alcance' => $scope, 'motivo' => true];
-            } else {
-                foreach ($removed as $appId) {
-                    $ops[] = ['type' => 'revert', 'app_id' => $appId, 'reason' => (string) ($g['reason'] ?: 'Revertido desde la app'), 'grant' => (string) $g['id']];
-                }
+            foreach ($removed as $appId) {
+                $ops[] = ['type' => 'revert', 'app_id' => $appId, 'reason' => 'Revertido desde la app'];
             }
         }
         if ($ops && !Roles::can($s['role'] ?? null, 'pagos.registrar')) {
             throw HttpError::forbidden('Tu rol no permite registrar cobros.');
-        }
-        if ($closed) {
-            $scope = 'periodo:' . implode(',', array_keys($closed));
-            if (!$this->stepUp->find($req, $s, 'DATOS_CERRADOS', $scope)) {
-                $locks[] = ['accion' => 'DATOS_CERRADOS', 'alcance' => $scope, 'motivo' => true];
-            }
         }
         return $ops;
     }
@@ -146,7 +128,7 @@ final class Payments
             } else {
                 $row = $this->db->one('SELECT id, invoice_ref, reference, usd_cents FROM payments WHERE org_id = ? AND app_id = ?', [$orgId, $op['app_id']]);
                 $this->db->exec("UPDATE payments SET status = 'REVERTIDO', reference_active = NULL, reverted_by = ?, reverted_at = ?, revert_reason = ? WHERE org_id = ? AND app_id = ? AND status = 'REGISTRADO'", [(int) $s['user_id'], Clock::ts(), mb_substr($op['reason'], 0, 400), $orgId, $op['app_id']]);
-                $this->audit->log($orgId, $actor, 'facturacion', sprintf('revirtió el cobro de %s · ref. %s · motivo: %s', $row['invoice_ref'] ?? '', $row['reference'] ?? '', $op['reason']), 'cobro', $op['app_id'], null, 'SERVIDOR', $op['grant']);
+                $this->audit->log($orgId, $actor, 'facturacion', sprintf('revirtió el cobro de %s · ref. %s · motivo: %s', $row['invoice_ref'] ?? '', $row['reference'] ?? '', $op['reason']), 'cobro', $op['app_id'], null, 'SERVIDOR', null);
             }
             $n++;
         }

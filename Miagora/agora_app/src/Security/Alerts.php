@@ -84,7 +84,6 @@ final class Alerts
             'WAF' => 'Ataque bloqueado en la API',
             'BLOQUEO_IP' => 'Dirección IP bloqueada',
             'LOGIN_FUERZA' => 'Intentos repetidos de entrar a una cuenta',
-            'OTP_ABUSO' => 'Intentos repetidos de adivinar códigos',
             default => 'Evento de seguridad',
         };
         $summary = "Se registró un evento de gravedad {$e['severity']} desde la IP {$e['ip']} ({$e['http_method']} {$e['path']}). En la última hora esa IP generó " . count($burst) . ' evento(s).';

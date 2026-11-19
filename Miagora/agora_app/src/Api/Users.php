@@ -15,7 +15,7 @@ use Agora\Security\Validator;
 
 /**
  * Personas de la empresa: invitar, cambiar rol, suspender. El plan limita cuántas personas caben
- * (Bronce 3, Plata 10, Oro 20, Diamante sin límite). Dar o quitar roles exige código (OTP).
+ * (Bronce 3, Plata 10, Oro 20, Diamante sin límite).
  */
 final class Users
 {
@@ -37,9 +37,9 @@ final class Users
         $org = $c->app->db->one('SELECT plan, max_users FROM organizations WHERE id = ?', [$orgId]) ?? [];
         $users = array_map(fn ($r) => [
             'uid' => $r['uid'], 'nombre' => $r['name'], 'correo' => $r['email'], 'rol' => $r['role'], 'rol_nombre' => Roles::LABELS[$r['role']] ?? $r['role'], 'estado' => $r['mstatus'],
-            'mfa' => (bool) $r['mfa_enabled'] || in_array($r['role'], Roles::MFA_REQUIRED, true), 'ultimo_acceso' => App::iso($r['last_login_at']), 'desde' => App::iso((string) $r['mcreated']), 'tu' => (int) $r['id'] === $c->userId(),
+            'ultimo_acceso' => App::iso($r['last_login_at']), 'desde' => App::iso((string) $r['mcreated']), 'tu' => (int) $r['id'] === $c->userId(),
         ], $c->app->db->all(
-            'SELECT u.id, u.uid, u.name, u.email, u.mfa_enabled, u.last_login_at, m.role, m.status AS mstatus, m.created_at AS mcreated FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? ORDER BY m.status, u.name',
+            'SELECT u.id, u.uid, u.name, u.email, u.last_login_at, m.role, m.status AS mstatus, m.created_at AS mcreated FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? ORDER BY m.status, u.name',
             [$orgId]
         ));
         $inv = array_map(fn ($r) => ['uid' => $r['uid'], 'correo' => $r['email'], 'rol' => $r['role'], 'rol_nombre' => Roles::LABELS[$r['role']] ?? $r['role'], 'vence' => App::iso((string) $r['expires_at']), 'creada' => App::iso((string) $r['created_at'])],
@@ -90,12 +90,8 @@ final class Users
         if ($c->app->db->value('SELECT 1 FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.org_id = ? AND u.email = ?', [$orgId, $email])) {
             throw new HttpError(409, 'YA_MIEMBRO', 'Esa persona ya forma parte de la empresa.');
         }
-        $g = null;
-        if (in_array($role, Roles::MFA_REQUIRED, true)) {
-            $g = $c->app->stepUp->require($c->req, $c->s(), 'USUARIO_INVITAR', 'rol:' . $role);
-        }
         $inv = (new \Agora\Services\Platform($c->app))->createInvitation($orgId, $email, $role, $c->userId(), (string) $c->s()['name']);
-        $c->audit('usuarios', 'invitó a ' . $email . ' como ' . Roles::LABELS[$role], 'invitacion', $inv['uid'], null, $g ? (string) $g['id'] : null);
+        $c->audit('usuarios', 'invitó a ' . $email . ' como ' . Roles::LABELS[$role], 'invitacion', $inv['uid'], null, null);
         return ['ok' => true, 'invitacion' => $inv['uid'], 'vence' => $inv['vence']];
     }
 
@@ -141,14 +137,10 @@ final class Users
         if (self::lastSuperadmin($c, $t)) {
             throw new HttpError(409, 'ULTIMO_SUPERADMIN', 'Es el único Superadministrador: nombra a otro antes de cambiarle el rol.');
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'USUARIO_ROL', 'usuario:' . $t['uid']);
         $c->app->db->update('memberships', ['role' => $role, 'updated_at' => Clock::ts()], ['org_id' => $c->orgId(), 'user_id' => (int) $t['id']]);
         // con otro rol cambian los permisos: se cierran sus sesiones para que entre de nuevo
         $c->app->sessions->revokeAllForUser((int) $t['id'], 'cambio_rol');
-        if (in_array($role, Roles::MFA_REQUIRED, true)) {
-            $c->app->db->update('users', ['mfa_enabled' => 1], ['id' => (int) $t['id']]);
-        }
-        $c->audit('usuarios', 'cambió el rol de ' . $t['email'] . ': ' . (Roles::LABELS[$t['role']] ?? $t['role']) . ' → ' . Roles::LABELS[$role], 'usuario', (string) $t['uid'], null, (string) $g['id']);
+        $c->audit('usuarios', 'cambió el rol de ' . $t['email'] . ': ' . (Roles::LABELS[$t['role']] ?? $t['role']) . ' → ' . Roles::LABELS[$role], 'usuario', (string) $t['uid'], null, null);
         $c->app->alerts->org($c->orgId(), 'Cambio de rol en tu empresa', 'Se cambió un rol', '<p>' . Templates::e((string) $c->s()['name']) . ' cambió el rol de ' . Templates::e((string) $t['name']) . ' a <b>' . Templates::e(Roles::LABELS[$role]) . '</b>.</p>');
         return ['ok' => true];
     }
@@ -169,12 +161,11 @@ final class Users
                 throw new HttpError(409, 'PLAN_LLENO', 'Tu plan ya no tiene cupos para reactivar a esta persona.');
             }
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'USUARIO_ROL', 'usuario:' . $t['uid']);
         $c->app->db->update('memberships', ['status' => $status, 'updated_at' => Clock::ts()], ['org_id' => $c->orgId(), 'user_id' => (int) $t['id']]);
         if ($status === 'SUSPENDIDA') {
             $c->app->db->exec('UPDATE sessions SET revoked_at = ?, revoke_reason = ? WHERE user_id = ? AND org_id = ? AND revoked_at IS NULL', [Clock::ts(), 'suspendido', (int) $t['id'], $c->orgId()]);
         }
-        $c->audit('usuarios', ($status === 'SUSPENDIDA' ? 'suspendió' : 'reactivó') . ' el acceso de ' . $t['email'], 'usuario', (string) $t['uid'], null, (string) $g['id']);
+        $c->audit('usuarios', ($status === 'SUSPENDIDA' ? 'suspendió' : 'reactivó') . ' el acceso de ' . $t['email'], 'usuario', (string) $t['uid'], null, null);
         return ['ok' => true];
     }
 }

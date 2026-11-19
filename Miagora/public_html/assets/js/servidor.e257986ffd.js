@@ -2,9 +2,9 @@
    ---------------------------------------------------------------------------------------------
    En la edición con servidor (Hostinger) los datos viven en la base de datos y no en el navegador.
    Este archivo se carga ANTES que app.js y:
-   · muestra el acceso (clave + código por correo o WhatsApp), la recuperación de la clave SOLO con código y las invitaciones;
+   · muestra el acceso (correo y clave) y las invitaciones;
    · trae los datos del servidor y conecta un "localStorage" en memoria que guarda en el servidor (por lotes, con versión);
-   · si el servidor pide verificación (mes cerrado, anular una factura, revertir un cobro…), pide el código y reintenta;
+   · pide un motivo escrito para anular, emitir notas y reabrir un mes;
    · deja a app.js el puente window.AGORA_SRV (facturación fiscal, cuenta, personas, cierres, seguridad, exportar).
    Todo el texto va escapado con esc(); los scripts solo corren con el nonce de la página (CSP). */
 (function () {
@@ -55,8 +55,6 @@
   const ic = (k, s = 18) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k] || ''}</svg>`;
 
   // ================================================================== 2. API
-  const grants = []; // autorizaciones vigentes: { accion, alcance, token, exp }
-  const liveGrants = () => grants.filter(g => g.exp > Date.now()).slice(-5).map(g => g.token);
   class ApiError extends Error {
     constructor(status, data) { super((data && data.mensaje) || (status ? 'El servidor respondió ' + status : 'Sin conexión con el servidor.')); this.status = status; this.code = (data && data.error) || (status ? 'ERROR' : 'SIN_CONEXION'); this.data = data || {}; }
   }
@@ -64,7 +62,6 @@
     const h = { Accept: 'application/json' };
     if (body !== undefined) h['Content-Type'] = 'application/json';
     if (S && S.csrf) h['X-CSRF-Token'] = S.csrf;
-    const g = liveGrants(); if (g.length) h['X-Agora-Autorizacion'] = g.join(',');
     if (o.etag) h['If-None-Match'] = o.etag;
     let res;
     try {
@@ -78,23 +75,18 @@
     else data = await res.text().catch(() => '');
     return { status: res.status, data, headers: res.headers };
   }
-  /** Llama a la API. Si el servidor pide verificación (423), pide el código y reintenta.
-      Si está ocupado (503/429 en horas pico), las lecturas esperan lo que pide Retry-After y reintentan solas. */
+  /** Llama a la API. Si está ocupado (503/429 en horas pico), las lecturas esperan lo que pide Retry-After y reintentan solas. */
   async function api(method, path, body, o = {}) {
     let busy = 0;
     for (let i = 0; i < 7; i++) {
       const r = await rawFetch(method, path, body, o);
-      if (r.status === 423 && r.data && r.data.error === 'VERIFICACION_REQUERIDA' && !o.noStepUp) {
-        await stepUp(r.data); // si cancela, lanza CANCELADO
-        continue;
-      }
       const wait = r.headers ? Math.min(30, +r.headers.get('retry-after') || 0) : 0;
       if ((r.status === 503 || r.status === 429) && method === 'GET' && !o.keepalive && busy < 2 && wait > 0 && wait <= 6) { busy++; await sleep(wait * 1000 + Math.random() * 800); continue; }
       if (r.status === 401 && !o.public) { onSessionLost(); throw new ApiError(401, r.data); }
       if (r.status === 0 || r.status >= 400) { const err = new ApiError(r.status, r.data); err.retryAfter = wait; throw err; }
       return r;
     }
-    throw new ApiError(423, { mensaje: 'Se necesitan demasiadas verificaciones seguidas. Intenta de nuevo.' });
+    throw new ApiError(503, { mensaje: 'El servidor está ocupado. Intenta de nuevo.' });
   }
   const get = (p, o) => api('GET', p, undefined, o).then(r => r.data);
   const post = (p, b = {}, o) => api('POST', p, b, o).then(r => r.data);
@@ -102,7 +94,7 @@
   const del = (p, o) => api('DELETE', p, undefined, o).then(r => r.data);
   window.agoraApi = { get, post, put, del };
 
-  // ================================================================== 3. hoja propia (código, avisos) sobre todo lo demás
+  // ================================================================== 3. hoja propia (motivo, avisos) sobre todo lo demás
   function sheet(html, { wide = false, onClose } = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'srv-sheet'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
@@ -117,81 +109,6 @@
     return { el: wrap, body: wrap.querySelector('.srv-sheet-b'), close };
   }
 
-  /** Texto legible del alcance de una verificación */
-  function scopeTxt(scope) {
-    const [k, v = ''] = String(scope).split(/:(.*)/s);
-    const vals = v.split(',').filter(Boolean);
-    if (k === 'periodo') return (vals.length > 1 ? 'Meses: ' : 'Mes: ') + vals.map(mesTxt).join(', ');
-    if (k === 'documento') { const d = docCache[vals[0]]; return d ? `${d.titulo} N.° ${d.numero_texto || 'borrador'} · ${d.cliente && d.cliente.nombre || ''}` : 'Documento fiscal'; }
-    if (k === 'cobro') return vals.length > 1 ? `${vals.length} cobros` : 'Un cobro registrado';
-    if (k === 'recibo') return vals.length > 1 ? `${vals.length} recibos` : 'Un recibo emitido';
-    if (k === 'empresa') return 'Todos los datos de la empresa';
-    if (k === 'usuario') return 'Una persona de la empresa';
-    if (k === 'rol') return 'Rol: ' + ({ SUPERADMIN: 'Superadministrador', DIRECCION: 'Dirección' }[v] || v);
-    if (k === 'contacto') return v === 'WHATSAPP' ? 'Tu WhatsApp de verificación' : 'Tu correo de verificación';
-    if (k === 'fiscal') return v === 'rangos' ? 'Números de control de la imprenta' : 'Datos fiscales de la empresa';
-    if (k === 'mfa') return 'Verificación en dos pasos de tu cuenta';
-    if (k === 'ip') return 'IP ' + v;
-    return scope;
-  }
-  const chanTxt = c => c === 'WHATSAPP' ? 'WhatsApp' : 'correo';
-
-  /** Pide el código (OTP) y deja la autorización guardada. Devuelve el token o lanza CANCELADO. */
-  function stepUp(info) {
-    return new Promise((resolve, reject) => {
-      const chans = (S && S.canales) || [];
-      let done = false;
-      const sh = sheet(`<div class="srv-otp">
-        <span class="srv-ic">${ic('shield', 22)}</span>
-        <h2>Confirma con un código</h2>
-        <p class="muted">${esc(info.descripcion || info.mensaje || 'Esta acción necesita verificación.')}</p>
-        <p class="srv-scope">${esc(scopeTxt(info.alcance))}</p>
-        <form class="srv-f" data-step="1" novalidate>
-          ${info.motivo_requerido ? `<label class="fld"><span>Motivo (queda en la auditoría)</span><textarea name="motivo" rows="2" maxlength="255" required placeholder="Ej. La factura del proveedor llegó con otro monto"></textarea></label>` : ''}
-          ${chans.length > 1 ? `<fieldset class="srv-ch"><legend>Enviar el código por</legend>${chans.map((c, i) => `<label class="srv-chip"><input type="radio" name="canal" value="${esc(c.canal)}" ${i === 0 ? 'checked' : ''}>${ic(c.canal === 'WHATSAPP' ? 'wa' : 'mail', 16)}<span>${esc(chanTxt(c.canal))}<small>${esc(c.destino)}</small></span></label>`).join('')}</fieldset>` : chans.length ? `<p class="muted small">Te enviaremos un código de 6 dígitos por ${esc(chanTxt(chans[0].canal))} (${esc(chans[0].destino)}).</p>` : '<p class="form-err">No tienes un correo ni un WhatsApp verificado. Escríbele a soporte.</p>'}
-          <p class="form-err" hidden></p>
-          <div class="modal-acts"><button type="button" class="btn btn-ghost" data-x>Cancelar</button><button type="submit" class="btn btn-cta" ${chans.length ? '' : 'disabled'}>Enviar código</button></div>
-        </form></div>`, { onClose: () => { if (!done) { done = true; const e = new ApiError(0, { error: 'CANCELADO', mensaje: 'Cancelaste la verificación: el cambio no se guardó.' }); e.code = 'CANCELADO'; reject(e); } } });
-      const root = sh.body;
-      root.querySelector('[data-x]').addEventListener('click', () => sh.close('cancel'));
-      let ch = null; let timer = 0;
-      const err = (f, m) => { const p = f.querySelector('.form-err'); p.textContent = m; p.hidden = !m; };
-      const countdown = (btn, secs) => { clearInterval(timer); let n = secs; btn.disabled = true; const t0 = btn.dataset.label || btn.textContent; btn.dataset.label = t0; const tick = () => { btn.textContent = n > 0 ? `${t0} (${n} s)` : t0; btn.disabled = n > 0; n--; if (n < -1) clearInterval(timer); }; tick(); timer = setInterval(tick, 1000); };
-      root.addEventListener('submit', async e => {
-        e.preventDefault(); const f = e.target; const btn = f.querySelector('button[type=submit]');
-        if (f.dataset.step === '1') {
-          const fd = new FormData(f); const motivo = (fd.get('motivo') || '').toString().trim();
-          if (info.motivo_requerido && motivo.length < 5) return err(f, 'Escribe el motivo (mínimo 5 caracteres).');
-          btn.disabled = true; err(f, '');
-          try {
-            ch = await post('/verificacion', { accion: info.accion, alcance: info.alcance, motivo: motivo || undefined, canal: fd.get('canal') || undefined }, { noStepUp: true });
-          } catch (x) { btn.disabled = false; return err(f, x.message); }
-          f.outerHTML = `<form class="srv-f" data-step="2" novalidate>
-            <p class="muted">Te enviamos un código de 6 dígitos por <b>${esc(chanTxt(ch.canal))}</b> a <b>${esc(ch.destino)}</b>. Vence en ${esc(ch.minutos || 5)} minutos.</p>
-            <label class="fld srv-code"><span>Código</span><input name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="7" placeholder="123456" required></label>
-            <p class="form-err" hidden></p>
-            <div class="srv-row"><button type="button" class="lnk" data-resend>Reenviar el código</button></div>
-            <div class="modal-acts"><button type="button" class="btn btn-ghost" data-x2>Cancelar</button><button type="submit" class="btn btn-cta">Confirmar</button></div></form>`;
-          const f2 = root.querySelector('form[data-step="2"]');
-          f2.querySelector('[data-x2]').addEventListener('click', () => sh.close('cancel'));
-          const rb = f2.querySelector('[data-resend]'); countdown(rb, 45);
-          rb.addEventListener('click', async () => { try { const r = await post('/verificacion/reenviar', { desafio: ch.desafio, canal: ch.canal }, { noStepUp: true }); err(f2, ''); say('Código reenviado a ' + r.destino); countdown(rb, 45); } catch (x) { err(f2, x.message); if (x.data && x.data.reintentar_en) countdown(rb, x.data.reintentar_en); } });
-          const inp = f2.querySelector('input'); inp.focus();
-          inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); if (inp.value.length === 6) f2.requestSubmit(); });
-          return;
-        }
-        const code = (new FormData(f).get('codigo') || '').toString().replace(/\D/g, '');
-        if (code.length !== 6) return err(f, 'El código tiene 6 dígitos.');
-        btn.disabled = true;
-        try {
-          const g = await post('/verificacion/confirmar', { desafio: ch.desafio, codigo: code }, { noStepUp: true });
-          grants.push({ accion: g.accion, alcance: g.alcance, token: g.autorizacion, exp: Date.now() + (g.minutos || 10) * 60000 - 15000 });
-          done = true; clearInterval(timer); tap(12); sh.close('ok'); resolve(g.autorizacion);
-        } catch (x) { btn.disabled = false; err(f, x.message); const i = f.querySelector('input'); i.select(); if (x.code === 'CODIGO_BLOQUEADO' || x.code === 'DESAFIO_VENCIDO') { f.querySelector('[data-resend]').textContent = 'Pedir un código nuevo'; } }
-      });
-    });
-  }
-  window.agoraStepUp = stepUp;
 
   // ================================================================== 4. almacenamiento: localStorage en memoria que guarda en el servidor
   const LOCAL_ONLY = new Set(['agora_fin_sess', 'agora_fin_acc_v1', 'agora_fin_key_hash', 'agora_fin_key_kdf_v1', 'agora_fin_login_tries', 'agora_fin_audit_anchor_v1', 'agora-facturas-v1', 'agora-factura-v2', 'agora-correlativos-v1', 'agora-formato-v1', 'agora-facturacion', 'agora_fin_fact_sig', 'agora_fin_role']);
@@ -258,15 +175,15 @@
     }).catch(e => {
       // sin conexión, servidor ocupado (503/429) o falla pasajera (5xx): el servidor no guardó nada (todo o nada),
       // así que los cambios vuelven a la cola y se reintenta con espera creciente; no se pierde nada
-      if ((e.status === 0 || e.status === 429 || e.status >= 500) && e.code !== 'CANCELADO') {
+      if ((e.status === 0 || e.status === 429 || e.status >= 500)) {
         for (const k of sentKeys) if (!dirty.has(k)) dirty.set(k, changes[k]);
         auditQ.unshift(...sentA); offline = e.status === 0; persistPending(); setSync(e.status === 0 ? 'sin-conexion' : 'ocupado');
         backoff = Math.min(60000, Math.max((backoff || 2000) * 2, (e.retryAfter || 0) * 1000)); schedule(backoff + Math.round(Math.random() * 1500)); return;
       }
       if (e.status === 401) { for (const k of sentKeys) if (!dirty.has(k)) dirty.set(k, changes[k]); auditQ.unshift(...sentA); persistPending(); return; }
-      // el servidor rechazó el lote (mes cerrado sin código, cobro inmutable, dato inválido…): se vuelve a lo guardado
+      // el servidor rechazó el lote (mes cerrado, cobro inmutable, dato inválido…): se vuelve a lo guardado
       dirty.clear(); persistPending(); setSync('ok');
-      flash(e.code === 'CANCELADO' ? 'El cambio no se guardó: cancelaste la verificación.' : 'No se guardó: ' + e.message);
+      flash('No se guardó: ' + e.message);
       setTimeout(() => location.reload(), 60);
     }).finally(() => { flushing = null; if (dirty.size || auditQ.length) schedule(800); });
     return flushing;
@@ -307,7 +224,7 @@
     else if (st === 'ok') { const b = $('.srv-banner'); if (b && /Sin conexión|muy ocupado/.test(b.textContent)) b.classList.remove('show'); }
   }
 
-  // ================================================================== 6. acceso: entrar, código, recuperar con código, invitación
+  // ================================================================== 6. acceso: entrar e invitación
   const docCache = {};
   const LOGO = '<svg viewBox="0 0 60 80" width="26" height="34" aria-hidden="true"><path fill="var(--iso,#AD103C)" d="M30 4 4 76h12l14-40 14 40h12z"/></svg>';
   function loginShell(title, sub, inner, foot = '') {
@@ -317,7 +234,7 @@
     L.innerHTML = `<div class="lg2">
       <header class="lg2-top"><span class="lg2-logo">${LOGO}<b>Agora</b><small>Digital App</small></span></header>
       <main class="lg2-main">
-        <section class="lg2-hero" aria-hidden="true"><div class="lg2-halo"></div><img class="lg2-athena" src="assets/img/athena-busto.webp" alt="" width="720" height="756" decoding="async"><div class="lg2-bubble"><span class="lg2-bn">Athena</span><b>Hola, soy Athena.</b> <span>Tus datos están protegidos en el servidor: clave, código de verificación y auditoría firmada.</span></div></section>
+        <section class="lg2-hero" aria-hidden="true"><div class="lg2-halo"></div><img class="lg2-athena" src="assets/img/athena-busto.webp" alt="" width="720" height="756" decoding="async"><div class="lg2-bubble"><span class="lg2-bn">Athena</span><b>Hola, soy Athena.</b> <span>Tus datos están protegidos en el servidor: clave y auditoría firmada.</span></div></section>
         <section class="lg2-card" aria-labelledby="lg-t"><p class="lg2-k">Finanzas y Operaciones</p><h1 id="lg-t">${title}</h1><p class="lg2-sub">${sub}</p>${inner}<p class="lg2-switch">${foot}</p></section>
       </main>
       <footer class="lg2-foot"><span>© ${new Date().getFullYear()} Agora Digital App · <b>Cada conversación, una oportunidad.</b></span><span>Conexión cifrada · Versión ${esc(BOOT.version_texto || BOOT.version || '')}</span></footer></div>`;
@@ -337,55 +254,8 @@
       </div>
       <label class="lg-rem"><input type="checkbox" name="recordar"> Recuérdame en este equipo (7 días)</label>
       <p class="lg-err" role="alert" ${msg ? '' : 'hidden'}>${esc(msg)}</p>
-      <button class="lg2-btn" type="submit">Continuar<span class="lg2-arrow">${ic('arrow', 18)}</span></button>
-      <button type="button" class="lnk lg-forgot" data-srv-go="recuperar">¿Olvidaste tu clave?</button></form>`, 'Tu acceso lo crea el administrador de tu empresa con una invitación.');
+      <button class="lg2-btn" type="submit">Continuar<span class="lg2-arrow">${ic('arrow', 18)}</span></button></form>`, 'Tu acceso lo crea el administrador de tu empresa con una invitación.');
     if (email) { const k = L.querySelector('[name=clave]'); if (k) k.focus(); }
-  }
-
-  function showCode(r, remember) {
-    const chans = r.canales || [];
-    loginShell('Verificación en dos pasos', esc(r.motivo || 'Confirma que eres tú.'), `<form class="lg2-form" data-srv-login="codigo" novalidate>
-      <p class="lg-note">Te enviamos un código de 6 dígitos por <b>${esc(chanTxt(r.canal))}</b> a <b>${esc(r.destino)}</b>. Vence en ${esc(r.minutos || 10)} minutos.</p>
-      <div class="lg2-group"><label class="lg2-f"><input name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="7" placeholder=" "><span>Código de 6 dígitos</span></label></div>
-      <label class="lg-rem"><input type="checkbox" name="confiar"> Confiar en este equipo 30 días (no volver a pedir el código aquí)</label>
-      <p class="lg-err" role="alert" hidden></p>
-      <button class="lg2-btn" type="submit">Entrar<span class="lg2-arrow">${ic('arrow', 18)}</span></button>
-      <div class="srv-row">${chans.filter(c => c.canal !== r.canal).map(c => `<button type="button" class="lnk" data-srv-canal="${esc(c.canal)}">Mejor por ${esc(chanTxt(c.canal))} (${esc(c.destino)})</button>`).join('')}<button type="button" class="lnk" data-srv-reenviar>Reenviar el código</button></div>
-      </form>`, '<button type="button" class="lnk" data-srv-go="entrar">Volver</button>');
-    const f = $('[data-srv-login="codigo"]'); f.dataset.desafio = r.desafio; f.dataset.remember = remember ? '1' : '';
-    const inp = f.querySelector('[name=codigo]');
-    inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); if (inp.value.length === 6) f.requestSubmit(); });
-    cooldown(f.querySelector('[data-srv-reenviar]'), 45);
-  }
-  function cooldown(btn, secs) {
-    if (!btn) return; clearInterval(btn._t); let n = secs; const t0 = btn.dataset.t0 || btn.textContent; btn.dataset.t0 = t0;
-    const tick = () => { btn.disabled = n > 0; btn.textContent = n > 0 ? `${t0} (${n} s)` : t0; if (n-- <= 0) clearInterval(btn._t); }; tick(); btn._t = setInterval(tick, 1000);
-  }
-
-  function showRecover(msg = '') {
-    const wa = !!(BOOT.recuperacion && BOOT.recuperacion.whatsapp);
-    loginShell('Recupera tu clave', 'Te enviamos un código de verificación al correo o al WhatsApp que tienes registrado.', `<form class="lg2-form" data-srv-login="recuperar" novalidate>
-      ${wa ? `<div class="srv-seg" role="radiogroup" aria-label="Recibir el código por"><label><input type="radio" name="via" value="EMAIL" checked><span>${ic('mail', 16)} Correo</span></label><label><input type="radio" name="via" value="WHATSAPP"><span>${ic('wa', 16)} WhatsApp</span></label></div>` : ''}
-      <div class="lg2-group"><label class="lg2-f"><input name="identificador" autocomplete="username" placeholder=" "><span data-srv-idlabel>Tu correo</span></label></div>
-      <p class="lg-note" data-srv-idhelp>Si el dato corresponde a una cuenta, te llega un código de 6 dígitos que vence en 10 minutos. Por seguridad, la respuesta es la misma exista o no la cuenta.</p>
-      <p class="lg-err" role="alert" ${msg ? '' : 'hidden'}>${esc(msg)}</p>
-      <button class="lg2-btn" type="submit">Enviar código<span class="lg2-arrow">${ic('arrow', 18)}</span></button></form>`, '<button type="button" class="lnk" data-srv-go="entrar">Volver a iniciar sesión</button>');
-    const f = $('[data-srv-login="recuperar"]');
-    f.addEventListener('change', () => { const v = (new FormData(f).get('via') || 'EMAIL'); const i = f.querySelector('[name=identificador]'); f.querySelector('[data-srv-idlabel]').textContent = v === 'WHATSAPP' ? 'Tu número de WhatsApp (ej. 0412 1234567)' : 'Tu correo'; i.type = v === 'WHATSAPP' ? 'tel' : 'email'; i.inputMode = v === 'WHATSAPP' ? 'tel' : 'email'; i.autocomplete = v === 'WHATSAPP' ? 'tel' : 'username'; i.focus(); });
-  }
-  function showRecoverCode(r) {
-    loginShell('Crea tu clave nueva', `Escribe el código que te enviamos por <b>${esc(chanTxt(r.canal))}</b> a <b>${esc(r.destino)}</b>.`, `<form class="lg2-form" data-srv-login="recuperar-confirmar" novalidate>
-      <div class="lg2-group">
-        <label class="lg2-f"><input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder=" "><span>Código de 6 dígitos</span></label>
-        <label class="lg2-f lg-in"><input name="k1" type="password" autocomplete="new-password" placeholder=" "><span>Clave nueva (mínimo 10 caracteres)</span>${eyeBtn}</label>
-        <label class="lg2-f"><input name="k2" type="password" autocomplete="new-password" placeholder=" "><span>Repite la clave nueva</span></label>
-      </div>
-      <p class="lg-note">Usa una frase que no tenga tu nombre ni tu correo. Al cambiarla cerramos todas tus sesiones y te avisamos por correo.</p>
-      <p class="lg-err" role="alert" hidden></p>
-      <button class="lg2-btn" type="submit">Guardar clave nueva<span class="lg2-arrow">${ic('arrow', 18)}</span></button>
-      <div class="srv-row"><button type="button" class="lnk" data-srv-reenviar-rec>Reenviar el código</button></div></form>`, '<button type="button" class="lnk" data-srv-go="entrar">Volver a iniciar sesión</button>');
-    const f = $('[data-srv-login="recuperar-confirmar"]'); f.dataset.desafio = r.desafio;
-    cooldown(f.querySelector('[data-srv-reenviar-rec]'), 45);
   }
 
   async function showInvitation(token) {
@@ -398,26 +268,12 @@
         <label class="lg2-f lg-in"><input name="k1" type="password" autocomplete="${inv.existe ? 'current-password' : 'new-password'}" placeholder=" "><span>${inv.existe ? 'Tu clave actual de Agora' : 'Crea tu clave (mínimo 10 caracteres)'}</span>${eyeBtn}</label>
         ${inv.existe ? '' : '<label class="lg2-f"><input name="k2" type="password" autocomplete="new-password" placeholder=" "><span>Repite la clave</span></label>'}
       </div>
-      <p class="lg-note">${inv.existe ? 'Ya tienes una cuenta con este correo: confirma tu clave para sumarte a esta empresa.' : 'Tu correo queda verificado con este enlace. Desde Ajustes → Tu cuenta puedes agregar tu WhatsApp para recibir códigos.'}</p>
+      <p class="lg-note">${inv.existe ? 'Ya tienes una cuenta con este correo: confirma tu clave para sumarte a esta empresa.' : 'Tu correo queda verificado con este enlace.'}</p>
       <p class="lg-err" role="alert" hidden></p>
       <button class="lg2-btn" type="submit">${inv.existe ? 'Unirme' : 'Crear mi acceso'}<span class="lg2-arrow">${ic('arrow', 18)}</span></button></form>`, '');
     $('[data-srv-login="invitacion"]').dataset.token = token;
   }
 
-  document.addEventListener('click', e => {
-    const g = e.target.closest('[data-srv-go]'); if (g) { e.preventDefault(); return g.dataset.srvGo === 'recuperar' ? showRecover() : showLogin(); }
-  });
-  document.addEventListener('click', async e => {
-    const b = e.target.closest('[data-srv-reenviar],[data-srv-canal],[data-srv-reenviar-rec]'); if (!b) return;
-    const f = b.closest('form'); e.preventDefault();
-    try {
-      if (b.dataset.srvReenviarRec !== undefined) { const r = await post('/recuperar/reenviar', { desafio: f.dataset.desafio }, { public: true }); say('Código reenviado a ' + r.destino); cooldown(b, 45); return; }
-      const r = await post('/acceso/codigo/enviar', { desafio: f.dataset.desafio, canal: b.dataset.srvCanal || undefined }, { public: true });
-      lgErr(f, ''); say('Código enviado por ' + chanTxt(r.canal) + ' a ' + r.destino);
-      const note = f.querySelector('.lg-note'); if (note) note.innerHTML = `Te enviamos un código de 6 dígitos por <b>${esc(chanTxt(r.canal))}</b> a <b>${esc(r.destino)}</b>. Vence en ${esc(r.minutos || 10)} minutos.`;
-      cooldown(f.querySelector('[data-srv-reenviar]'), 45);
-    } catch (x) { lgErr(f, x.message); if (x.data && x.data.reintentar_en) cooldown(b, x.data.reintentar_en); }
-  });
   document.addEventListener('submit', async e => {
     const f = e.target; const mode = f.dataset && f.dataset.srvLogin; if (!mode) return;
     e.preventDefault(); e.stopImmediatePropagation();
@@ -428,28 +284,7 @@
         const correo = v('correo').trim().toLowerCase();
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo) || !v('clave')) { busy(f, false); return lgErr(f, 'Escribe tu correo y tu clave.'); }
         const r = await post('/acceso', { correo, clave: v('clave'), recordar: !!fd.get('recordar') }, { public: true });
-        if (r.paso === 'codigo') return showCode(r, !!fd.get('recordar'));
         return afterLogin(r.sesion);
-      }
-      if (mode === 'codigo') {
-        const codigo = v('codigo').replace(/\D/g, '');
-        if (codigo.length !== 6) { busy(f, false); return lgErr(f, 'El código tiene 6 dígitos.'); }
-        const r = await post('/acceso/codigo/verificar', { desafio: f.dataset.desafio, codigo, recordar_equipo: !!fd.get('confiar') }, { public: true });
-        return afterLogin(r.sesion);
-      }
-      if (mode === 'recuperar') {
-        const id = v('identificador').trim();
-        if (!id) { busy(f, false); return lgErr(f, 'Escribe tu correo o tu número de WhatsApp.'); }
-        const r = await post('/recuperar', { identificador: id }, { public: true });
-        return showRecoverCode(r);
-      }
-      if (mode === 'recuperar-confirmar') {
-        const codigo = v('codigo').replace(/\D/g, '');
-        if (codigo.length !== 6) { busy(f, false); return lgErr(f, 'El código tiene 6 dígitos.'); }
-        if (v('k1').length < 10) { busy(f, false); return lgErr(f, 'La clave nueva debe tener al menos 10 caracteres.'); }
-        if (v('k1') !== v('k2')) { busy(f, false); return lgErr(f, 'Las dos claves no coinciden.'); }
-        await post('/recuperar/confirmar', { desafio: f.dataset.desafio, codigo, clave: v('k1') }, { public: true });
-        tap(12); showLogin(''); say('Listo: tu clave cambió. Entra con la clave nueva.'); return;
       }
       if (mode === 'invitacion') {
         const body = { token: f.dataset.token, clave: v('k1') };
@@ -466,7 +301,6 @@
       }
     } catch (x) {
       busy(f, false); lgErr(f, x.message);
-      if (x.code === 'DESAFIO_VENCIDO' || x.code === 'CODIGO_BLOQUEADO' || x.code === 'DEMASIADOS_ENVIOS') setTimeout(() => (mode.startsWith('recuperar') ? showRecover(x.message) : showLogin(x.message)), 1600);
     }
   }, true);
 
@@ -520,8 +354,7 @@
   }
   async function logout() {
     try { await flush(); } catch (e) {}
-    try { await post('/salir', {}, { noStepUp: true }); } catch (e) {}
-    grants.length = 0;
+    try { await post('/salir', {}); } catch (e) {}
     const pk = pendKey(); if (pk && realLS) try { realLS.removeItem(pk); } catch (e) {}
     location.replace(location.pathname + '#/resumen'); location.reload();
   }
@@ -550,12 +383,12 @@
         const blob = new Blob([JSON.stringify(r, null, 1)], { type: 'application/json' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `agora-exportacion-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
         say('Exportación descargada (se avisó por correo a los administradores)');
-      } catch (e) { if (e.code !== 'CANCELADO') say(e.message, 'bad'); }
+      } catch (e) { say(e.message, 'bad'); }
     })();
   }
   function importModal() {
     if (!can('importar')) return say('Solo un Superadministrador puede importar datos.', 'bad');
-    window.openModal(`<h2 id="modal-t">Importar la edición local</h2><p class="muted">Carga el respaldo (.json) que descargaste en la edición local (HTML o PC). Las facturas entran como documentos <b>históricos</b> (no se vuelven a emitir) y el correlativo sigue desde la última. Los cobros pasan las mismas validaciones. Pide un código de verificación.</p>
+    window.openModal(`<h2 id="modal-t">Importar la edición local</h2><p class="muted">Carga el respaldo (.json) que descargaste en la edición local (HTML o PC). Las facturas entran como documentos <b>históricos</b> (no se vuelven a emitir) y el correlativo sigue desde la última. Los cobros pasan las mismas validaciones. </p>
       <form data-srv-form="importar" novalidate><label class="fld"><span>Archivo de respaldo</span><input type="file" name="f" accept=".json,application/json"></label><p class="form-err" hidden></p>
       <div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cancelar</button><button type="submit" class="btn btn-cta">Importar</button></div></form>`);
   }
@@ -565,15 +398,14 @@
     const u = S.usuario, e = S.empresa || {};
     const nClosed = closed.size, lastClosed = [...closed].sort().pop();
     const cards = [
-      card('user', 'Tu cuenta', `${esc(u.nombre)} · ${esc(u.correo)} · ${esc(u.rol_nombre)}. Verificación en dos pasos ${u.mfa ? '<b>activa</b>' : 'apagada'}${u.mfa_obligatoria ? ' (obligatoria para tu rol)' : ''}.`, '<span class="acts"><button class="btn btn-cta" data-srv-act="cuenta">Mi cuenta</button></span>'),
+      card('user', 'Tu cuenta', `${esc(u.nombre)} · ${esc(u.correo)} · ${esc(u.rol_nombre)}.`, '<span class="acts"><button class="btn btn-cta" data-srv-act="cuenta">Mi cuenta</button></span>'),
       card('lock', 'Modo edición', 'Los cambios que mueven los indicadores se abren con tu clave de acceso durante 15 minutos. El servidor valida la clave y lo registra.', '<button class="btn" data-srv-act="edicion">Abrir edición</button>'),
-      card('shield', 'Recuperar la clave', `Si la olvidas, la recuperas con un código de verificación que llega a tu correo${S.whatsapp ? ' o a tu WhatsApp' : ''}. No hay preguntas secretas ni códigos que guardar.`, S.whatsapp ? '<button class="btn" data-srv-act="cuenta">Agregar mi WhatsApp</button>' : ''),
-      card('calendar', 'Cierre de mes', `${nClosed ? `${nClosed} mes${nClosed === 1 ? '' : 'es'} cerrado${nClosed === 1 ? '' : 's'} (el último: ${esc(mesTxt(lastClosed))}).` : 'Todavía no hay meses cerrados.'} Un mes cerrado no se cambia sin un código de verificación y queda en la auditoría.`, '<button class="btn" data-srv-act="periodos">Cierre de mes</button>'),
+      card('calendar', 'Cierre de mes', `${nClosed ? `${nClosed} mes${nClosed === 1 ? '' : 'es'} cerrado${nClosed === 1 ? '' : 's'} (el último: ${esc(mesTxt(lastClosed))}).` : 'Todavía no hay meses cerrados.'} Un mes cerrado queda marcado y sus cambios quedan en la auditoría.`, '<button class="btn" data-srv-act="periodos">Cierre de mes</button>'),
     ];
-    if (can('usuarios.gestionar')) cards.push(card('users', 'Personas y permisos', `Plan ${esc(e.plan || '')}${e.max_usuarios ? `: hasta ${esc(e.max_usuarios)} personas` : ': sin límite de personas'}. Invita, cambia roles o suspende accesos (dar roles de dirección pide código).`, '<button class="btn" data-srv-act="usuarios">Gestionar</button>'));
+    if (can('usuarios.gestionar')) cards.push(card('users', 'Personas y permisos', `Plan ${esc(e.plan || '')}${e.max_usuarios ? `: hasta ${esc(e.max_usuarios)} personas` : ': sin límite de personas'}. Invita, cambia roles o suspende accesos.`, '<button class="btn" data-srv-act="usuarios">Gestionar</button>'));
     if (can('facturas.ver')) cards.push(card('invoice', 'Facturación fiscal', 'Correlativo sin saltos, número de control de la imprenta, tasa BCV, notas de crédito y débito y libro de ventas.', '<a class="btn" href="#/facturero">Ir a Facturación fiscal</a>'));
     if (can('seguridad.ver')) cards.push(card('shield', 'Seguridad', 'Intentos de acceso, ataques frenados, archivos vigilados y avisos por correo a los administradores.', '<button class="btn" data-srv-act="seguridad">Ver seguridad</button>'));
-    if (can('exportar')) cards.push(card('upload', 'Exportar e importar', 'Descarga todos los datos (también sirve para la edición local) o importa un respaldo de la edición local. Ambas cosas piden código.', `<span class="acts"><button class="btn" data-act="backup-dl">Exportar</button>${can('importar') ? '<button class="btn" data-act="backup-up">Importar</button>' : ''}</span>`));
+    if (can('exportar')) cards.push(card('upload', 'Exportar e importar', 'Descarga todos los datos (también sirve para la edición local) o importa un respaldo de la edición local. ', `<span class="acts"><button class="btn" data-act="backup-dl">Exportar</button>${can('importar') ? '<button class="btn" data-act="backup-up">Importar</button>' : ''}</span>`));
     cards.push(card('invoice', 'Productos y servicios', 'El catálogo con el precio de lista y el tipo de ingreso de cada producto.', '<a class="btn" href="#/productos">Ir a Productos</a>'));
     cards.push(card('team', 'Asesores e implementadores', 'Quién cobra comisión por venta y quién cobra por implementación, con sus porcentajes y tarifas.', '<a class="btn" href="#/comisiones">Ir a Comisiones</a>'));
     cards.push(card('upload', 'Importar gastos', 'Pega la tabla de tu hoja de cálculo para cargar gastos de una vez.', '<button class="btn" data-act="sheet">Gastos</button>'));
@@ -585,22 +417,13 @@
   async function accountModal(note = '') {
     let p;
     try { p = await get('/perfil'); } catch (e) { return say(e.message, 'bad'); }
-    const contact = c => `<li><span class="srv-ct">${ic(c.canal === 'WHATSAPP' ? 'wa' : 'mail', 16)}<b>${esc(c.valor)}</b>${c.principal ? '<span class="sc sc-blue">principal</span>' : ''}${c.verificado ? '<span class="sc sc-ok">verificado</span>' : '<span class="sc sc-gold">sin verificar</span>'}</span>${c.canal === 'EMAIL' && c.valor === p.correo ? '<small class="muted">con este entras</small>' : `<button class="btn btn-sm btn-ghost" data-srv-act="contacto-quitar" data-id="${esc(c.id)}">Quitar</button>`}</li>`;
     const sesion = x => `<li><span><b>${esc(x.actual ? 'Este equipo' : (x.equipo || 'Equipo').replace(/\(.*?\)/g, '').slice(0, 60))}</b><small class="muted">IP ${esc(x.ip)} · última actividad ${esc(dmy(x.ultima))} ${esc(String(x.ultima || '').slice(11, 16))}</small></span>${x.actual ? '<span class="sc sc-ok">actual</span>' : `<button class="btn btn-sm btn-ghost" data-srv-act="sesion-cerrar" data-id="${esc(x.id)}">Cerrar</button>`}</li>`;
     window.openModal(`<h2 id="modal-t">Mi cuenta</h2>${note ? `<p class="srv-ok">${esc(note)}</p>` : ''}
       <section class="srv-sec"><h3>Datos</h3><form data-srv-form="nombre" class="srv-inline" novalidate><label class="fld fld-grow"><span>Nombre</span><input name="nombre" value="${esc(p.nombre)}" maxlength="120"></label><button class="btn" type="submit">Guardar</button></form><p class="muted small">Correo de acceso: <b>${esc(p.correo)}</b> · cuenta desde ${esc(dmy(p.desde))}</p></section>
-      <section class="srv-sec"><h3>Dónde recibes los códigos</h3><ul class="srv-list">${p.contactos.map(contact).join('')}</ul>
-        <form data-srv-form="contacto" class="srv-inline" novalidate><label class="fld"><span>Canal</span><select name="canal"><option value="EMAIL">Correo</option>${p.whatsapp_disponible ? '<option value="WHATSAPP">WhatsApp</option>' : ''}</select></label><label class="fld fld-grow"><span>Correo o número (+58…)</span><input name="valor" autocomplete="off"></label><button class="btn" type="submit">Agregar</button></form>
-        <p class="muted small">Para agregar o quitar un canal te pedimos un código al que ya tienes y otro al nuevo (así nadie puede cambiarlo sin ti).</p></section>
-      <section class="srv-sec"><h3>Verificación en dos pasos</h3><form data-srv-form="mfa" class="srv-inline" novalidate><label class="sw-row"><input type="checkbox" name="activar" ${p.mfa.activa ? 'checked' : ''} ${p.mfa.obligatoria ? 'disabled' : ''}> Pedir un código al entrar desde un equipo nuevo</label><label class="fld"><span>Canal preferido</span><select name="canal">${p.contactos.filter(c => c.verificado).map(c => c.canal).filter((v, i, a) => a.indexOf(v) === i).map(c => `<option value="${esc(c)}" ${p.mfa.canal === c ? 'selected' : ''}>${esc(chanTxt(c))}</option>`).join('')}</select></label><button class="btn" type="submit">Guardar</button></form>${p.mfa.obligatoria ? '<p class="muted small">Tu rol exige la verificación en dos pasos.</p>' : ''}</section>
       <section class="srv-sec"><h3>Cambiar la clave</h3><form data-srv-form="clave" novalidate><div class="fgrid"><label class="fld"><span>Clave actual</span><input type="password" name="actual" autocomplete="current-password"></label><label class="fld"><span>Clave nueva (mínimo 10)</span><input type="password" name="nueva" autocomplete="new-password"></label><label class="fld"><span>Repite la nueva</span><input type="password" name="nueva2" autocomplete="new-password"></label></div><p class="form-err" hidden></p><div class="modal-acts"><button class="btn" type="submit">Cambiar clave</button></div></form></section>
-      <section class="srv-sec"><h3>Sesiones abiertas</h3><ul class="srv-list">${p.sesiones.map(sesion).join('')}</ul><div class="acts"><button class="btn btn-sm" data-srv-act="sesiones-otras">Cerrar las demás</button>${p.equipos_confianza ? `<button class="btn btn-sm btn-ghost" data-srv-act="equipos-olvidar">Olvidar ${esc(p.equipos_confianza)} equipo(s) de confianza</button>` : ''}</div></section>
+      <section class="srv-sec"><h3>Sesiones abiertas</h3><ul class="srv-list">${p.sesiones.map(sesion).join('')}</ul><div class="acts"><button class="btn btn-sm" data-srv-act="sesiones-otras">Cerrar las demás</button></div></section>
       <div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cerrar</button></div>`);
     $('#modal .modal-card').classList.add('modal-wide');
-  }
-  function codeModal(title, text, onCode) {
-    window.openModal(`<h2 id="modal-t">${esc(title)}</h2><p class="muted">${text}</p><form data-srv-form="codigo-libre" novalidate><label class="fld srv-code"><span>Código de 6 dígitos</span><input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="7"></label><p class="form-err" hidden></p><div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cancelar</button><button class="btn btn-cta" type="submit">Verificar</button></div></form>`);
-    codeModal.fn = onCode;
   }
 
   // ---------- Personas
@@ -608,10 +431,10 @@
     let d; try { d = await get('/usuarios'); } catch (e) { return say(e.message, 'bad'); }
     const roleSel = u => `<select data-srv-rol="${esc(u.uid)}" ${u.tu ? 'disabled' : ''}>${d.roles.map(r => `<option value="${esc(r.rol)}" ${r.rol === u.rol ? 'selected' : ''}>${esc(r.nombre)}</option>`).join('')}${d.roles.some(r => r.rol === u.rol) ? '' : `<option selected>${esc(u.rol_nombre)}</option>`}</select>`;
     window.openModal(`<h2 id="modal-t">Personas y permisos</h2><p class="muted">Plan <b>${esc(d.plan.nombre)}</b>: ${esc(d.plan.usados)} de ${d.plan.maximo ? esc(d.plan.maximo) : 'personas sin límite'} cupos usados (incluye invitaciones pendientes).</p>
-      <div class="bt-wrap"><table class="bt"><thead><tr><th>Persona</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead><tbody>${d.usuarios.map(u => `<tr><td><b>${esc(u.nombre)}</b>${u.tu ? ' <span class="sc sc-blue">tú</span>' : ''}<small class="muted" style="display:block">${esc(u.correo)}${u.mfa ? ' · dos pasos' : ''}</small></td><td>${roleSel(u)}</td><td>${u.estado === 'ACTIVA' ? '<span class="sc sc-ok">activa</span>' : '<span class="sc sc-bad">suspendida</span>'}</td><td>${esc(u.ultimo_acceso ? dmy(u.ultimo_acceso) : 'nunca')}</td><td>${u.tu ? '' : `<button class="btn btn-sm btn-ghost" data-srv-act="usuario-estado" data-uid="${esc(u.uid)}" data-estado="${u.estado === 'ACTIVA' ? 'SUSPENDIDA' : 'ACTIVA'}">${u.estado === 'ACTIVA' ? 'Suspender' : 'Reactivar'}</button>`}</td></tr>`).join('')}</tbody></table></div>
+      <div class="bt-wrap"><table class="bt"><thead><tr><th>Persona</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead><tbody>${d.usuarios.map(u => `<tr><td><b>${esc(u.nombre)}</b>${u.tu ? ' <span class="sc sc-blue">tú</span>' : ''}<small class="muted" style="display:block">${esc(u.correo)}</small></td><td>${roleSel(u)}</td><td>${u.estado === 'ACTIVA' ? '<span class="sc sc-ok">activa</span>' : '<span class="sc sc-bad">suspendida</span>'}</td><td>${esc(u.ultimo_acceso ? dmy(u.ultimo_acceso) : 'nunca')}</td><td>${u.tu ? '' : `<button class="btn btn-sm btn-ghost" data-srv-act="usuario-estado" data-uid="${esc(u.uid)}" data-estado="${u.estado === 'ACTIVA' ? 'SUSPENDIDA' : 'ACTIVA'}">${u.estado === 'ACTIVA' ? 'Suspender' : 'Reactivar'}</button>`}</td></tr>`).join('')}</tbody></table></div>
       ${d.invitaciones.length ? `<h3 class="srv-h3">Invitaciones pendientes</h3><ul class="srv-list">${d.invitaciones.map(i => `<li><span><b>${esc(i.correo)}</b><small class="muted">${esc(i.rol_nombre)} · vence ${esc(dmy(i.vence))}</small></span><button class="btn btn-sm btn-ghost" data-srv-act="invitacion-revocar" data-uid="${esc(i.uid)}">Revocar</button></li>`).join('')}</ul>` : ''}
       <h3 class="srv-h3">Invitar a alguien</h3><form data-srv-form="invitar" class="srv-inline" novalidate><label class="fld fld-grow"><span>Correo</span><input name="correo" type="email" autocomplete="off"></label><label class="fld"><span>Rol</span><select name="rol">${d.roles.map(r => `<option value="${esc(r.rol)}" ${r.rol === 'ADMIN' ? 'selected' : ''}>${esc(r.nombre)}</option>`).join('')}</select></label><button class="btn btn-cta" type="submit">Invitar</button></form>
-      <p class="muted small">La invitación llega por correo y vence en 7 días. Dirección y Superadministrador entran siempre con código.</p>
+      <p class="muted small">La invitación llega por correo y vence en 7 días.</p>
       <div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cerrar</button></div>`);
     $('#modal .modal-card').classList.add('modal-wide');
   }
@@ -623,7 +446,7 @@
     const months = []; let [y, m] = d.mes_actual.split('-').map(Number);
     for (let i = 0; i < 15; i++) { months.push(`${y}-${String(m).padStart(2, '0')}`); m--; if (!m) { m = 12; y--; } }
     const info = Object.fromEntries((d.periodos || []).map(p => [p.periodo, p]));
-    window.openModal(`<h2 id="modal-t">Cierre de mes</h2><p class="muted">Cierra un mes cuando ya cuadraste sus cifras. Después, cualquier cambio en sus gastos, cobros, recibos, tasas o caja pide un <b>código de verificación</b> con motivo y queda en la auditoría. ${can('periodos.reabrir') ? 'Como Superadministrador puedes reabrirlo (con código y aviso por correo).' : ''}</p>
+    window.openModal(`<h2 id="modal-t">Cierre de mes</h2><p class="muted">Cierra un mes cuando ya cuadraste sus cifras. Después, cualquier cambio en sus gastos, cobros, recibos, tasas o caja queda en la auditoría. ${can('periodos.reabrir') ? 'Como Superadministrador puedes reabrirlo (con motivo y aviso por correo).' : ''}</p>
       <ul class="srv-list srv-months">${months.map(p => { const c = closed.has(p), cur = p === d.mes_actual, inf = info[p]; return `<li><span><b>${esc(mesTxt(p))}</b><small class="muted">${cur ? 'mes en curso' : c ? `cerrado el ${esc(dmy(inf && inf.cerrado_en))}` : inf && inf.reabierto_en ? `reabierto el ${esc(dmy(inf.reabierto_en))}: ${esc(inf.motivo_reapertura || '')}` : 'abierto'}</small></span>${c ? `<span class="sc sc-blue">${ic('lock', 12)} cerrado</span>${can('periodos.reabrir') ? `<button class="btn btn-sm btn-ghost" data-srv-act="periodo-reabrir" data-p="${esc(p)}">Reabrir</button>` : ''}` : cur ? '' : can('periodos.cerrar') ? `<button class="btn btn-sm" data-srv-act="periodo-cerrar" data-p="${esc(p)}">Cerrar mes</button>` : ''}</li>`; }).join('')}</ul>
       <div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cerrar</button></div>`);
   }
@@ -632,7 +455,7 @@
   async function securityModal() {
     let r, ev; try { [r, ev] = await Promise.all([get('/seguridad/resumen'), get('/seguridad/eventos?dias=7')]); } catch (e) { return say(e.message, 'bad'); }
     const sev = { BAJA: 'sc-blue', MEDIA: 'sc-gold', ALTA: 'sc-bad', CRITICA: 'sc-bad' };
-    const TIPOS = { ACCESO_FALLIDO: 'Clave incorrecta', LOGIN_FUERZA: 'Muchos intentos de entrar', OTP_FALLIDO: 'Código incorrecto', OTP_ABUSO: 'Código bloqueado', CSRF: 'Solicitud de otro sitio', WAF: 'Ataque frenado', TRAMPA: 'Intento de leer el código', BLOQUEO_IP: 'IP bloqueada', INMUTABLE: 'Intento de cambiar datos sellados', MES_REABIERTO: 'Mes reabierto', CLAVE_RESTABLECIDA: 'Clave restablecida', RECUPERACION: 'Pidió recuperar la clave', EDICION_FALLIDA: 'Clave de edición incorrecta', AUDITORIA_ROTA: 'Auditoría alterada', INTEGRIDAD: 'Archivos modificados' };
+    const TIPOS = { ACCESO_FALLIDO: 'Clave incorrecta', LOGIN_FUERZA: 'Muchos intentos de entrar', CSRF: 'Solicitud de otro sitio', WAF: 'Ataque frenado', TRAMPA: 'Intento de leer el código', BLOQUEO_IP: 'IP bloqueada', INMUTABLE: 'Intento de cambiar datos sellados', MES_REABIERTO: 'Mes reabierto', CLAVE_RESTABLECIDA: 'Clave restablecida', RECUPERACION: 'Pidió recuperar la clave', EDICION_FALLIDA: 'Clave de edición incorrecta', AUDITORIA_ROTA: 'Auditoría alterada', INTEGRIDAD: 'Archivos modificados' };
     window.openModal(`<h2 id="modal-t">Seguridad</h2>
       <div class="micro-grid" style="--cols:4">${['CRITICA', 'ALTA', 'MEDIA', 'BAJA'].map(k => `<article class="micro"><header class="mm-h"><h3>${esc({ CRITICA: 'Críticos', ALTA: 'Graves', MEDIA: 'Medios', BAJA: 'Leves' }[k])}</h3></header><div class="mm-row"><p class="mm-v">${esc(r.eventos_7_dias[k] || 0)}</p></div><p class="mm-foot">últimos 7 días</p></article>`).join('')}</div>
       <ul class="srv-list"><li><span><b>Auditoría encadenada</b><small class="muted">${esc(r.auditoria.registros)} registros firmados</small></span>${r.auditoria.integra ? '<span class="sc sc-ok">íntegra</span>' : '<span class="sc sc-bad">alterada</span>'}</li>
@@ -691,32 +514,33 @@
       if (a === 'tasas-vivo') return ratesModal();
       if (a === 'empresas') return window.openModal(`<h2 id="modal-t">Cambiar de empresa</h2><ul class="srv-list">${S.empresas.map(x => `<li><span><b>${esc(x.nombre)}</b><small class="muted">${esc(x.rol_nombre)} · plan ${esc(x.plan)}</small></span>${S.empresa && x.uid === S.empresa.uid ? '<span class="sc sc-ok">actual</span>' : `<button class="btn btn-sm" data-srv-act="empresa-ir" data-uid="${esc(x.uid)}">Entrar</button>`}</li>`).join('')}</ul>`);
       if (a === 'empresa-ir') { await flush(); await post('/sesion/empresa', { empresa: b.dataset.uid }); location.reload(); return; }
-      if (a === 'contacto-quitar') { await post('/perfil/contactos/' + encodeURIComponent(b.dataset.id) + '/quitar', {}); return accountModal('Listo: se quitó ese dato.'); }
       if (a === 'sesion-cerrar') { const r = await post('/perfil/sesiones/' + encodeURIComponent(b.dataset.id) + '/cerrar', {}); if (r.actual) return location.reload(); return accountModal('Sesión cerrada.'); }
       if (a === 'sesiones-otras') { const r = await post('/perfil/sesiones/cerrar-otras', {}); return accountModal(`Se cerraron ${r.cerradas} sesión(es) en otros equipos.`); }
-      if (a === 'equipos-olvidar') { await post('/perfil/equipos/olvidar', {}); return accountModal('Listo: los equipos de confianza volverán a pedir código.'); }
       if (a === 'usuario-estado') { await post(`/usuarios/${encodeURIComponent(b.dataset.uid)}/estado`, { estado: b.dataset.estado }); say(b.dataset.estado === 'ACTIVA' ? 'Acceso reactivado' : 'Acceso suspendido: se cerraron sus sesiones'); return usersModal(); }
       if (a === 'invitacion-revocar') { await post(`/invitaciones/${encodeURIComponent(b.dataset.uid)}/revocar`, {}); say('Invitación revocada'); return usersModal(); }
       if (a === 'periodo-cerrar' || a === 'periodo-reabrir') {
-        const p = b.dataset.p; b.disabled = true;
-        const r = await post(`/periodos/${encodeURIComponent(p)}/${a === 'periodo-cerrar' ? 'cerrar' : 'reabrir'}`, {});
+        const p = b.dataset.p;
+        const motivo = a === 'periodo-reabrir' ? await reasonSheet('Reabrir el mes', `Reabrir ${esc(mesTxt(p))} permite cambiar sus datos. Queda en la auditoría y se avisa por correo.`, 'Reabrir', true) : null;
+        if (a === 'periodo-reabrir' && !motivo) return;
+        b.disabled = true;
+        const r = await post(`/periodos/${encodeURIComponent(p)}/${a === 'periodo-cerrar' ? 'cerrar' : 'reabrir'}`, a === 'periodo-reabrir' ? { motivo } : {});
         closed = new Set(r.cerrados || []); if (S) S.cerrados = r.cerrados; tap(12);
         say(a === 'periodo-cerrar' ? `Mes cerrado: ${mesTxt(p)}` : `Mes reabierto: ${mesTxt(p)} (se avisó por correo)`);
         if (typeof window.render === 'function') window.render();
         return periodsModal();
       }
       if (a === 'seguridad-prueba') { const r = await post('/seguridad/prueba', {}); return say(`Aviso de prueba enviado a ${r.destinatarios} correo(s)`); }
-    } catch (x) { b.disabled = false; if (x.code !== 'CANCELADO') say(x.message, 'bad'); }
+    } catch (x) { b.disabled = false; say(x.message, 'bad'); }
   });
   document.addEventListener('change', async e => {
     const pol = e.target.closest('[data-srv-pol]');
     if (pol) {
       try { await post('/tasas/politica', { politica: pol.value }); tap(10); return ratesModal(pol.value === 'SIEMPRE_ALTA' ? 'Listo: toda operación interna usa la tasa más alta disponible.' : 'Listo: cada operación usa su tasa.'); }
-      catch (x) { if (x.code !== 'CANCELADO') say(x.message, 'bad'); return ratesModal(); }
+      catch (x) { say(x.message, 'bad'); return ratesModal(); }
     }
     const sel = e.target.closest('[data-srv-rol]'); if (!sel) return;
     try { await post(`/usuarios/${encodeURIComponent(sel.dataset.srvRol)}/rol`, { rol: sel.value }); say('Rol cambiado: esa persona debe volver a entrar'); usersModal(); }
-    catch (x) { if (x.code !== 'CANCELADO') say(x.message, 'bad'); usersModal(); }
+    catch (x) { say(x.message, 'bad'); usersModal(); }
   });
   document.addEventListener('submit', async e => {
     const f = e.target; const k = f.dataset && f.dataset.srvForm; if (!k) return;
@@ -737,13 +561,6 @@
         const r = await post('/perfil/clave', { actual: fd.get('actual'), nueva: fd.get('nueva') });
         return accountModal(`Clave cambiada. Cerramos ${r.sesiones_cerradas} sesión(es) en otros equipos y te avisamos por correo.`);
       }
-      if (k === 'contacto') {
-        const canal = v('canal'), valor = v('valor'); if (!valor) throw new Error('Escribe el correo o el número.');
-        const r = await post('/perfil/contactos', { canal, valor });
-        return codeModal(canal === 'WHATSAPP' ? 'Verifica tu WhatsApp' : 'Verifica tu correo', `Te enviamos un código por <b>${esc(chanTxt(r.canal))}</b> a <b>${esc(r.destino)}</b>. Escríbelo para confirmar que es tuyo.`, async codigo => { await post('/perfil/contactos/verificar', { desafio: r.desafio, codigo }); S.canales = (await get('/sesion')).canales; return accountModal('Listo: ya recibes códigos ahí.'); });
-      }
-      if (k === 'codigo-libre') { const c = v('codigo').replace(/\D/g, ''); if (c.length !== 6) throw new Error('El código tiene 6 dígitos.'); return await codeModal.fn(c); }
-      if (k === 'mfa') { await post('/perfil/mfa', { activar: !!fd.get('activar') || !!(S.usuario.mfa_obligatoria), canal: v('canal') || undefined }); const ss = await get('/sesion'); S.usuario = ss.usuario; return accountModal('Verificación en dos pasos guardada.'); }
       if (k === 'cotizar') {
         const raw = v('monto'); const m = raw ? Number(raw.replace(/\./g, '').replace(',', '.')) : 0;
         if (raw && !(m > 0)) throw new Error('Escribe el monto en US$ (por ejemplo 150,00).');
@@ -764,7 +581,7 @@
         return location.reload();
       }
       if (fiscalForms[k]) return await fiscalForms[k](f, fd, v);
-    } catch (x) { if (btn) btn.disabled = false; if (x.code !== 'CANCELADO') formErr(f, x.message); }
+    } catch (x) { if (btn) btn.disabled = false; formErr(f, x.message); }
   }, true);
 
   // ================================================================== 9. facturación fiscal (norma venezolana)
@@ -815,7 +632,7 @@
     const head = [can('facturas.emitir') ? `<button class="btn btn-cta" data-fis="nueva" ${p.completo ? '' : 'title="Primero completa los datos fiscales"'}>Nueva factura</button>` : '', can('libro.ventas') ? '<button class="btn" data-fis="libro">Libro de ventas</button>' : '', can('fiscal.configurar') ? '<button class="btn" data-fis="perfil">Datos fiscales</button>' : '', can('fiscal.configurar') && p.modo === 'FORMA_LIBRE' ? '<button class="btn" data-fis="rangos">Números de control</button>' : '', '<button class="btn btn-ghost" data-fis="verificar">Verificar sellos</button>'].filter(Boolean).join('');
     root.innerHTML = `${alerts.join('')}<section class="panel"><header class="pn-h"><h2>Documentos fiscales</h2><div class="pn-a"><span class="acts">${head}</span></div></header>${stats}${tools}
       <div class="bt-wrap"><table class="bt fis-t"><thead><tr><th>N.°</th><th>Control</th><th>Fecha</th><th>Cliente</th><th class="num">Total</th><th class="num">Equivalente</th><th>Estado</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="8"><p class="muted">${F.filtro.estado || F.filtro.buscar || F.filtro.tipo || F.filtro.periodo ? 'No hay documentos con estos filtros.' : 'Todavía no hay documentos. Crea la primera factura con «Nueva factura».'}</p></td></tr>`}</tbody></table></div>
-      <p class="note">${esc(lista.total)} documento(s). El número correlativo y el de control se asignan al emitir; lo emitido no se edita ni se borra: se anula (con código) o se corrige con una nota de crédito o débito. Equivalente en bolívares a la tasa oficial del BCV del día de emisión.</p></section>`;
+      <p class="note">${esc(lista.total)} documento(s). El número correlativo y el de control se asignan al emitir; lo emitido no se edita ni se borra: se anula o se corrige con una nota de crédito o débito. Equivalente en bolívares a la tasa oficial del BCV del día de emisión.</p></section>`;
   }
   let fisT = 0;
   document.addEventListener('input', e => { const i = e.target.closest('[data-fis-f]'); if (!i) return; F.filtro[i.dataset.fisF] = i.value; clearTimeout(fisT); fisT = setTimeout(() => { F.at = 0; loadFiscal(); }, i.type === 'search' ? 350 : 0); });
@@ -916,10 +733,24 @@
     $('#modal .modal-card').classList.add('modal-wide');
     const fr = $('#modal .fis-frame'); if (fr) fr.srcdoc = html;
   }
+  function reasonSheet(title, text, okLabel, danger = false) {
+    return new Promise(res => {
+      let val = null;
+      const sh = sheet(`<div class="srv-hoja"><h2>${esc(title)}</h2><p class="muted">${text}</p><form data-srv-reason novalidate><label class="fld"><span>Motivo (queda en la auditoría)</span><textarea name="motivo" rows="2" maxlength="255" required></textarea></label><p class="form-err" hidden></p><div class="modal-acts"><button type="button" class="btn btn-ghost" data-n>Cancelar</button><button type="submit" class="btn ${danger ? 'btn-danger' : 'btn-cta'}">${esc(okLabel)}</button></div></form></div>`, { onClose: () => res(val) });
+      const f = sh.body.querySelector('form');
+      sh.body.querySelector('[data-n]').addEventListener('click', () => sh.close('n'));
+      f.addEventListener('submit', e => {
+        e.preventDefault(); const m = f.querySelector('textarea').value.trim();
+        if (m.length < 5) { const p = f.querySelector('.form-err'); p.textContent = 'Escribe el motivo (mínimo 5 caracteres).'; p.hidden = false; return; }
+        val = m; sh.close('y');
+      });
+      setTimeout(() => f.querySelector('textarea').focus(), 40);
+    });
+  }
   function confirmSheet(title, text, okLabel, danger = false) {
     return new Promise(res => {
       let ok = false;
-      const sh = sheet(`<div class="srv-otp"><h2>${esc(title)}</h2><p class="muted">${text}</p><div class="modal-acts"><button type="button" class="btn btn-ghost" data-n>Cancelar</button><button type="button" class="btn ${danger ? 'btn-danger' : 'btn-cta'}" data-y>${esc(okLabel)}</button></div></div>`, { onClose: () => res(ok) });
+      const sh = sheet(`<div class="srv-hoja"><h2>${esc(title)}</h2><p class="muted">${text}</p><div class="modal-acts"><button type="button" class="btn btn-ghost" data-n>Cancelar</button><button type="button" class="btn ${danger ? 'btn-danger' : 'btn-cta'}" data-y>${esc(okLabel)}</button></div></div>`, { onClose: () => res(ok) });
       sh.body.querySelector('[data-n]').addEventListener('click', () => sh.close('n'));
       sh.body.querySelector('[data-y]').addEventListener('click', () => { ok = true; sh.close('y'); });
       setTimeout(() => sh.body.querySelector('[data-y]').focus(), 40);
@@ -933,10 +764,10 @@
   async function emit(uid) {
     const d = docCache[uid];
     const p = F.data && F.data.perfil;
-    const ok = await confirmSheet('Emitir el documento', `Se le asigna el <b>siguiente número correlativo</b>${p && p.modo === 'FORMA_LIBRE' ? ' y el <b>siguiente número de control</b> de la imprenta' : ' (el número de control lo registras cuando te lo dé la imprenta digital)'}, con la fecha de <b>hoy</b> y la tasa BCV vigente.${d ? ` Cliente: <b>${esc(d.cliente.nombre)}</b>.` : ''} Después de emitido <b>no se puede editar ni borrar</b>: solo anular (con código) o corregir con una nota.`, 'Emitir');
+    const ok = await confirmSheet('Emitir el documento', `Se le asigna el <b>siguiente número correlativo</b>${p && p.modo === 'FORMA_LIBRE' ? ' y el <b>siguiente número de control</b> de la imprenta' : ' (el número de control lo registras cuando te lo dé la imprenta digital)'}, con la fecha de <b>hoy</b> y la tasa BCV vigente.${d ? ` Cliente: <b>${esc(d.cliente.nombre)}</b>.` : ''} Después de emitido <b>no se puede editar ni borrar</b>: solo anular o corregir con una nota.`, 'Emitir');
     if (!ok) return;
     try { const r = await post(`/facturas/${encodeURIComponent(uid)}/emitir`, {}); tap(14); say(`${r.titulo} N.° ${r.numero_texto} emitida${r.control ? ' · control ' + r.control : ''}`); await afterFiscalChange(uid, `Emitida con el N.° ${r.numero_texto}${r.control ? ' y el control ' + r.control : ''}.`); }
-    catch (e) { if (e.code !== 'CANCELADO') say(e.message, 'bad'); }
+    catch (e) { say(e.message, 'bad'); }
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-fis]'); if (!b) return;
@@ -953,8 +784,9 @@
       if (a === 'pdf' || a === 'pdf-copia') { b.disabled = true; const d = docCache[uid]; const html = await repHtml(uid, a === 'pdf-copia'); await pdfFrom(html, `${d && d.tipo || 'DOC'}-${d && d.numero_texto || 'borrador'}${a === 'pdf-copia' ? '-copia' : ''}.pdf`); b.disabled = false; return say('PDF descargado'); }
       if (a === 'anular') {
         const d = docCache[uid];
-        if (!(await confirmSheet('Anular el documento', `${esc(d ? d.titulo + ' N.° ' + d.numero_texto : 'El documento')} queda marcado como <b>ANULADO</b> (conserva su número, no se reutiliza) y se avisa por correo a los administradores. Si tiene cobros o su mes está cerrado, corrígelo con una nota de crédito.`, 'Continuar', true))) return;
-        await post(`/facturas/${encodeURIComponent(uid)}/anular`, {}); tap(14); say('Documento anulado'); return afterFiscalChange(uid, 'Documento anulado.');
+        const motivo = await reasonSheet('Anular el documento', `${esc(d ? d.titulo + ' N.° ' + d.numero_texto : 'El documento')} queda marcado como <b>ANULADO</b> (conserva su número, no se reutiliza) y se avisa por correo a los administradores. Si tiene cobros o su mes está cerrado, corrígelo con una nota de crédito.`, 'Anular', true);
+        if (!motivo) return;
+        await post(`/facturas/${encodeURIComponent(uid)}/anular`, { motivo }); tap(14); say('Documento anulado'); return afterFiscalChange(uid, 'Documento anulado.');
       }
       if (a === 'nota') return noteModal(uid, b.dataset.tipo);
       if (a === 'control') return controlModal(uid);
@@ -965,14 +797,14 @@
       if (a === 'libro-csv') { const r = await api('GET', '/libro-ventas?periodo=' + encodeURIComponent(b.dataset.p) + '&formato=csv', undefined, { raw: true }); const blob = new Blob([r.data], { type: 'text/csv;charset=utf-8' }); if (typeof downloadBlob === 'function') downloadBlob(blob, `libro-de-ventas-${b.dataset.p}.csv`); return say('Libro de ventas descargado'); }
       if (a === 'verificar') { const r = await get('/fiscal/verificar'); return window.openModal(`<h2 id="modal-t">Verificación de sellos</h2><p class="${r.integro ? 'srv-ok' : 'form-err'}">${r.integro ? `Los ${esc(r.documentos)} documentos emitidos conservan su sello y la numeración no tiene saltos.` : `Hay ${esc(r.problemas.length)} problema(s):`}</p>${r.problemas.length ? `<ul class="srv-list">${r.problemas.map(x => `<li><span><b>${esc(TIPO[x.tipo] || x.tipo)} ${esc(x.documento)}</b><small class="muted">${esc(x.problema)}</small></span></li>`).join('')}</ul>` : ''}<div class="modal-acts"><button type="button" class="btn btn-cta" data-act="close">Entendido</button></div>`); }
       if (a === 'ver-pendientes') { F.filtro = { estado: 'EMITIDA', tipo: '', periodo: '', buscar: '' }; F.at = 0; return loadFiscal(); }
-    } catch (x) { b.disabled = false; if (x.code !== 'CANCELADO') say(x.message, 'bad'); }
+    } catch (x) { b.disabled = false; say(x.message, 'bad'); }
   });
 
   function noteModal(uid, tipo) {
     const d = docCache[uid]; if (!d) return;
     const sym = d.moneda === 'VES' ? 'Bs.' : 'US$';
     window.openModal(`<h2 id="modal-t">${tipo === 'NC' ? 'Nota de crédito' : 'Nota de débito'} sobre la factura ${esc(d.numero_texto)}</h2>
-      <p class="muted">${tipo === 'NC' ? 'Resta de la factura (descuento, devolución, servicio no prestado). No puede superar lo que queda de la factura.' : 'Suma a la factura (intereses, recargos, diferencias).'} Cita el número, la fecha y el monto de la factura (art. 23) y lleva su propio correlativo. Pide un código y el motivo.</p>
+      <p class="muted">${tipo === 'NC' ? 'Resta de la factura (descuento, devolución, servicio no prestado). No puede superar lo que queda de la factura.' : 'Suma a la factura (intereses, recargos, diferencias).'} Cita el número, la fecha y el monto de la factura (art. 23) y lleva su propio correlativo. Pide el motivo.</p>
       <p class="muted small">Factura: ${esc(sym)} ${esc(fmtN(d.totales.total))} del ${esc(dmy(d.fecha))} · ${esc(d.cliente.nombre)}</p>
       <form data-srv-form="nota" data-uid="${esc(uid)}" data-tipo="${esc(tipo)}" novalidate>
         <div class="bt-wrap"><table class="bt fis-lines"><thead><tr><th>Producto</th><th>Descripción</th><th>Cant.</th><th>Precio</th><th>Desc.</th><th>Impuesto</th><th class="num">Monto</th><th></th></tr></thead><tbody>${lineRow({ descripcion: tipo === 'NC' ? 'Ajuste a la factura ' + d.numero_texto : 'Recargo sobre la factura ' + d.numero_texto, cantidad: 1, impuesto: 'G' }, 0)}</tbody></table></div>
@@ -988,7 +820,7 @@
   }
   async function profileModal() {
     let p; try { p = await get('/fiscal/perfil'); } catch (e) { return say(e.message, 'bad'); }
-    window.openModal(`<h2 id="modal-t">Datos fiscales de la empresa</h2><p class="muted">Salen en cada documento (Prov. SNAT/2011/00071, art. 13). ${p.emitidos ? 'Ya hay documentos emitidos: cambiar estos datos pide un código y solo afecta a los nuevos.' : ''}</p>
+    window.openModal(`<h2 id="modal-t">Datos fiscales de la empresa</h2><p class="muted">Salen en cada documento (Prov. SNAT/2011/00071, art. 13). ${p.emitidos ? 'Ya hay documentos emitidos: cambiar estos datos solo afecta a los nuevos.' : ''}</p>
       <form data-srv-form="perfil" novalidate><div class="fgrid">
         <label class="fld span2"><span>Razón social</span><input name="razon_social" value="${esc(p.razon_social)}" maxlength="200"></label>
         <label class="fld"><span>RIF</span><input name="rif" value="${esc(p.rif)}" placeholder="J-12345678-9"></label>
@@ -1014,7 +846,7 @@
   }
   async function rangesModal() {
     let r; try { r = await get('/fiscal/rangos'); } catch (e) { return say(e.message, 'bad'); }
-    window.openModal(`<h2 id="modal-t">Números de control (forma libre)</h2><p class="muted">Registra los rangos que te asignó la imprenta autorizada. Al emitir se usa el siguiente número, en orden, para todos los documentos. Registrar o anular un rango pide un código.</p>
+    window.openModal(`<h2 id="modal-t">Números de control (forma libre)</h2><p class="muted">Registra los rangos que te asignó la imprenta autorizada. Al emitir se usa el siguiente número, en orden, para todos los documentos. Registrar o anular un rango queda en la auditoría.</p>
       ${r.rangos.length ? `<ul class="srv-list">${r.rangos.map(x => `<li><span><b>${esc(x.prefijo)}-${esc(String(x.desde).padStart(8, '0'))} al ${esc(x.prefijo)}-${esc(String(x.hasta).padStart(8, '0'))}</b><small class="muted">${esc(x.imprenta)} · ${esc(x.providencia)} · ${esc(x.disponibles)} disponibles</small></span><span class="sc ${x.estado === 'ACTIVO' ? 'sc-ok' : x.estado === 'AGOTADO' ? 'sc-blue' : 'sc-bad'}">${esc(x.estado.toLowerCase())}</span>${x.estado === 'ACTIVO' && x.siguiente === x.desde ? `<button class="btn btn-sm btn-ghost" data-fis="rango-anular" data-id="${esc(x.id)}">Anular</button>` : ''}</li>`).join('')}</ul>` : '<p class="muted">Todavía no hay rangos registrados.</p>'}
       <form data-srv-form="rango" novalidate><h3 class="srv-h3">Nuevo rango</h3><div class="fgrid"><label class="fld"><span>Prefijo</span><input name="prefijo" value="00" maxlength="2"></label><label class="fld"><span>Desde</span><input name="desde" type="number" min="1"></label><label class="fld"><span>Hasta</span><input name="hasta" type="number" min="1"></label><label class="fld span2"><span>Imprenta</span><input name="imprenta"></label><label class="fld"><span>RIF de la imprenta</span><input name="rif_imprenta"></label><label class="fld"><span>Providencia</span><input name="providencia"></label><label class="fld"><span>Fecha de asignación</span><input name="fecha" type="date"></label></div>
       <p class="form-err" hidden></p><div class="modal-acts"><button type="button" class="btn btn-ghost" data-act="close">Cerrar</button><button type="submit" class="btn btn-cta">Registrar rango</button></div></form>`);
@@ -1048,7 +880,9 @@
     async nota(f) {
       const lineas = draftLines(f).filter(l => l.descripcion || l.precio);
       if (!lineas.length || lineas.some(l => !l.descripcion || l.precio == null)) throw new Error('Cada línea necesita descripción y precio.');
-      const r = await post(`/facturas/${encodeURIComponent(f.dataset.uid)}/nota`, { tipo: f.dataset.tipo, lineas });
+      const motivo = await reasonSheet('Emitir la nota', 'Explica por qué se emite la nota. Queda en la auditoría.', 'Emitir la nota', true);
+      if (!motivo) return;
+      const r = await post(`/facturas/${encodeURIComponent(f.dataset.uid)}/nota`, { tipo: f.dataset.tipo, lineas, motivo });
       tap(14); say(`${r.titulo} N.° ${r.numero_texto} emitida`); docCache[r.uid] = r; return afterFiscalChange(r.uid, `${r.titulo} emitida con el N.° ${r.numero_texto}.`);
     },
     async control(f, fd, v) { const r = await post(`/facturas/${encodeURIComponent(f.dataset.uid)}/control`, { numero_control: v('numero_control'), asignado: v('asignado') }); say('Número de control registrado: ' + r.control); return afterFiscalChange(r.uid, 'Número de control registrado.'); },

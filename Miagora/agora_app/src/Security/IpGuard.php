@@ -6,7 +6,7 @@ namespace Agora\Security;
 use Agora\Core\Clock;
 use Agora\Core\Db;
 
-/** Bloqueo temporal de direcciones IP (trampa de código fuente, WAF, abuso de OTP o de acceso). */
+/** Bloqueo temporal de direcciones IP (trampa de código fuente, WAF o abuso de acceso). */
 final class IpGuard
 {
     private array $cache = [];

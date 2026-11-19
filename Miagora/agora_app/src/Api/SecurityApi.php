@@ -9,31 +9,13 @@ use Agora\Http\HttpError;
 use Agora\Http\Router;
 use Agora\Notify\Templates;
 use Agora\Security\Roles;
-use Agora\Security\StepUp;
-use Agora\Security\Validator;
 
-/**
- * Verificación con código (OTP) para acciones sensibles y panel de seguridad:
- * eventos, IP bloqueadas, integridad de archivos y prueba de avisos.
- */
+/** Panel de seguridad: eventos, IP bloqueadas, integridad de archivos y prueba de avisos. */
 final class SecurityApi
 {
-    /** Permiso necesario para pedir el código de cada acción (null: cualquiera con sesión, sobre su propia cuenta) */
-    private const ACTION_PERM = [
-        'DATOS_CERRADOS' => 'datos.escribir', 'PERIODO_CERRAR' => 'periodos.cerrar', 'PERIODO_REABRIR' => 'periodos.reabrir',
-        'FACTURA_ANULAR' => 'facturas.anular', 'NOTA_EMITIR' => 'facturas.emitir', 'COBRO_REVERTIR' => 'pagos.revertir', 'RECIBO_CAMBIAR' => 'datos.escribir',
-        'PERFIL_FISCAL' => 'fiscal.configurar', 'RANGO_CONTROL' => 'fiscal.configurar', 'USUARIO_ROL' => 'usuarios.gestionar', 'USUARIO_INVITAR' => 'usuarios.gestionar',
-        'CONTACTO' => null, 'MFA' => null, 'EXPORTAR' => 'exportar', 'IMPORTAR' => 'importar', 'IP_DESBLOQUEAR' => null,
-    ];
-    /** Acciones que exigen escribir el motivo (queda en la auditoría) */
-    private const NEEDS_REASON = ['DATOS_CERRADOS', 'PERIODO_REABRIR', 'FACTURA_ANULAR', 'NOTA_EMITIR', 'COBRO_REVERTIR', 'RECIBO_CAMBIAR'];
-
     public static function routes(Router $r, App $app): void
     {
         $o = ['org' => false];
-        $r->add('POST', '/api/v1/verificacion', fn (Ctx $c) => self::request($c), $o + ['rate' => ['verificacion:{user}', 15, 3600]]);
-        $r->add('POST', '/api/v1/verificacion/reenviar', fn (Ctx $c) => self::resend($c), $o);
-        $r->add('POST', '/api/v1/verificacion/confirmar', fn (Ctx $c) => self::confirm($c), $o + ['rate' => ['verificacion:conf:{user}', 30, 900]]);
         $r->add('GET', '/api/v1/seguridad/eventos', fn (Ctx $c) => self::events($c), ['perm' => 'seguridad.ver']);
         $r->add('GET', '/api/v1/seguridad/resumen', fn (Ctx $c) => self::summary($c), ['perm' => 'seguridad.ver']);
         $r->add('POST', '/api/v1/seguridad/prueba', fn (Ctx $c) => self::testAlert($c), ['perm' => 'seguridad.gestionar', 'rate' => ['seguridad:prueba:{user}', 3, 3600]]);
@@ -42,65 +24,6 @@ final class SecurityApi
         $r->add('POST', '/api/v1/plataforma/bloqueos/{ip}/quitar', fn (Ctx $c) => self::unblock($c), ['org' => false, 'platform' => true]);
         $r->add('GET', '/api/v1/plataforma/integridad', fn (Ctx $c) => self::integrity($c), ['org' => false, 'platform' => true]);
         $r->add('POST', '/api/v1/plataforma/integridad/verificar', fn (Ctx $c) => self::integrityRun($c), ['org' => false, 'platform' => true, 'rate' => ['integridad:{user}', 6, 3600]]);
-    }
-
-    // ------------------------------------------------------------------ verificación con código
-    private static function request(Ctx $c): array
-    {
-        $s = $c->s();
-        $d = $c->json();
-        $action = strtoupper((string) ($d['accion'] ?? ''));
-        if (!array_key_exists($action, self::ACTION_PERM)) {
-            throw HttpError::badRequest('Acción no reconocida.');
-        }
-        $perm = self::ACTION_PERM[$action];
-        if ($action === 'IP_DESBLOQUEAR') {
-            $c->needPlatform();
-        } elseif ($perm !== null) {
-            if ($s['org_id'] === null) {
-                throw new HttpError(409, 'SIN_EMPRESA', 'Elige una empresa para continuar.');
-            }
-            if ($action === 'DATOS_CERRADOS' ? !($c->can('datos.escribir') || $c->can('pagos.registrar') || $c->can('agenda.escribir')) : !$c->can($perm)) {
-                throw HttpError::forbidden('Tu rol no permite hacer esta acción.');
-            }
-        }
-        $scope = (string) ($d['alcance'] ?? '');
-        $reason = isset($d['motivo']) ? Validator::clean($d['motivo'], 255) : '';
-        if (in_array($action, self::NEEDS_REASON, true) && mb_strlen($reason) < 5) {
-            throw HttpError::badRequest('Escribe el motivo (mínimo 5 caracteres): queda en la auditoría.');
-        }
-        return $c->app->stepUp->request($s, $c->req, $action, $scope, $reason !== '' ? $reason : null, isset($d['canal']) ? (string) $d['canal'] : null);
-    }
-
-    private static function resend(Ctx $c): array
-    {
-        $s = $c->s();
-        $d = $c->json();
-        $cid = (string) ($d['desafio'] ?? '');
-        $ch = $c->app->otp->peek($cid);
-        if ($ch['purpose'] !== 'VERIFICACION' || $ch['session_id'] !== $s['id']) {
-            throw new HttpError(422, 'DESAFIO_INVALIDO', 'La solicitud de código no es válida. Empieza de nuevo.');
-        }
-        return $c->app->otp->send($cid, (string) ($d['canal'] ?? $ch['channel'] ?? 'EMAIL'), $c->req->ip);
-    }
-
-    private static function confirm(Ctx $c): array
-    {
-        $s = $c->s();
-        $d = $c->json();
-        try {
-            $g = $c->app->stepUp->confirm($s, (string) ($d['desafio'] ?? ''), (string) ($d['codigo'] ?? ''));
-        } catch (HttpError $e) {
-            if ($e->errorCode === 'CODIGO_BLOQUEADO') {
-                $c->app->alerts->event('OTP_ABUSO', 'MEDIA', $c->req->ip, $c->req->method, $c->req->path, $c->req->userAgent(), ['proposito' => 'VERIFICACION'], $s['org_id'] !== null ? (int) $s['org_id'] : null, (int) $s['user_id']);
-            }
-            throw $e;
-        }
-        if ($s['org_id'] !== null) {
-            $reason = (string) $c->app->db->value('SELECT reason FROM otp_challenges WHERE id = ?', [(string) $d['desafio']]);
-            $c->audit('seguridad', 'confirmó con código: ' . (StepUp::ACTIONS[$g['accion']] ?? $g['accion']) . ' (' . $g['alcance'] . ')' . ($reason !== '' ? ' · motivo: ' . $reason : ''));
-        }
-        return $g;
     }
 
     // ------------------------------------------------------------------ panel de seguridad
@@ -164,9 +87,8 @@ final class SecurityApi
         if (!filter_var($ip, FILTER_VALIDATE_IP)) {
             throw HttpError::badRequest('IP no válida.');
         }
-        $g = $c->app->stepUp->require($c->req, $c->s(), 'IP_DESBLOQUEAR', 'ip:' . $ip);
         $c->app->ipGuard->unblock($ip);
-        $c->app->audit->log(null, $c->actor(), 'seguridad', 'desbloqueó la IP ' . $ip, 'ip', $ip, null, 'SERVIDOR', (string) $g['id']);
+        $c->app->audit->log(null, $c->actor(), 'seguridad', 'desbloqueó la IP ' . $ip, 'ip', $ip, null, 'SERVIDOR', null);
         return ['ok' => true];
     }
 

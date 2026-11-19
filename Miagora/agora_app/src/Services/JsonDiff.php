@@ -5,7 +5,7 @@ namespace Agora\Services;
 
 /**
  * Comparación y fusión de los documentos de la app.
- *  · changedPeriods(): qué meses (AAAA-MM) toca un cambio, para exigir OTP si alguno está cerrado.
+ *  · changedPeriods(): qué meses (AAAA-MM) toca un cambio, para marcar los cerrados en la auditoría.
  *  · merge3(): fusión de tres vías (base del navegador, versión actual del servidor y cambio del navegador)
  *    para que dos personas editando a la vez no se pisen: listas con "id" y mapas se fusionan por elemento.
  */

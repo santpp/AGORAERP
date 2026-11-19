@@ -494,7 +494,7 @@ final class Documents
     }
 
     // ================================================================== anulación y notas
-    public function annul(int $orgId, string $uid, string $reason, array $actor, string $grantId): array
+    public function annul(int $orgId, string $uid, string $reason, array $actor, ?string $grantId): array
     {
         $this->db->transaction(function () use ($orgId, $uid, $reason, $actor, $grantId) {
             $doc = $this->row($orgId, $uid, true);
@@ -526,7 +526,7 @@ final class Documents
         return $this->get($orgId, $uid);
     }
 
-    public function note(int $orgId, string $affectedUid, string $type, array $d, string $reason, array $actor, string $grantId): array
+    public function note(int $orgId, string $affectedUid, string $type, array $d, string $reason, array $actor, ?string $grantId): array
     {
         if (!in_array($type, ['NC', 'ND'], true)) {
             throw HttpError::badRequest('Tipo de nota no válido.');

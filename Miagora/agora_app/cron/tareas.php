@@ -91,12 +91,8 @@ function limpieza(App $app): array
 {
     $db = $app->db;
     $out = [];
-    $now = Clock::ts();
     $out['limites'] = $db->exec('DELETE FROM rate_limits WHERE expires_at < ?', [Clock::unix()]);
-    $out['codigos'] = $db->exec('DELETE FROM otp_challenges WHERE expires_at < ?', [Clock::ts(-86400)]);
-    $out['autorizaciones'] = $db->exec('DELETE FROM step_up_grants WHERE expires_at < ?', [Clock::ts(-86400)]);
     $out['sesiones'] = $db->exec('DELETE FROM sessions WHERE expires_at < ? OR (revoked_at IS NOT NULL AND revoked_at < ?)', [Clock::ts(-7 * 86400), Clock::ts(-30 * 86400)]);
-    $out['equipos'] = $db->exec('DELETE FROM trusted_devices WHERE expires_at < ? OR (revoked_at IS NOT NULL AND revoked_at < ?)', [$now, Clock::ts(-30 * 86400)]);
     $out['bloqueos'] = $db->exec('DELETE FROM ip_blocks WHERE blocked_until < ?', [Clock::ts(-30 * 86400)]);
     $out['tasas'] = $db->exec('DELETE FROM fx_snapshots WHERE fetched_at < ?', [Clock::ts(-90 * 86400)]);
     $out['cotizaciones'] = $db->exec('DELETE FROM fx_quotes WHERE expires_at < ?', [Clock::ts(-180 * 86400)]);

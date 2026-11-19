@@ -76,7 +76,7 @@ final class Env
         return in_array(strtolower($v), ['1', 'true', 'si', 'sí', 'yes', 'on'], true);
     }
 
-    /** Secreto obligatorio de al menos 32 caracteres (APP_KEY, OTP_PEPPER, AUDIT_KEY, BACKUP_KEY…) */
+    /** Secreto obligatorio de al menos 32 caracteres (APP_KEY, AUDIT_KEY, BACKUP_KEY…) */
     public static function secret(string $key): string
     {
         $v = (string) self::get($key, '');

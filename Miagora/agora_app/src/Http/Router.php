@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Agora\Http;
 
 /**
- * Rutas de la API. Cada ruta declara si exige sesión, permiso y verificación OTP.
+ * Rutas de la API. Cada ruta declara si exige sesión y permiso.
  * Opciones: auth (bool, por defecto true), perm (string), public_csrf (bool: POST sin sesión que solo
  * comprueba el origen), rate ([clave, máximo, segundos]).
  */

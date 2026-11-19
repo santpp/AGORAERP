@@ -3,7 +3,6 @@
  * Agora Digital App · diagnóstico del servidor (por SSH). No cambia nada.
  *   php agora_app/tools/diagnostico.php
  *   php agora_app/tools/diagnostico.php --probar-correo=tu@correo.com
- *   php agora_app/tools/diagnostico.php --probar-whatsapp=+584121234567
  *   php agora_app/tools/diagnostico.php --probar-tasas
  */
 declare(strict_types=1);
@@ -15,7 +14,6 @@ use Agora\Core\Db;
 use Agora\Core\Env;
 use Agora\Core\Migrator;
 use Agora\Notify\Outbox;
-use Agora\Notify\WhatsApp;
 use Agora\Security\Integrity;
 use Agora\Services\Backup;
 
@@ -44,7 +42,7 @@ $check('APCu (límites en memoria, opcional)', function_exists('apcu_enabled') &
 $check('Archivo .env', is_file(AGORA_APP . '/.env'));
 $perm = is_file(AGORA_APP . '/.env') ? substr(sprintf('%o', fileperms(AGORA_APP . '/.env')), -3) : '';
 $check('.env solo legible por tu usuario (600)', in_array($perm, ['600', '400'], true), $perm, true);
-foreach (['AUDIT_KEY', 'OTP_PEPPER', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
+foreach (['AUDIT_KEY', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
     $v = Env::str($k);
     $check("Secreto {$k}", strlen($v) >= 32 && !str_contains($v, 'cambia'), strlen($v) . ' caracteres');
 }
@@ -98,7 +96,6 @@ try {
     $check('Conexión a la base de datos', false, $e->getMessage());
 }
 $check('Correo configurado (SMTP)', Outbox::mailConfigured() && Env::str('MAIL_DRIVER') === 'smtp', Env::str('MAIL_DRIVER') . ' ' . Env::str('MAIL_HOST'));
-$check('WhatsApp (API oficial de Meta)', WhatsApp::configured(), WhatsApp::configured() ? 'plantilla ' . Env::str('WHATSAPP_TEMPLATE_OTP', 'agora_codigo_verificacion') : 'sin configurar: los códigos irán solo por correo', true);
 
 if (!empty($a['probar-correo'])) {
     try {
@@ -107,14 +104,6 @@ if (!empty($a['probar-correo'])) {
         $check('Envío de correo de prueba', true, (string) $a['probar-correo']);
     } catch (\Throwable $e) {
         $check('Envío de correo de prueba', false, $e->getMessage());
-    }
-}
-if (!empty($a['probar-whatsapp'])) {
-    try {
-        $id = WhatsApp::sendOtp((string) $a['probar-whatsapp'], '123456');
-        $check('Envío de WhatsApp de prueba (código 123456)', true, $id);
-    } catch (\Throwable $e) {
-        $check('Envío de WhatsApp de prueba', false, $e->getMessage());
     }
 }
 if (!empty($a['probar-tasas'])) {

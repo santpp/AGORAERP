@@ -9,7 +9,7 @@ use Agora\Core\Env;
 use Agora\Core\Log;
 
 /**
- * Envío de correos y WhatsApp. Los códigos OTP salen al instante. Los avisos quedan en la cola (tabla outbox):
+ * Envío de correos. Los avisos quedan en la cola (tabla outbox):
  * en una petición web se intentan DESPUÉS de responder (así un servidor de correo lento o caído nunca demora
  * ni bloquea la respuesta, ni siquiera en la trampa del código fuente); lo que no salga lo reintenta la tarea
  * programada cada minuto. Desde la línea de comandos (tareas, herramientas) se envían al momento.
@@ -55,25 +55,6 @@ final class Outbox
             Env::str('MAIL_FROM_NAME', 'Agora Digital App'),
             $timeout,
         ))->send($to, $subject, $text, $html);
-    }
-
-    /** Código de un solo uso: se envía al instante. En la cola solo queda el registro con el código oculto. */
-    public function sendOtp(string $channel, string $dest, string $code, string $purpose, int $minutes, string $ip, string $detail, ?int $orgId): void
-    {
-        if ($channel === 'WHATSAPP') {
-            WhatsApp::sendOtp($dest, $code);
-            $logBody = 'Código de verificación enviado por WhatsApp (plantilla de autenticación).';
-            $subject = null;
-        } else {
-            [$subject, $text, $html] = Templates::otp($code, $purpose, $minutes, $ip, $detail);
-            self::deliverEmail($dest, $subject, $text, $html);
-            $logBody = str_replace(substr($code, 0, 3) . ' ' . substr($code, 3), '••• •••', $text);
-        }
-        self::$sent[] = ['channel' => $channel, 'to' => $dest, 'code' => Env::isTest() ? $code : null, 'purpose' => $purpose];
-        $this->db->insert('outbox', [
-            'org_id' => $orgId, 'channel' => $channel, 'destination' => $dest, 'subject' => $subject, 'body' => $logBody, 'template' => 'otp',
-            'priority' => 1, 'status' => 'REGISTRO', 'attempts' => 1, 'last_error' => null, 'send_after' => Clock::ts(), 'sent_at' => Clock::ts(), 'created_at' => Clock::ts(),
-        ]);
     }
 
     /** Aviso por correo: queda en la cola; en la web se intenta después de responder, en la terminal al momento. */

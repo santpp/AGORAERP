@@ -8,8 +8,8 @@
 .srv-sheet.is-open .srv-sheet-card{transform:none}
 .srv-sheet-card.is-wide{max-width:680px}
 .srv-x{position:absolute;top:12px;right:12px}
-.srv-otp h2{margin:6px 0 6px;font-size:21px;letter-spacing:-.02em}
-.srv-otp .muted{margin:0 0 10px}
+.srv-hoja h2{margin:6px 0 6px;font-size:21px;letter-spacing:-.02em}
+.srv-hoja .muted{margin:0 0 10px}
 .srv-ic{display:inline-flex;width:44px;height:44px;border-radius:14px;align-items:center;justify-content:center;background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand)}
 .srv-scope{display:inline-block;margin:0 0 14px;padding:5px 12px;border-radius:999px;background:var(--fill);color:var(--ink);font-size:13px;font-weight:600}
 .srv-f{display:flex;flex-direction:column;gap:12px}

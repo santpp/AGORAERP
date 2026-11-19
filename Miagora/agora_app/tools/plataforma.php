@@ -88,7 +88,6 @@ cli_run(function () use ($argv): void {
                 throw new RuntimeException('No existe esa cuenta.');
             }
             cli_ok('Sesiones cerradas: ' . $app->sessions->revokeAllForUser((int) $uid, 'plataforma'));
-            $app->sessions->revokeDevices((int) $uid);
             break;
         case 'verificar':
             $o = $org();
@@ -125,12 +124,12 @@ cli_run(function () use ($argv): void {
                 $email = sprintf('carga-%s-%04d@carga.invalid', strtolower(substr((string) $o['uid'], -6)), $i);
                 $uid = $app->db->value('SELECT id FROM users WHERE email = ?', [$email]);
                 if (!$uid) {
-                    $uid = $app->db->insert('users', ['uid' => Ids::ulid(), 'email' => $email, 'name' => 'Prueba de carga ' . $i, 'password_hash' => $hash, 'password_changed_at' => $now, 'status' => 'ACTIVO', 'is_platform_admin' => 0, 'mfa_enabled' => 0, 'mfa_channel' => 'EMAIL', 'failed_logins' => 0, 'locked_until' => null, 'last_login_at' => null, 'last_login_ip' => null, 'created_at' => $now, 'updated_at' => $now]);
+                    $uid = $app->db->insert('users', ['uid' => Ids::ulid(), 'email' => $email, 'name' => 'Prueba de carga ' . $i, 'password_hash' => $hash, 'password_changed_at' => $now, 'status' => 'ACTIVO', 'is_platform_admin' => 0, 'failed_logins' => 0, 'locked_until' => null, 'last_login_at' => null, 'last_login_ip' => null, 'created_at' => $now, 'updated_at' => $now]);
                     $app->db->insert('memberships', ['org_id' => $orgId, 'user_id' => $uid, 'role' => 'ADMIN', 'status' => 'ACTIVA', 'created_at' => $now, 'created_by' => null, 'updated_at' => $now]);
                 }
                 $token = Ids::token(32);
                 $csrf = bin2hex(random_bytes(32));
-                $app->db->insert('sessions', ['id' => Ids::sha256($token), 'user_id' => (int) $uid, 'org_id' => $orgId, 'csrf_token' => $csrf, 'mfa_passed' => 0, 'elevated_until' => null, 'ip' => 'carga', 'user_agent' => 'prueba de carga', 'created_at' => $now, 'last_seen_at' => $now, 'idle_expires_at' => Clock::ts(86400), 'expires_at' => Clock::ts(86400), 'revoked_at' => null, 'revoke_reason' => null]);
+                $app->db->insert('sessions', ['id' => Ids::sha256($token), 'user_id' => (int) $uid, 'org_id' => $orgId, 'csrf_token' => $csrf, 'elevated_until' => null, 'ip' => 'carga', 'user_agent' => 'prueba de carga', 'created_at' => $now, 'last_seen_at' => $now, 'idle_expires_at' => Clock::ts(86400), 'expires_at' => Clock::ts(86400), 'revoked_at' => null, 'revoke_reason' => null]);
                 fwrite($fh, SessionManager::cookieName() . ',' . $token . ',' . $csrf . "\n");
             }
             fclose($fh);

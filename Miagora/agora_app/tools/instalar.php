@@ -27,7 +27,7 @@ cli_run(function () use ($argv): void {
             throw new RuntimeException('Ya existe agora_app/.env: no se reemplaza. Bórralo a mano si de verdad quieres uno nuevo.');
         }
         $tpl = (string) file_get_contents(AGORA_APP . '/.env.example');
-        foreach (['AUDIT_KEY', 'OTP_PEPPER', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
+        foreach (['AUDIT_KEY', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
             $tpl = (string) preg_replace('/^' . $k . '=.*$/m', $k . '=' . rtrim(strtr(base64_encode(random_bytes(48)), '+/', '-_'), '='), $tpl);
         }
         file_put_contents($target, $tpl);
@@ -53,13 +53,13 @@ cli_run(function () use ($argv): void {
     if (!is_file(AGORA_APP . '/.env')) {
         throw new RuntimeException('Falta agora_app/.env. Corre primero: php agora_app/tools/instalar.php --generar-env');
     }
-    foreach (['AUDIT_KEY', 'OTP_PEPPER', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
+    foreach (['AUDIT_KEY', 'INTEGRITY_KEY', 'BACKUP_KEY'] as $k) {
         Env::secret($k);
     }
     if (Env::isProduction() && !str_starts_with(Env::str('APP_URL'), 'https://')) {
         throw new RuntimeException('APP_URL debe empezar con https:// en producción.');
     }
-    cli_ok('Secretos configurados (AUDIT_KEY, OTP_PEPPER, INTEGRITY_KEY, BACKUP_KEY)');
+    cli_ok('Secretos configurados (AUDIT_KEY, INTEGRITY_KEY, BACKUP_KEY)');
 
     // 3) Carpetas
     foreach (['storage', 'storage/logs', 'storage/respaldos', 'storage/integridad'] as $d) {

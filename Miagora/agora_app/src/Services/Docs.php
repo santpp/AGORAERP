@@ -8,27 +8,26 @@ use Agora\Core\Db;
 use Agora\Http\HttpError;
 use Agora\Http\Request;
 use Agora\Security\Roles;
-use Agora\Security\StepUp;
 use Agora\Security\Validator;
 
 /**
  * Datos de la app (los mismos que la edición local guardaba en el navegador), ahora en el servidor:
  *  · documentos de la empresa con versión, historial y fusión cuando dos personas editan a la vez;
- *  · reglas por clave: meses cerrados (OTP), recibos emitidos (OTP), cobros (servicio Payments), auditoría;
+ *  · reglas por clave: meses cerrados, recibos emitidos, cobros (servicio Payments), auditoría;
  *  · preferencias personales por usuario; credenciales y datos del facturero local nunca se suben.
  */
 final class Docs
 {
     public const LOCAL_ONLY = ['agora_fin_sess', 'agora_fin_acc_v1', 'agora_fin_key_hash', 'agora_fin_key_kdf_v1', 'agora_fin_login_tries', 'agora_fin_audit_anchor_v1', 'agora-facturas-v1', 'agora-factura-v2', 'agora-correlativos-v1', 'agora-formato-v1', 'agora-facturacion', 'agora_fin_fact_sig'];
     public const USER_PREFS = ['agora_fin_theme', 'agora_fin_accent', 'agora_fin_nav_v1', 'agora_fin_side_v1', 'agora_fin_gestures_v1', 'agora_fin_athena_cfg_v1', 'agora_fin_athena_greet_day', 'agora_fin_role'];
-    /** Claves con datos de meses: cambiar un mes cerrado exige OTP */
+    /** Claves con datos de meses: cambiar un mes cerrado queda marcado en la auditoría */
     public const GUARDED = ['agora_fin_expenses_v2', 'agora_fin_investments_v2', 'agora_fin_aportes_v1', 'agora_fin_receipts_v1', 'agora_fin_tasas_v1', 'agora_fin_rates_v1', 'agora_fin_cash_v1', 'agora_fin_budget_over_v1', 'agora_fin_goals_v1', 'agora_fin_matrix_v1', 'agora_fin_com_paid_v1', 'agora_fin_com_paid_ref_v1', 'agora_fin_decisions', 'agora_fin_payments', 'agora_fin_pay_refs_v1'];
     public const AGENDA = ['agora_fin_events_v1', 'agora_fin_agenda_cfg_v1', 'agora_fin_actions'];
     /** Las arma el servidor (no se guardan desde la app): facturas salen de los documentos fiscales */
     public const DERIVED = ['agora_fin_imported_v1'];
     private const MAX_BYTES = 4 * 1024 * 1024;
 
-    public function __construct(private Db $db, private Periods $periods, private Payments $payments, private Audit $audit, private StepUp $stepUp)
+    public function __construct(private Db $db, private Periods $periods, private Payments $payments, private Audit $audit)
     {
     }
 
@@ -113,12 +112,10 @@ final class Docs
         }
 
         return $this->db->transaction(function () use ($req, $s, $orgId, $parsed, $bases) {
-            $locks = [];
             $plans = [];
-            $grantUsed = null;
             foreach ($parsed as $key => $p) {
                 if ($p['kind'] === 'pagos') {
-                    $plans['pagos'] = $this->payments->plan($req, $s, $p['val'], $locks);
+                    $plans['pagos'] = $this->payments->plan($s, $p['val']);
                     continue;
                 }
                 if ($p['kind'] !== 'doc') {
@@ -137,35 +134,10 @@ final class Docs
                     $closedSet = $this->periods->closed($orgId);
                     $touched = array_values(array_intersect(JsonDiff::changedPeriods($curVal, $final), $closedSet));
                     if ($touched) {
-                        $scope = 'periodo:' . implode(',', $touched);
-                        $g = $this->stepUp->find($req, $s, 'DATOS_CERRADOS', $scope);
-                        if (!$g) {
-                            $locks[] = ['accion' => 'DATOS_CERRADOS', 'alcance' => $scope, 'motivo' => true];
-                        } else {
-                            $grantUsed = $g;
-                            $p['closed'] = $touched;
-                        }
-                    }
-                }
-                if ($key === 'agora_fin_receipts_v1') {
-                    $changedIds = self::changedExistingIds($curVal, $final);
-                    if ($changedIds) {
-                        $scope = 'recibo:' . implode(',', $changedIds);
-                        $g = $this->stepUp->find($req, $s, 'RECIBO_CAMBIAR', $scope);
-                        if (!$g) {
-                            $locks[] = ['accion' => 'RECIBO_CAMBIAR', 'alcance' => $scope, 'motivo' => true];
-                        } else {
-                            $grantUsed = $g;
-                        }
+                        $p['closed'] = $touched;
                     }
                 }
                 $plans[$key] = ['final' => $final, 'curVer' => $curVer, 'exists' => (bool) $cur, 'merged' => $final !== $p['val'], 'closed' => $p['closed'] ?? []];
-            }
-            if ($locks) {
-                $first = $locks[0];
-                throw new HttpError(423, 'VERIFICACION_REQUERIDA', StepUp::ACTIONS[$first['accion']] . ': confirma con el código que te enviaremos.', [
-                    'accion' => $first['accion'], 'alcance' => $first['alcance'], 'descripcion' => StepUp::ACTIONS[$first['accion']], 'motivo_requerido' => $first['motivo'], 'pendientes' => count($locks),
-                ]);
             }
             $versions = [];
             $updated = [];
@@ -193,13 +165,13 @@ final class Docs
                     } else {
                         $this->db->insert('org_documents', ['org_id' => $orgId, 'doc_key' => $key, 'content' => $json, 'version' => $ver, 'size_bytes' => strlen($json), 'updated_at' => Clock::ts(), 'updated_by' => (int) $s['user_id']]);
                     }
-                    $this->db->insert('org_document_history', ['org_id' => $orgId, 'doc_key' => $key, 'version' => $ver, 'content' => $json, 'changed_by' => (int) $s['user_id'], 'grant_id' => $plan['closed'] && $grantUsed ? $grantUsed['id'] : null, 'changed_at' => Clock::ts()]);
+                    $this->db->insert('org_document_history', ['org_id' => $orgId, 'doc_key' => $key, 'version' => $ver, 'content' => $json, 'changed_by' => (int) $s['user_id'], 'grant_id' => null, 'changed_at' => Clock::ts()]);
                     $versions[$key] = $ver;
                     if ($plan['merged']) {
                         $updated[$key] = $json;
                     }
                     if ($plan['closed']) {
-                        $this->audit->log($orgId, $actor, 'periodos', 'cambió datos de mes cerrado (' . implode(', ', $plan['closed']) . ') en ' . self::label($key) . ' · motivo: ' . ($grantUsed['reason'] ?? ''), 'documento', $key, null, 'SERVIDOR', $grantUsed['id'] ?? null);
+                        $this->audit->log($orgId, $actor, 'periodos', 'cambió datos de mes cerrado (' . implode(', ', $plan['closed']) . ') en ' . self::label($key), 'documento', $key, null, 'SERVIDOR', null);
                     }
                     if ($key === 'agora_fin_clients_v2') {
                         $this->projectClients($orgId, $plan['final']);
